@@ -2,6 +2,7 @@ import { prisma } from "~/server/utils/prisma"
 
 const PUBLIC_ROUTES = [
   /^\/api\/register$/,
+  /^\/api\/admin\//,
   /^\/api\/ini\/[^/]+\/auth\/magic-link$/,
   /^\/api\/ini\/[^/]+\/auth\/verify\//,
 ]

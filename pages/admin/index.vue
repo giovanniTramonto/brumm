@@ -78,9 +78,10 @@ async function onSetupStorage(clubId: string) {
       <div v-if="!isAuthenticated" class="card max-w-sm">
         <h2 class="mb-4 font-semibold text-gray-900">Anmelden</h2>
         <form class="space-y-4" @submit.prevent="onLogin">
+          <input type="text" name="username" autocomplete="username" value="admin" class="hidden" />
           <div>
             <label class="label">Admin-Passwort</label>
-            <input v-model="adminSecret" type="password" class="input mt-1" required />
+            <input v-model="adminSecret" type="password" class="input mt-1" autocomplete="current-password" required />
           </div>
           <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
           <button type="submit" class="btn-primary w-full" :disabled="isLoading">
