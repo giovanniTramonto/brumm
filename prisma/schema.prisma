@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Club {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  storageType      Storage?
+  storageConfig    Json?
+  isSetupRequested Boolean  @default(false)
+  isSetupDone      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  users    User[]
+  sessions Session[]
+  invites  Invite[]
+  groups   Group[]
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  clubId    String
+  name      String
+  email     String?
+  createdAt DateTime @default(now())
+
+  club  Club   @relation(fields: [clubId], references: [id])
+  users User[]
+}
+
+model User {
+  id         String    @id @default(cuid())
+  clubId     String
+  role       Role      @default(MEMBER)
+  isActive   Boolean   @default(false)
+  storageRef String?
+
+  firstName     String
+  lastName      String
+  birthDate     DateTime
+  guardian1Name String?
+  guardian2Name String?
+
+  groupId String?
+
+  deactivatedAt DateTime?
+  deactivatedBy String?
+
+  createdAt DateTime @default(now())
+
+  club       Club        @relation(fields: [clubId], references: [id])
+  group      Group?      @relation(fields: [groupId], references: [id])
+  emails     UserEmail[]
+  sessions   Session[]
+  magicLinks MagicLink[]
+  invites    Invite[]
+
+  @@unique([storageRef, clubId])
+}
+
+model UserEmail {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String   @unique
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Invite {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}
+
+model MagicLink {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  clubId    String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  club Club @relation(fields: [clubId], references: [id])
+}
+
+enum Role {
+  SUPERUSER
+  TEAM
+  MEMBER
+}
+
+enum Storage {
+  GOOGLE_DRIVE
+  S3
+  R2
+}

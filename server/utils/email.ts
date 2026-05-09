@@ -1,0 +1,120 @@
+import { Resend } from "resend"
+
+function getResend(): Resend {
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error("RESEND_API_KEY is not configured")
+  return new Resend(key)
+}
+
+const FROM_ADDRESS = "Jita Vereinsverwaltung <noreply@jita.app>"
+
+export async function sendMagicLink(params: {
+  to: string
+  clubName: string
+  clubSlug: string
+  token: string
+}): Promise<void> {
+  const resend = getResend()
+  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/auth/verify/${params.token}`
+
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Anmeldung bei ${params.clubName}`,
+    html: `
+      <h2>Anmeldung bei ${params.clubName}</h2>
+      <p>Klicke auf den folgenden Link, um dich anzumelden. Der Link ist 15 Minuten gültig.</p>
+      <p><a href="${link}">Jetzt anmelden</a></p>
+      <p>Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren.</p>
+    `,
+  })
+}
+
+export async function sendInviteEmail(params: {
+  to: string
+  clubName: string
+  clubSlug: string
+  token: string
+  childName: string
+}): Promise<void> {
+  const resend = getResend()
+  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/auth/verify/${params.token}`
+
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Einladung: ${params.childName} bei ${params.clubName}`,
+    html: `
+      <h2>Willkommen bei ${params.clubName}!</h2>
+      <p>Ihr Kind <strong>${params.childName}</strong> wurde angemeldet.</p>
+      <p>Bitte klickt auf den folgenden Link, um euer Profil einzurichten. Der Link ist 7 Tage gültig.</p>
+      <p><a href="${link}">Profil einrichten</a></p>
+    `,
+  })
+}
+
+export async function sendSuperUserNotification(params: {
+  to: string[]
+  clubName: string
+  childName: string
+  clubSlug: string
+  userId: string
+}): Promise<void> {
+  const resend = getResend()
+  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/members/${params.userId}`
+
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Neues Mitglied wartet auf Freischaltung: ${params.childName}`,
+    html: `
+      <h2>Neues Mitglied bei ${params.clubName}</h2>
+      <p><strong>${params.childName}</strong> hat das Onboarding abgeschlossen und wartet auf Freischaltung.</p>
+      <p><a href="${link}">Mitglied freischalten</a></p>
+    `,
+  })
+}
+
+export async function sendDeactivationConfirmation(params: {
+  to: string[]
+  clubName: string
+  childName: string
+}): Promise<void> {
+  const resend = getResend()
+
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Abmeldung bestätigt: ${params.childName}`,
+    html: `
+      <h2>Abmeldung bei ${params.clubName}</h2>
+      <p><strong>${params.childName}</strong> wurde erfolgreich vom Verein abgemeldet.</p>
+      <p>Gemäß DSGVO werden alle persönlichen Daten nach einem Jahr vollständig gelöscht.</p>
+    `,
+  })
+}
+
+export async function sendImportSummary(params: {
+  to: string[]
+  clubName: string
+  succeeded: number
+  failed: number
+  total: number
+}): Promise<void> {
+  const resend = getResend()
+
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `CSV-Import abgeschlossen: ${params.clubName}`,
+    html: `
+      <h2>Import-Zusammenfassung für ${params.clubName}</h2>
+      <p>Der CSV-Import wurde abgeschlossen:</p>
+      <ul>
+        <li>Gesamt: ${params.total}</li>
+        <li>Erfolgreich: ${params.succeeded}</li>
+        <li>Fehlgeschlagen: ${params.failed}</li>
+      </ul>
+    `,
+  })
+}

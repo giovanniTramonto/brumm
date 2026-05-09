@@ -1,0 +1,40 @@
+{
+  "name": "jita",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare && prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "^2.2.2",
+    "@pinia/nuxt": "^0.9.0",
+    "@prisma/client": "^6.3.0",
+    "google-auth-library": "^9.15.0",
+    "googleapis": "^144.0.0",
+    "nuxt": "^3.15.0",
+    "pinia": "^2.3.0",
+    "reka-ui": "^2.1.0",
+    "resend": "^4.0.0",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "@tailwindcss/forms": "^0.5.9",
+    "@types/node": "^22.0.0",
+    "prisma": "^6.3.0",
+    "typescript": "^5.7.0"
+  }
+}
