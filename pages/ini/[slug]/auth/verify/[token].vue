@@ -14,7 +14,8 @@ const isLoading = ref(true)
 onMounted(async () => {
   try {
     await authStore.verifyToken(slug, token)
-    await navigateTo(`/ini/${slug}/dashboard`)
+    const target = authStore.currentClub?.isSetupDone ? `/ini/${slug}/dashboard` : `/ini/${slug}/onboarding`
+    await navigateTo(target)
   } catch (err: unknown) {
     error.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??

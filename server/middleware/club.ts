@@ -1,7 +1,8 @@
 import { prisma } from "~/server/utils/prisma"
 
 export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, "slug")
+  const path = getRequestURL(event).pathname
+  const slug = path.match(/^\/api\/ini\/([^/]+)/)?.[1]
   if (!slug) return
 
   const club = await prisma.club.findUnique({ where: { slug } })

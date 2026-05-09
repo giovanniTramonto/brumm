@@ -3,6 +3,10 @@ import { z } from "zod"
 export const registerSchema = z.object({
   name: z.string().min(2, "Vereinsname zu kurz (min. 2 Zeichen)"),
   slug: z.string().min(2).optional(),
+  firstName: z.string().min(1, "Vorname fehlt"),
+  lastName: z.string().min(1, "Nachname fehlt"),
+  birthDate: z.string().refine((v) => !isNaN(Date.parse(v)), "Ungültiges Geburtsdatum"),
+  email: z.string().email("Ungültige E-Mail-Adresse"),
 })
 
 export const magicLinkSchema = z.object({

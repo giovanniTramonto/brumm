@@ -6,11 +6,21 @@ export interface GoogleCredentials {
   serviceAccountKey: string
 }
 
+function extractPrivateKey(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw) as { private_key?: string }
+    if (parsed.private_key) return parsed.private_key.replace(/\\n/g, "\n")
+  } catch {
+    // not JSON — treat as raw PEM
+  }
+  return raw.replace(/\\n/g, "\n")
+}
+
 export function getGoogleAuth(credentials: GoogleCredentials): GoogleAuth {
   return new GoogleAuth({
     credentials: {
       client_email: credentials.serviceAccountEmail,
-      private_key: credentials.serviceAccountKey,
+      private_key: extractPrivateKey(credentials.serviceAccountKey),
     },
     scopes: [
       "https://www.googleapis.com/auth/drive",

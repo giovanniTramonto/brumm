@@ -8,6 +8,7 @@ interface ClubWithCount {
   storageType: string | null
   isSetupDone: boolean
   isSetupRequested: boolean
+  superuserHasLoggedIn: boolean
   createdAt: string
   _count: { users: number }
 }
@@ -25,6 +26,14 @@ const isSetupLoading = ref(false)
 const setupError = ref<string | null>(null)
 const setupSuccess = ref<string | null>(null)
 
+const deleteClubId = ref<string | null>(null)
+const isDeleteLoading = ref(false)
+const deleteError = ref<string | null>(null)
+
+const resendedClubs = ref<Set<string>>(new Set())
+const isResendLoading = ref<string | null>(null)
+const resendError = ref<string | null>(null)
+
 async function onLogin() {
   isLoading.value = true
   error.value = null
@@ -38,6 +47,41 @@ async function onLogin() {
     error.value = "Falsches Passwort"
   } finally {
     isLoading.value = false
+  }
+}
+
+async function onResendInvite(clubId: string) {
+  isResendLoading.value = clubId
+  resendError.value = null
+  try {
+    await $fetch(`/api/admin/clubs/${clubId}/resend-invite`, {
+      method: "POST" as const,
+      headers: { "x-admin-secret": adminSecret.value },
+    })
+    resendedClubs.value = new Set([...resendedClubs.value, clubId])
+  } catch (err: unknown) {
+    resendError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler"
+  } finally {
+    isResendLoading.value = null
+  }
+}
+
+async function onDeleteClub(clubId: string) {
+  isDeleteLoading.value = true
+  deleteError.value = null
+  try {
+    await $fetch(`/api/admin/clubs/${clubId}/delete`, {
+      method: "POST" as const,
+      headers: { "x-admin-secret": adminSecret.value },
+    })
+    deleteClubId.value = null
+    clubs.value = clubs.value.filter((c) => c.id !== clubId)
+  } catch (err: unknown) {
+    deleteError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler"
+  } finally {
+    isDeleteLoading.value = false
   }
 }
 
@@ -145,13 +189,57 @@ async function onSetupStorage(clubId: string) {
                     </span>
                   </td>
                   <td class="px-4 py-3 text-right">
-                    <button
-                      v-if="!club.isSetupDone"
-                      class="btn-secondary py-1 text-xs"
-                      @click="setupClubId = setupClubId === club.id ? null : club.id"
-                    >
-                      Storage einrichten
-                    </button>
+                    <div class="flex justify-end gap-2">
+                      <button
+                        v-if="!club.isSetupDone"
+                        class="btn-secondary py-1 text-xs"
+                        @click="setupClubId = setupClubId === club.id ? null : club.id; deleteClubId = null"
+                      >
+                        Storage einrichten
+                      </button>
+                      <button
+                        v-if="!club.isSetupDone && !club.superuserHasLoggedIn && !resendedClubs.has(club.id)"
+                        class="btn-secondary py-1 text-xs"
+                        :disabled="isResendLoading === club.id"
+                        @click="onResendInvite(club.id)"
+                      >
+                        {{ isResendLoading === club.id ? '…' : 'Resend Invite' }}
+                      </button>
+                      <button
+                        class="btn-danger py-1 text-xs"
+                        @click="deleteClubId = deleteClubId === club.id ? null : club.id; setupClubId = null"
+                      >
+                        Löschen
+                      </button>
+                    </div>
+                    <div v-if="resendedClubs.has(club.id)" class="mt-1 text-right text-xs text-green-700">
+                      ✓ Invite gesendet
+                    </div>
+                    <div v-if="resendError" class="mt-1 text-right text-xs text-red-700">{{ resendError }}</div>
+                  </td>
+                </tr>
+
+                <!-- Delete-Bestätigung -->
+                <tr v-if="deleteClubId === club.id">
+                  <td colspan="6" class="bg-red-50 px-4 py-4">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm text-red-700">
+                        <strong>{{ club.name }}</strong> und alle Daten unwiderruflich löschen?
+                      </p>
+                      <div class="flex gap-2">
+                        <div v-if="deleteError" class="text-xs text-red-700">{{ deleteError }}</div>
+                        <button
+                          class="btn-danger py-1 text-xs"
+                          :disabled="isDeleteLoading"
+                          @click="onDeleteClub(club.id)"
+                        >
+                          {{ isDeleteLoading ? "Wird gelöscht…" : "Ja, löschen" }}
+                        </button>
+                        <button class="btn-secondary py-1 text-xs" @click="deleteClubId = null">
+                          Abbrechen
+                        </button>
+                      </div>
+                    </div>
                   </td>
                 </tr>
 

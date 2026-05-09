@@ -6,7 +6,7 @@ function getResend(): Resend {
   return new Resend(key)
 }
 
-const FROM_ADDRESS = "Jita Vereinsverwaltung <noreply@jita.app>"
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? "Jita Vereinsverwaltung <onboarding@resend.dev>"
 
 export async function sendMagicLink(params: {
   to: string
@@ -25,6 +25,29 @@ export async function sendMagicLink(params: {
       <h2>Anmeldung bei ${params.clubName}</h2>
       <p>Klicke auf den folgenden Link, um dich anzumelden. Der Link ist 15 Minuten gültig.</p>
       <p><a href="${link}">Jetzt anmelden</a></p>
+      <p>Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren.</p>
+    `,
+  })
+}
+
+export async function sendWelcomeEmail(params: {
+  to: string
+  clubName: string
+  clubSlug: string
+  token: string
+}): Promise<void> {
+  const resend = getResend()
+  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/auth/verify/${params.token}`
+
+  await resend.emails.send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Willkommen bei Jita – ${params.clubName} einrichten`,
+    html: `
+      <h2>Willkommen bei Jita!</h2>
+      <p>Dein Verein <strong>${params.clubName}</strong> wurde registriert.</p>
+      <p>Klicke auf den folgenden Link, um die Einrichtung abzuschließen. Der Link ist 24 Stunden gültig.</p>
+      <p><a href="${link}">Einrichtung starten</a></p>
       <p>Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren.</p>
     `,
   })

@@ -107,5 +107,14 @@ async function onSetupStorage() {
         {{ isSetupLoading ? "Wird eingerichtet…" : "Google Drive einrichten" }}
       </button>
     </div>
+    <div class="card space-y-4 border-red-200">
+      <h2 class="font-semibold text-red-700">Gefahrenbereich</h2>
+      <p class="text-sm text-gray-600">
+        Den Verein und alle Daten unwiderruflich löschen.
+      </p>
+      <NuxtLink :to="`/ini/${slug}/settings/delete`" class="btn-danger inline-block text-sm">
+        Verein löschen
+      </NuxtLink>
+    </div>
   </div>
 </template>

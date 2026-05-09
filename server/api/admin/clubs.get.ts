@@ -10,8 +10,20 @@ export default defineEventHandler(async (event) => {
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { users: true } },
+      users: {
+        where: { role: "SUPERUSER" },
+        select: {
+          magicLinks: { where: { isUsed: true }, select: { id: true }, take: 1 },
+        },
+      },
     },
   })
 
-  return { clubs }
+  return {
+    clubs: clubs.map((c) => ({
+      ...c,
+      superuserHasLoggedIn: c.users.some((u) => u.magicLinks.length > 0),
+      users: undefined,
+    })),
+  }
 })
