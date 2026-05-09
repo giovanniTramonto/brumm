@@ -1,6 +1,8 @@
-import { prisma } from "~/server/utils/prisma"
-import { sendMagicLink } from "~/server/utils/email"
-import { magicLinkSchema, formatZodError } from "~/server/utils/schemas"
+import { sendMagicLink } from '~/server/utils/email'
+import { prisma } from '~/server/utils/prisma'
+import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
+import { findUserIdByEmail } from '~/server/utils/storage/sheets'
+import type { GoogleDriveConfig } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -11,28 +13,70 @@ export default defineEventHandler(async (event) => {
   }
 
   const { email } = parsed.data
+  const normalizedEmail = email.toLowerCase()
 
+  // First: check UserEmail in Neon (covers SUPERUSER role)
   const userEmail = await prisma.userEmail.findUnique({
-    where: { email: email.toLowerCase() },
+    where: { email: normalizedEmail },
     include: { user: true },
   })
 
-  if (!userEmail || userEmail.user.clubId !== club.id) {
-    return { message: "Falls diese E-Mail bekannt ist, wurde ein Link gesendet" }
+  if (userEmail && userEmail.user.clubId === club.id) {
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+    const magicLink = await prisma.magicLink.create({
+      data: { userId: userEmail.userId, expiresAt },
+    })
+    await sendMagicLink({
+      to: email,
+      clubName: club.name,
+      clubSlug: club.slug,
+      token: magicLink.token,
+    })
+    return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
   }
 
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+  // Second: search in Sheets (setup done) or localData (setup not done)
+  let userId: string | null = null
 
-  const magicLink = await prisma.magicLink.create({
-    data: { userId: userEmail.userId, expiresAt },
-  })
+  if (club.isSetupDone && club.storageConfig) {
+    const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
+    const credentials = {
+      serviceAccountEmail: storageConfig.serviceAccountEmail,
+      serviceAccountKey: storageConfig.serviceAccountKey,
+    }
+    userId = await findUserIdByEmail({
+      credentials,
+      masterSheetId: storageConfig.masterSheetId,
+      email: normalizedEmail,
+    })
+  } else {
+    // Search localData in Neon for matching email
+    const usersWithLocalData = await prisma.user.findMany({
+      where: { clubId: club.id, localData: { not: null } },
+    })
+    const match = usersWithLocalData.find((u) => {
+      const d = u.localData as Record<string, unknown> | null
+      if (!d) return false
+      return (
+        (d.email1 as string)?.toLowerCase() === normalizedEmail ||
+        (d.email2 as string)?.toLowerCase() === normalizedEmail
+      )
+    })
+    userId = match?.id ?? null
+  }
 
-  await sendMagicLink({
-    to: email,
-    clubName: club.name,
-    clubSlug: club.slug,
-    token: magicLink.token,
-  })
+  if (userId) {
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+    const magicLink = await prisma.magicLink.create({
+      data: { userId, expiresAt },
+    })
+    await sendMagicLink({
+      to: email,
+      clubName: club.name,
+      clubSlug: club.slug,
+      token: magicLink.token,
+    })
+  }
 
-  return { message: "Falls diese E-Mail bekannt ist, wurde ein Link gesendet" }
+  return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
 })

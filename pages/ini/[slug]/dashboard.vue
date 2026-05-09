@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
-import { useMembersStore } from "~/stores/members"
+import { useAuthStore } from '~/stores/auth'
+import { useMembersStore } from '~/stores/members'
 
-definePageMeta({ middleware: ["auth"] })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -10,7 +10,7 @@ const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
 onMounted(async () => {
-  if (authStore.currentUser?.role !== "MEMBER") {
+  if (authStore.currentUser?.role !== 'MEMBER') {
     await membersStore.fetchMembers(slug)
   }
 })

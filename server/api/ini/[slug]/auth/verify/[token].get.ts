@@ -1,11 +1,11 @@
-import { prisma } from "~/server/utils/prisma"
+import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
-  const token = getRouterParam(event, "token")
+  const token = getRouterParam(event, 'token')
 
   if (!token) {
-    throw createError({ statusCode: 400, statusMessage: "Token fehlt" })
+    throw createError({ statusCode: 400, statusMessage: 'Token fehlt' })
   }
 
   const magicLink = await prisma.magicLink.findUnique({
@@ -14,23 +14,14 @@ export default defineEventHandler(async (event) => {
   })
 
   if (!magicLink || magicLink.isUsed || magicLink.expiresAt < new Date()) {
-    throw createError({ statusCode: 400, statusMessage: "Link ungültig oder abgelaufen" })
+    throw createError({ statusCode: 400, statusMessage: 'Link ungültig oder abgelaufen' })
   }
 
   if (magicLink.user.clubId !== club.id) {
-    throw createError({ statusCode: 403, statusMessage: "Zugriff verweigert" })
+    throw createError({ statusCode: 403, statusMessage: 'Zugriff verweigert' })
   }
 
-  const existingSession = await prisma.session.findFirst({
-    where: {
-      userId: magicLink.userId,
-      expiresAt: { gt: new Date() },
-    },
-  })
-
-  if (existingSession) {
-    throw createError({ statusCode: 409, statusMessage: "Zu viele Anmeldungen" })
-  }
+  await prisma.session.deleteMany({ where: { userId: magicLink.userId } })
 
   await prisma.magicLink.update({
     where: { id: magicLink.id },
@@ -47,17 +38,17 @@ export default defineEventHandler(async (event) => {
     },
   })
 
-  setCookie(event, "session_token", session.token, {
+  setCookie(event, 'session_token', session.token, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: 'lax',
     expires: expiresAt,
-    path: "/",
+    path: '/',
   })
 
   const user = await prisma.user.findUnique({
     where: { id: magicLink.userId },
-    include: { emails: true, group: true },
+    include: { emails: true },
   })
 
   return { user, club }

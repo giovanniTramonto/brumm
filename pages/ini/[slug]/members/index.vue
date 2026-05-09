@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
-import { useMembersStore } from "~/stores/members"
-import type { User } from "~/types"
+import { useAuthStore } from '~/stores/auth'
+import { useMembersStore } from '~/stores/members'
+import type { Member } from '~/types'
 
-definePageMeta({ middleware: ["auth", "role"], requiredRole: "TEAM" })
+definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'TEAM' })
 
 const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
-const search = ref("")
+const search = ref('')
 const isActivating = ref<string | null>(null)
 const isDeactivating = ref<string | null>(null)
 
@@ -19,13 +19,11 @@ onMounted(() => membersStore.fetchMembers(slug))
 const filteredMembers = computed(() => {
   const q = search.value.toLowerCase()
   return membersStore.members.filter(
-    (m) =>
-      m.firstName.toLowerCase().includes(q) ||
-      m.lastName.toLowerCase().includes(q)
+    (m) => m.firstName.toLowerCase().includes(q) || m.lastName.toLowerCase().includes(q),
   )
 })
 
-async function onActivate(member: User) {
+async function onActivate(member: Member) {
   isActivating.value = member.id
   try {
     await membersStore.activateMember(slug, member.id)
@@ -34,7 +32,7 @@ async function onActivate(member: User) {
   }
 }
 
-async function onDeactivate(member: User) {
+async function onDeactivate(member: Member) {
   if (!confirm(`${member.firstName} ${member.lastName} wirklich abmelden?`)) return
   isDeactivating.value = member.id
   try {

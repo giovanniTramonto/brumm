@@ -1,21 +1,51 @@
-import { prisma } from "~/server/utils/prisma"
+import { getAllMemberData } from '~/server/utils/memberData'
+import { prisma } from '~/server/utils/prisma'
+import type { Member } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
   const user = event.context.user
 
-  if (user.role === "MEMBER") {
-    throw createError({ statusCode: 403, statusMessage: "Keine Berechtigung" })
+  if (user.role === 'MEMBER') {
+    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  const members = await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     where: { clubId: club.id },
-    include: {
-      group: true,
-      emails: true,
-    },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   })
+
+  const userIds = users.map((u) => u.id)
+  const memberDataList = await getAllMemberData(userIds, club)
+
+  const memberDataMap = new Map(memberDataList.map((md) => [md.userId, md]))
+
+  const members: Member[] = users
+    .map((u) => {
+      const md = memberDataMap.get(u.id)
+      if (!md) return null
+      return {
+        id: u.id,
+        clubId: u.clubId,
+        role: u.role,
+        isActive: u.isActive,
+        storageId: u.storageId,
+        createdAt: u.createdAt.toISOString(),
+        firstName: md.firstName,
+        lastName: md.lastName,
+        birthDate: md.birthDate,
+        guardian1Name: md.guardian1Name,
+        guardian2Name: md.guardian2Name,
+        email1: md.email1,
+        email2: md.email2,
+        groupId: md.groupId,
+        storageRef: md.storageRef,
+      } satisfies Member
+    })
+    .filter((m): m is Member => m !== null)
+    .sort((a, b) => {
+      const lastCmp = a.lastName.localeCompare(b.lastName, 'de')
+      return lastCmp !== 0 ? lastCmp : a.firstName.localeCompare(b.firstName, 'de')
+    })
 
   return { members }
 })

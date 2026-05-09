@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: false })
 
@@ -7,7 +7,7 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const email = ref("")
+const email = ref('')
 const isLoading = ref(false)
 const isSent = ref(false)
 const error = ref<string | null>(null)
@@ -20,7 +20,8 @@ async function onSubmit() {
     await authStore.login(slug, email.value)
     isSent.value = true
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler beim Senden"
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Senden'
   } finally {
     isLoading.value = false
   }

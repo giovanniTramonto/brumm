@@ -1,4 +1,4 @@
-import { prisma } from "~/server/utils/prisma"
+import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const path = getRequestURL(event).pathname
@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
   const club = await prisma.club.findUnique({ where: { slug } })
   if (!club) {
-    throw createError({ statusCode: 404, statusMessage: "Verein nicht gefunden" })
+    throw createError({ statusCode: 404, statusMessage: 'Verein nicht gefunden' })
   }
 
   event.context.club = club

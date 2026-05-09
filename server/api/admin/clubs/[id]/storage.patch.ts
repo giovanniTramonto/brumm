@@ -1,18 +1,16 @@
-import { prisma } from "~/server/utils/prisma"
-import { setupClubStorage } from "~/server/utils/storage/setupClubStorage"
-import { storageSetupSchema, formatZodError } from "~/server/utils/schemas"
+import { checkAdminAuth } from '~/server/utils/adminAuth'
+import { prisma } from '~/server/utils/prisma'
+import { formatZodError, storageSetupSchema } from '~/server/utils/schemas'
+import { setupClubStorage } from '~/server/utils/storage/setupClubStorage'
 
 export default defineEventHandler(async (event) => {
-  const secret = getHeader(event, "x-admin-secret")
-  if (!secret || secret !== process.env.ADMIN_SECRET) {
-    throw createError({ statusCode: 401, statusMessage: "Nicht autorisiert" })
-  }
+  checkAdminAuth(event)
 
-  const clubId = getRouterParam(event, "id")
-  if (!clubId) throw createError({ statusCode: 400, statusMessage: "ID fehlt" })
+  const clubId = getRouterParam(event, 'id')
+  if (!clubId) throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
 
   const club = await prisma.club.findUnique({ where: { id: clubId } })
-  if (!club) throw createError({ statusCode: 404, statusMessage: "Verein nicht gefunden" })
+  if (!club) throw createError({ statusCode: 404, statusMessage: 'Verein nicht gefunden' })
 
   const parsed = storageSetupSchema.safeParse(await readBody(event))
   if (!parsed.success) {
@@ -27,5 +25,5 @@ export default defineEventHandler(async (event) => {
     credentials: { serviceAccountEmail, serviceAccountKey },
   })
 
-  return { storageConfig: { ...storageConfig, serviceAccountKey: "[versteckt]" } }
+  return { storageConfig: { ...storageConfig, serviceAccountKey: '[versteckt]' } }
 })

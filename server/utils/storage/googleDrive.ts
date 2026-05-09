@@ -1,5 +1,5 @@
-import { getDriveClient } from "../googleAuth"
-import type { GoogleCredentials } from "../googleAuth"
+import { getDriveClient } from '../googleAuth'
+import type { GoogleCredentials } from '../googleAuth'
 
 export async function createMemberFolder(params: {
   credentials: GoogleCredentials
@@ -11,14 +11,14 @@ export async function createMemberFolder(params: {
   const folder = await drive.files.create({
     requestBody: {
       name: params.folderName,
-      mimeType: "application/vnd.google-apps.folder",
+      mimeType: 'application/vnd.google-apps.folder',
       parents: [params.parentFolderId],
     },
-    fields: "id",
+    fields: 'id',
   })
 
   const folderId = folder.data.id
-  if (!folderId) throw new Error("Failed to create member folder")
+  if (!folderId) throw new Error('Failed to create member folder')
   return folderId
 }
 
@@ -32,10 +32,10 @@ export async function createUploadSubfolders(params: {
     const result = await drive.files.create({
       requestBody: {
         name,
-        mimeType: "application/vnd.google-apps.folder",
+        mimeType: 'application/vnd.google-apps.folder',
         parents: [params.memberFolderId],
       },
-      fields: "id",
+      fields: 'id',
     })
     const id = result.data.id
     if (!id) throw new Error(`Failed to create subfolder: ${name}`)
@@ -43,9 +43,9 @@ export async function createUploadSubfolders(params: {
   }
 
   const [documentsId, imagesId, miscId] = await Promise.all([
-    createFolder("documents"),
-    createFolder("images"),
-    createFolder("misc"),
+    createFolder('documents'),
+    createFolder('images'),
+    createFolder('misc'),
   ])
 
   return { documentsId, imagesId, miscId }
@@ -73,10 +73,10 @@ export async function createRootFolderStructure(params: {
     const result = await drive.files.create({
       requestBody: {
         name,
-        mimeType: "application/vnd.google-apps.folder",
+        mimeType: 'application/vnd.google-apps.folder',
         parents: parentId ? [parentId] : undefined,
       },
-      fields: "id",
+      fields: 'id',
     })
     const id = result.data.id
     if (!id) throw new Error(`Failed to create folder: ${name}`)
@@ -85,8 +85,8 @@ export async function createRootFolderStructure(params: {
 
   const rootFolderId = await createFolder(params.clubName)
   const [appFolderId, membersFolderId] = await Promise.all([
-    createFolder("app", rootFolderId),
-    createFolder("members", rootFolderId),
+    createFolder('app', rootFolderId),
+    createFolder('members', rootFolderId),
   ])
 
   return { rootFolderId, appFolderId, membersFolderId }

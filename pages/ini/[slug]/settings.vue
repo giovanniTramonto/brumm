@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
+import { useAuthStore } from '~/stores/auth'
 
-definePageMeta({ middleware: ["auth", "role"], requiredRole: "SUPERUSER" })
+definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'SUPERUSER' })
 
 const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const serviceAccountEmail = ref("")
-const serviceAccountKey = ref("")
+const serviceAccountEmail = ref('')
+const serviceAccountKey = ref('')
 const isSetupLoading = ref(false)
 const setupError = ref<string | null>(null)
 const setupSuccess = ref(false)
@@ -20,7 +20,7 @@ async function onSetupStorage() {
   setupSuccess.value = false
   try {
     await $fetch(`/api/ini/${slug}/setup/storage`, {
-      method: "POST",
+      method: 'POST',
       body: {
         serviceAccountEmail: serviceAccountEmail.value,
         serviceAccountKey: serviceAccountKey.value,
@@ -29,7 +29,7 @@ async function onSetupStorage() {
     setupSuccess.value = true
   } catch (err: unknown) {
     setupError.value =
-      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler"
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isSetupLoading.value = false
   }

@@ -13,15 +13,25 @@ interface ClubWithCount {
   _count: { users: number }
 }
 
-const adminSecret = ref("")
+const adminSecret = ref('')
 const isAuthenticated = ref(false)
 const isLoading = ref(false)
 const clubs = ref<ClubWithCount[]>([])
 const error = ref<string | null>(null)
 
+onMounted(async () => {
+  try {
+    const data = await $fetch<{ clubs: ClubWithCount[] }>('/api/admin/clubs')
+    clubs.value = data.clubs
+    isAuthenticated.value = true
+  } catch {
+    // no valid session cookie — show login form
+  }
+})
+
 const setupClubId = ref<string | null>(null)
-const setupEmail = ref("")
-const setupKey = ref("")
+const setupEmail = ref('')
+const setupKey = ref('')
 const isSetupLoading = ref(false)
 const setupError = ref<string | null>(null)
 const setupSuccess = ref<string | null>(null)
@@ -34,17 +44,26 @@ const resendedClubs = ref<Set<string>>(new Set())
 const isResendLoading = ref<string | null>(null)
 const resendError = ref<string | null>(null)
 
+async function onLogout() {
+  await $fetch('/api/admin/logout', { method: 'POST' })
+  isAuthenticated.value = false
+  clubs.value = []
+  adminSecret.value = ''
+}
+
 async function onLogin() {
   isLoading.value = true
   error.value = null
   try {
-    const data = await $fetch<{ clubs: ClubWithCount[] }>("/api/admin/clubs", {
-      headers: { "x-admin-secret": adminSecret.value },
+    await $fetch('/api/admin/login', {
+      method: 'POST',
+      body: { secret: adminSecret.value },
     })
+    const data = await $fetch<{ clubs: ClubWithCount[] }>('/api/admin/clubs')
     clubs.value = data.clubs
     isAuthenticated.value = true
   } catch {
-    error.value = "Falsches Passwort"
+    error.value = 'Falsches Passwort'
   } finally {
     isLoading.value = false
   }
@@ -54,14 +73,11 @@ async function onResendInvite(clubId: string) {
   isResendLoading.value = clubId
   resendError.value = null
   try {
-    await $fetch(`/api/admin/clubs/${clubId}/resend-invite`, {
-      method: "POST" as const,
-      headers: { "x-admin-secret": adminSecret.value },
-    })
+    await $fetch(`/api/admin/clubs/${clubId}/resend-invite`, { method: 'POST' as const })
     resendedClubs.value = new Set([...resendedClubs.value, clubId])
   } catch (err: unknown) {
     resendError.value =
-      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler"
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isResendLoading.value = null
   }
@@ -71,15 +87,12 @@ async function onDeleteClub(clubId: string) {
   isDeleteLoading.value = true
   deleteError.value = null
   try {
-    await $fetch(`/api/admin/clubs/${clubId}/delete`, {
-      method: "POST" as const,
-      headers: { "x-admin-secret": adminSecret.value },
-    })
+    await $fetch(`/api/admin/clubs/${clubId}/delete`, { method: 'POST' as const })
     deleteClubId.value = null
     clubs.value = clubs.value.filter((c) => c.id !== clubId)
   } catch (err: unknown) {
     deleteError.value =
-      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler"
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isDeleteLoading.value = false
   }
@@ -92,21 +105,18 @@ async function onSetupStorage(clubId: string) {
   setupSuccess.value = null
   try {
     await $fetch(`/api/admin/clubs/${clubId}/storage`, {
-      method: "PATCH",
-      headers: { "x-admin-secret": adminSecret.value },
+      method: 'PATCH',
       body: { serviceAccountEmail: setupEmail.value, serviceAccountKey: setupKey.value },
     })
     setupSuccess.value = clubId
     setupClubId.value = null
-    setupEmail.value = ""
-    setupKey.value = ""
-    const data = await $fetch<{ clubs: ClubWithCount[] }>("/api/admin/clubs", {
-      headers: { "x-admin-secret": adminSecret.value },
-    })
+    setupEmail.value = ''
+    setupKey.value = ''
+    const data = await $fetch<{ clubs: ClubWithCount[] }>('/api/admin/clubs')
     clubs.value = data.clubs
   } catch (err: unknown) {
     setupError.value =
-      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler"
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isSetupLoading.value = false
   }
@@ -138,7 +148,7 @@ async function onSetupStorage(clubId: string) {
       <template v-else>
         <div class="mb-4 flex items-center justify-between">
           <p class="text-sm text-gray-600">{{ clubs.length }} Vereine registriert</p>
-          <button class="btn-secondary text-sm" @click="isAuthenticated = false">
+          <button class="btn-secondary text-sm" @click="onLogout">
             Abmelden
           </button>
         </div>
@@ -170,7 +180,9 @@ async function onSetupStorage(clubId: string) {
                           ? 'bg-green-100 text-green-800'
                           : club.isSetupRequested
                             ? 'bg-amber-100 text-amber-800'
-                            : 'bg-gray-100 text-gray-600'
+                            : club.superuserHasLoggedIn
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-600'
                       "
                     >
                       {{
@@ -178,7 +190,9 @@ async function onSetupStorage(clubId: string) {
                           ? "Aktiv"
                           : club.isSetupRequested
                             ? "Setup angefragt"
-                            : "Ausstehend"
+                            : club.superuserHasLoggedIn
+                              ? "Einrichtung ausstehend"
+                              : "Ausstehend"
                       }}
                     </span>
                     <span

@@ -1,5 +1,5 @@
-import { useAuthStore } from "~/stores/auth"
-import type { Role } from "~/types"
+import { useAuthStore } from '~/stores/auth'
+import type { Role } from '~/types'
 
 const ROLE_HIERARCHY: Record<Role, number> = {
   SUPERUSER: 3,
@@ -21,6 +21,6 @@ export default defineNuxtRouteMiddleware((to) => {
 
   if (userLevel < requiredLevel) {
     const slug = to.params.slug as string | undefined
-    return navigateTo(slug ? `/ini/${slug}/dashboard` : "/")
+    return navigateTo(slug ? `/ini/${slug}/dashboard` : '/')
   }
 })

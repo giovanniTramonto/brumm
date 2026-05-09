@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: false })
 
@@ -14,12 +14,14 @@ const isLoading = ref(true)
 onMounted(async () => {
   try {
     await authStore.verifyToken(slug, token)
-    const target = authStore.currentClub?.isSetupDone ? `/ini/${slug}/dashboard` : `/ini/${slug}/onboarding`
+    const target = authStore.currentClub?.isSetupDone
+      ? `/ini/${slug}/dashboard`
+      : `/ini/${slug}/onboarding`
     await navigateTo(target)
   } catch (err: unknown) {
     error.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??
-      "Anmeldung fehlgeschlagen"
+      'Anmeldung fehlgeschlagen'
   } finally {
     isLoading.value = false
   }

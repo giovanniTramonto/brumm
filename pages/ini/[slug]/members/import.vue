@@ -1,13 +1,13 @@
 <script setup lang="ts">
-definePageMeta({ middleware: ["auth", "role"], requiredRole: "SUPERUSER" })
+definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'SUPERUSER' })
 
-import type { ImportResult, ImportRow } from "~/types/import"
+import type { ImportResult, ImportRow } from '~/types/import'
 
 const route = useRoute()
 const slug = route.params.slug as string
 
-const step = ref<"upload" | "preview" | "confirm" | "done">("upload")
-const csvContent = ref("")
+const step = ref<'upload' | 'preview' | 'confirm' | 'done'>('upload')
+const csvContent = ref('')
 const previewResult = ref<ImportResult | null>(null)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -18,9 +18,9 @@ function onFileChange(event: Event) {
   if (!file) return
   const reader = new FileReader()
   reader.onload = (e) => {
-    csvContent.value = (e.target?.result as string) ?? ""
+    csvContent.value = (e.target?.result as string) ?? ''
   }
-  reader.readAsText(file, "utf-8")
+  reader.readAsText(file, 'utf-8')
 }
 
 async function onPreview() {
@@ -29,13 +29,15 @@ async function onPreview() {
   error.value = null
   try {
     const result = await $fetch<ImportResult>(`/api/ini/${slug}/members/import/preview`, {
-      method: "POST",
+      method: 'POST',
       body: { csvContent: csvContent.value },
     })
     previewResult.value = result
-    step.value = "preview"
+    step.value = 'preview'
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler bei der Vorschau"
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??
+      'Fehler bei der Vorschau'
   } finally {
     isLoading.value = false
   }
@@ -50,35 +52,35 @@ async function onConfirm() {
     .filter((r) => r.isImportable)
     .map((r) => r.rowIndex)
 
-  const lines = csvContent.value.split("\n")
-  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase())
-  const getCol = (row: string[], name: string) => row[headers.indexOf(name)]?.trim() ?? ""
+  const lines = csvContent.value.split('\n')
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase())
+  const getCol = (row: string[], name: string) => row[headers.indexOf(name)]?.trim() ?? ''
 
-  const rows: ImportRow[] = importableRows
-    .map((idx) => {
-      const row = lines[idx - 1]?.split(",") ?? []
-      return {
-        firstName: getCol(row, "firstname"),
-        lastName: getCol(row, "lastname"),
-        birthDate: getCol(row, "birthdate"),
-        guardian1Name: getCol(row, "guardian1name"),
-        guardian2Name: getCol(row, "guardian2name") || undefined,
-        email1: getCol(row, "email1"),
-        email2: getCol(row, "email2") || undefined,
-        groupId: getCol(row, "groupid") || undefined,
-        rowIndex: idx,
-      } satisfies ImportRow
-    })
+  const rows: ImportRow[] = importableRows.map((idx) => {
+    const row = lines[idx - 1]?.split(',') ?? []
+    return {
+      firstName: getCol(row, 'firstname'),
+      lastName: getCol(row, 'lastname'),
+      birthDate: getCol(row, 'birthdate'),
+      guardian1Name: getCol(row, 'guardian1name'),
+      guardian2Name: getCol(row, 'guardian2name') || undefined,
+      email1: getCol(row, 'email1'),
+      email2: getCol(row, 'email2') || undefined,
+      groupId: getCol(row, 'groupid') || undefined,
+      rowIndex: idx,
+    } satisfies ImportRow
+  })
 
   try {
     const result = await $fetch<{ succeeded: number; failed: number }>(
       `/api/ini/${slug}/members/import/confirm`,
-      { method: "POST", body: { rows } }
+      { method: 'POST', body: { rows } },
     )
     confirmResult.value = result
-    step.value = "done"
+    step.value = 'done'
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Import fehlgeschlagen"
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Import fehlgeschlagen'
   } finally {
     isLoading.value = false
   }
@@ -86,7 +88,7 @@ async function onConfirm() {
 
 async function onDownloadTemplate() {
   const url = `/api/ini/${slug}/members/import/template`
-  window.open(url, "_blank")
+  window.open(url, '_blank')
 }
 </script>
 

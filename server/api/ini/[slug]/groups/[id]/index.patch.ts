@@ -1,17 +1,17 @@
-import { prisma } from "~/server/utils/prisma"
-import { updateGroupSchema, formatZodError } from "~/server/utils/schemas"
+import { prisma } from '~/server/utils/prisma'
+import { formatZodError, updateGroupSchema } from '~/server/utils/schemas'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
-  const groupId = getRouterParam(event, "id")
+  const groupId = getRouterParam(event, 'id')
 
-  if (currentUser.role !== "SUPERUSER") {
-    throw createError({ statusCode: 403, statusMessage: "Keine Berechtigung" })
+  if (currentUser.role !== 'SUPERUSER') {
+    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
   if (!groupId) {
-    throw createError({ statusCode: 400, statusMessage: "ID fehlt" })
+    throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
   const group = await prisma.group.findFirst({
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   })
 
   if (!group) {
-    throw createError({ statusCode: 404, statusMessage: "Gruppe nicht gefunden" })
+    throw createError({ statusCode: 404, statusMessage: 'Gruppe nicht gefunden' })
   }
 
   const parsed = updateGroupSchema.safeParse(await readBody(event))

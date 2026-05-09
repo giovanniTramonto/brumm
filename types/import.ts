@@ -11,13 +11,13 @@ export interface ImportRow {
 }
 
 export type ImportErrorCode =
-  | "MISSING_REQUIRED_FIELD"
-  | "INVALID_DATE"
-  | "INVALID_EMAIL"
-  | "DUPLICATE_EMAIL"
-  | "DUPLICATE_MEMBER"
-  | "GROUP_NOT_FOUND"
-  | "LIMIT_EXCEEDED"
+  | 'MISSING_REQUIRED_FIELD'
+  | 'INVALID_DATE'
+  | 'INVALID_EMAIL'
+  | 'DUPLICATE_EMAIL'
+  | 'DUPLICATE_MEMBER'
+  | 'GROUP_NOT_FOUND'
+  | 'LIMIT_EXCEEDED'
 
 export interface ImportError {
   rowIndex: number

@@ -1,7 +1,7 @@
-import { defineStore } from "pinia"
-import type { AuthUser, Club } from "~/types"
+import { defineStore } from 'pinia'
+import type { AuthUser, Club } from '~/types'
 
-export const useAuthStore = defineStore("auth", () => {
+export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref<AuthUser | null>(null)
   const currentClub = ref<Club | null>(null)
   const isLoading = ref(false)
@@ -10,7 +10,7 @@ export const useAuthStore = defineStore("auth", () => {
     isLoading.value = true
     try {
       await $fetch(`/api/ini/${slug}/auth/magic-link`, {
-        method: "POST",
+        method: 'POST',
         body: { email },
       })
     } finally {
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore("auth", () => {
     isLoading.value = true
     try {
       const data = await $fetch<{ user: AuthUser; club: Club }>(
-        `/api/ini/${slug}/auth/verify/${token}`
+        `/api/ini/${slug}/auth/verify/${token}`,
       )
       currentUser.value = data.user
       currentClub.value = data.club
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore("auth", () => {
   async function logout(slug: string): Promise<void> {
     isLoading.value = true
     try {
-      await $fetch(`/api/ini/${slug}/auth/logout`, { method: "POST" })
+      await $fetch(`/api/ini/${slug}/auth/logout`, { method: 'POST' })
     } finally {
       currentUser.value = null
       currentClub.value = null

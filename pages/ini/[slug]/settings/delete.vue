@@ -7,11 +7,11 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const confirmation = ref("")
+const confirmation = ref('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-const clubName = computed(() => authStore.currentClub?.name ?? "")
+const clubName = computed(() => authStore.currentClub?.name ?? '')
 const isConfirmed = computed(() => confirmation.value === clubName.value)
 
 async function onDelete() {
@@ -19,11 +19,12 @@ async function onDelete() {
   isLoading.value = true
   error.value = null
   try {
-    await $fetch(`/api/ini/${slug}/settings/delete`, { method: "POST" })
+    await $fetch(`/api/ini/${slug}/settings/delete`, { method: 'POST' })
     authStore.clearAuth()
-    await navigateTo("/register")
+    await navigateTo('/register')
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Fehler beim Löschen"
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Löschen'
   } finally {
     isLoading.value = false
   }

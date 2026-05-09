@@ -31,38 +31,27 @@ model Group {
   email     String?
   createdAt DateTime @default(now())
 
-  club  Club   @relation(fields: [clubId], references: [id])
-  users User[]
+  club Club @relation(fields: [clubId], references: [id])
 }
 
 model User {
-  id         String    @id @default(cuid())
-  clubId     String
-  role       Role      @default(MEMBER)
-  isActive   Boolean   @default(false)
-  storageRef String?
+  id        String  @id @default(cuid())
+  clubId    String
+  role      Role    @default(MEMBER)
+  isActive  Boolean @default(false)
+  storageId String?
 
-  firstName     String
-  lastName      String
-  birthDate     DateTime
-  guardian1Name String?
-  guardian2Name String?
-
-  groupId String?
-
-  deactivatedAt DateTime?
-  deactivatedBy String?
+  localData Json?
 
   createdAt DateTime @default(now())
 
   club       Club        @relation(fields: [clubId], references: [id])
-  group      Group?      @relation(fields: [groupId], references: [id])
   emails     UserEmail[]
   sessions   Session[]
   magicLinks MagicLink[]
   invites    Invite[]
 
-  @@unique([storageRef, clubId])
+  @@unique([storageId, clubId])
 }
 
 model UserEmail {

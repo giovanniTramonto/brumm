@@ -1,4 +1,4 @@
-import { prisma } from "~/server/utils/prisma"
+import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const session = event.context.session
@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     await prisma.session.delete({ where: { id: session.id } })
   }
 
-  deleteCookie(event, "session_token", { path: "/" })
+  deleteCookie(event, 'session_token', { path: '/' })
 
-  return { message: "Erfolgreich abgemeldet" }
+  return { message: 'Erfolgreich abgemeldet' }
 })

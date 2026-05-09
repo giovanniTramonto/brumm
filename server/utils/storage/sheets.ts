@@ -1,20 +1,40 @@
-import { getSheetsClient, getDriveClient } from "../googleAuth"
-import type { GoogleCredentials } from "../googleAuth"
-import type { User } from "~/types"
+import type { MemberData } from '~/types'
+import { getDriveClient, getSheetsClient } from '../googleAuth'
+import type { GoogleCredentials } from '../googleAuth'
 
 const MASTER_SHEET_HEADERS = [
-  "storageRef",
-  "firstName",
-  "lastName",
-  "birthDate",
-  "guardian1Name",
-  "guardian2Name",
-  "email1",
-  "email2",
-  "groupName",
-  "isActive",
-  "createdAt",
+  'userId',
+  'storageRef',
+  'firstName',
+  'lastName',
+  'birthDate',
+  'guardian1Name',
+  'guardian2Name',
+  'email1',
+  'email2',
+  'groupId',
+  'isActive',
+  'deactivatedAt',
+  'deactivatedBy',
 ]
+
+function rowToMemberData(row: string[]): MemberData {
+  return {
+    userId: row[0] ?? '',
+    storageRef: row[1] ?? '',
+    firstName: row[2] ?? '',
+    lastName: row[3] ?? '',
+    birthDate: row[4] ?? '',
+    guardian1Name: row[5] || null,
+    guardian2Name: row[6] || null,
+    email1: row[7] ?? '',
+    email2: row[8] || null,
+    groupId: row[9] || null,
+    isActive: row[10] === 'true',
+    deactivatedAt: row[11] || null,
+    deactivatedBy: row[12] || null,
+  }
+}
 
 export async function createMasterSheet(params: {
   credentials: GoogleCredentials
@@ -26,20 +46,20 @@ export async function createMasterSheet(params: {
 
   const file = await drive.files.create({
     requestBody: {
-      name: "master",
-      mimeType: "application/vnd.google-apps.spreadsheet",
+      name: 'master',
+      mimeType: 'application/vnd.google-apps.spreadsheet',
       parents: [params.appFolderId],
     },
-    fields: "id",
+    fields: 'id',
   })
 
   const sheetId = file.data.id
-  if (!sheetId) throw new Error("Failed to create master sheet")
+  if (!sheetId) throw new Error('Failed to create master sheet')
 
   await sheets.spreadsheets.values.update({
     spreadsheetId: sheetId,
-    range: "A1",
-    valueInputOption: "RAW",
+    range: 'A1',
+    valueInputOption: 'RAW',
     requestBody: { values: [MASTER_SHEET_HEADERS] },
   })
 
@@ -49,35 +69,36 @@ export async function createMasterSheet(params: {
 export async function createMemberSheet(params: {
   credentials: GoogleCredentials
   memberFolderId: string
-  storageRef: string
-  user: Pick<User, "firstName" | "lastName" | "birthDate">
+  memberData: MemberData
 }): Promise<string> {
   const drive = getDriveClient(params.credentials)
   const sheets = getSheetsClient(params.credentials)
 
+  const { memberData } = params
+
   const file = await drive.files.create({
     requestBody: {
-      name: params.storageRef,
-      mimeType: "application/vnd.google-apps.spreadsheet",
+      name: memberData.storageRef,
+      mimeType: 'application/vnd.google-apps.spreadsheet',
       parents: [params.memberFolderId],
     },
-    fields: "id",
+    fields: 'id',
   })
 
   const sheetId = file.data.id
-  if (!sheetId) throw new Error("Failed to create member sheet")
+  if (!sheetId) throw new Error('Failed to create member sheet')
 
   await sheets.spreadsheets.values.update({
     spreadsheetId: sheetId,
-    range: "A1",
-    valueInputOption: "RAW",
+    range: 'A1',
+    valueInputOption: 'RAW',
     requestBody: {
       values: [
-        ["Feld", "Wert"],
-        ["storageRef", params.storageRef],
-        ["Vorname", params.user.firstName],
-        ["Nachname", params.user.lastName],
-        ["Geburtsdatum", params.user.birthDate],
+        ['Feld', 'Wert'],
+        ['storageRef', memberData.storageRef],
+        ['Vorname', memberData.firstName],
+        ['Nachname', memberData.lastName],
+        ['Geburtsdatum', memberData.birthDate],
       ],
     },
   })
@@ -85,38 +106,35 @@ export async function createMemberSheet(params: {
   return sheetId
 }
 
-export async function addMemberToMasterSheet(params: {
+export async function writeMemberToSheet(params: {
   credentials: GoogleCredentials
   masterSheetId: string
-  storageRef: string
-  user: User
-  emails: Array<{ email: string; isPrimary: boolean }>
-  groupName?: string
+  data: MemberData
 }): Promise<void> {
   const sheets = getSheetsClient(params.credentials)
-
-  const primaryEmail = params.emails.find((e) => e.isPrimary)?.email ?? ""
-  const secondaryEmail = params.emails.find((e) => !e.isPrimary)?.email ?? ""
+  const { data } = params
 
   const row = [
-    params.storageRef,
-    params.user.firstName,
-    params.user.lastName,
-    params.user.birthDate,
-    params.user.guardian1Name ?? "",
-    params.user.guardian2Name ?? "",
-    primaryEmail,
-    secondaryEmail,
-    params.groupName ?? "",
-    params.user.isActive ? "ja" : "nein",
-    new Date().toISOString(),
+    data.userId,
+    data.storageRef,
+    data.firstName,
+    data.lastName,
+    data.birthDate,
+    data.guardian1Name ?? '',
+    data.guardian2Name ?? '',
+    data.email1,
+    data.email2 ?? '',
+    data.groupId ?? '',
+    String(data.isActive),
+    data.deactivatedAt ?? '',
+    data.deactivatedBy ?? '',
   ]
 
   await sheets.spreadsheets.values.append({
     spreadsheetId: params.masterSheetId,
-    range: "A1",
-    valueInputOption: "RAW",
-    insertDataOption: "INSERT_ROWS",
+    range: 'A1',
+    valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [row] },
   })
 }
@@ -130,7 +148,7 @@ export async function removeMemberFromMasterSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: "A:A",
+    range: 'B:B',
   })
 
   const rows = response.data.values ?? []
@@ -145,7 +163,7 @@ export async function removeMemberFromMasterSheet(params: {
           deleteDimension: {
             range: {
               sheetId: 0,
-              dimension: "ROWS",
+              dimension: 'ROWS',
               startIndex: rowIndex,
               endIndex: rowIndex + 1,
             },
@@ -153,5 +171,113 @@ export async function removeMemberFromMasterSheet(params: {
         },
       ],
     },
+  })
+}
+
+export async function getAllMembersFromSheet(params: {
+  credentials: GoogleCredentials
+  masterSheetId: string
+}): Promise<MemberData[]> {
+  const sheets = getSheetsClient(params.credentials)
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: params.masterSheetId,
+    range: 'A:M',
+  })
+
+  const rows = response.data.values ?? []
+  // Skip header row
+  return rows.slice(1).map((row) => rowToMemberData(row as string[]))
+}
+
+export async function getMemberFromSheet(params: {
+  credentials: GoogleCredentials
+  masterSheetId: string
+  userId: string
+}): Promise<MemberData | null> {
+  const sheets = getSheetsClient(params.credentials)
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: params.masterSheetId,
+    range: 'A:M',
+  })
+
+  const rows = response.data.values ?? []
+  // Skip header row, find by userId (column A)
+  const dataRow = rows.slice(1).find((row) => row[0] === params.userId)
+  if (!dataRow) return null
+
+  return rowToMemberData(dataRow as string[])
+}
+
+export async function findUserIdByEmail(params: {
+  credentials: GoogleCredentials
+  masterSheetId: string
+  email: string
+}): Promise<string | null> {
+  const sheets = getSheetsClient(params.credentials)
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: params.masterSheetId,
+    range: 'A:M',
+  })
+
+  const rows = response.data.values ?? []
+  // Skip header row, search email1 (col H = index 7) and email2 (col I = index 8)
+  const match = rows
+    .slice(1)
+    .find(
+      (row) =>
+        row[7]?.toLowerCase() === params.email.toLowerCase() ||
+        row[8]?.toLowerCase() === params.email.toLowerCase(),
+    )
+
+  return match ? (match[0] as string) : null
+}
+
+export async function updateMemberInSheet(params: {
+  credentials: GoogleCredentials
+  masterSheetId: string
+  userId: string
+  updates: Partial<MemberData>
+}): Promise<void> {
+  const sheets = getSheetsClient(params.credentials)
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: params.masterSheetId,
+    range: 'A:M',
+  })
+
+  const rows = response.data.values ?? []
+  // Find row by userId (column A), including header at index 0
+  const rowIndex = rows.findIndex((row, i) => i > 0 && row[0] === params.userId)
+  if (rowIndex === -1) return
+
+  const existing = rowToMemberData(rows[rowIndex] as string[])
+  const merged: MemberData = { ...existing, ...params.updates }
+
+  const updatedRow = [
+    merged.userId,
+    merged.storageRef,
+    merged.firstName,
+    merged.lastName,
+    merged.birthDate,
+    merged.guardian1Name ?? '',
+    merged.guardian2Name ?? '',
+    merged.email1,
+    merged.email2 ?? '',
+    merged.groupId ?? '',
+    String(merged.isActive),
+    merged.deactivatedAt ?? '',
+    merged.deactivatedBy ?? '',
+  ]
+
+  // rowIndex is 1-based in spreadsheet (A1 is row 1, data starts at row 2)
+  const sheetRow = rowIndex + 1
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: params.masterSheetId,
+    range: `A${sheetRow}`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [updatedRow] },
   })
 }

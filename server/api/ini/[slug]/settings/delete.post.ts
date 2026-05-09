@@ -1,11 +1,11 @@
-import { prisma } from "~/server/utils/prisma"
+import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
 
-  if (currentUser.role !== "SUPERUSER") {
-    throw createError({ statusCode: 403, statusMessage: "Keine Berechtigung" })
+  if (currentUser.role !== 'SUPERUSER') {
+    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
   const userIds = (
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     prisma.club.delete({ where: { id: club.id } }),
   ])
 
-  deleteCookie(event, "session_token")
+  deleteCookie(event, 'session_token')
 
   return { ok: true }
 })

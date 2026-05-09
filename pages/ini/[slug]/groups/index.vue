@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
-import { useGroupsStore } from "~/stores/groups"
-import type { Group } from "~/types"
+import { useAuthStore } from '~/stores/auth'
+import { useGroupsStore } from '~/stores/groups'
+import type { Group } from '~/types'
 
-definePageMeta({ middleware: ["auth"] })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -11,11 +11,11 @@ const authStore = useAuthStore()
 const groupsStore = useGroupsStore()
 
 const isCreating = ref(false)
-const newGroupName = ref("")
-const newGroupEmail = ref("")
+const newGroupName = ref('')
+const newGroupEmail = ref('')
 const editingGroup = ref<Group | null>(null)
-const editName = ref("")
-const editEmail = ref("")
+const editName = ref('')
+const editEmail = ref('')
 const isLoading = ref(false)
 
 onMounted(() => groupsStore.fetchGroups(slug))
@@ -28,8 +28,8 @@ async function onCreateGroup() {
       name: newGroupName.value.trim(),
       email: newGroupEmail.value || undefined,
     })
-    newGroupName.value = ""
-    newGroupEmail.value = ""
+    newGroupName.value = ''
+    newGroupEmail.value = ''
     isCreating.value = false
   } finally {
     isLoading.value = false
@@ -39,7 +39,7 @@ async function onCreateGroup() {
 function onStartEdit(group: Group) {
   editingGroup.value = group
   editName.value = group.name
-  editEmail.value = group.email ?? ""
+  editEmail.value = group.email ?? ''
 }
 
 async function onSaveEdit() {

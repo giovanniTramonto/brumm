@@ -1,5 +1,5 @@
-export type Role = "SUPERUSER" | "TEAM" | "MEMBER"
-export type Storage = "GOOGLE_DRIVE" | "S3" | "R2"
+export type Role = 'SUPERUSER' | 'TEAM' | 'MEMBER'
+export type Storage = 'GOOGLE_DRIVE' | 'S3' | 'R2'
 
 export interface GoogleDriveConfig {
   serviceAccountEmail: string
@@ -43,18 +43,43 @@ export interface User {
   clubId: string
   role: Role
   isActive: boolean
-  storageRef: string | null
+  storageId: string | null
+  localData?: Record<string, unknown> | null
+  createdAt: string
+  emails?: UserEmail[]
+}
+
+export interface MemberData {
+  userId: string
+  storageRef: string
   firstName: string
   lastName: string
   birthDate: string
   guardian1Name: string | null
   guardian2Name: string | null
+  email1: string
+  email2: string | null
   groupId: string | null
+  isActive: boolean
   deactivatedAt: string | null
   deactivatedBy: string | null
-  createdAt: string
+}
+
+export interface Member extends User {
+  firstName: string
+  lastName: string
+  birthDate: string
+  guardian1Name: string | null
+  guardian2Name: string | null
+  email1: string
+  email2: string | null
+  groupId: string | null
+  storageRef: string | null
   group?: Group | null
-  emails?: UserEmail[]
+}
+
+export interface AuthUser extends User {
+  emails: UserEmail[]
 }
 
 export interface UserEmail {
@@ -90,17 +115,6 @@ export interface Invite {
   token: string
   expiresAt: string
   isUsed: boolean
-  createdAt: string
-}
-
-export interface AuthUser extends User {
-  emails: UserEmail[]
-  group: Group | null
-}
-
-export type UserWithDateStrings = Omit<User, 'birthDate' | 'deactivatedAt' | 'createdAt'> & {
-  birthDate: string
-  deactivatedAt: string | null
   createdAt: string
 }
 

@@ -1,4 +1,4 @@
-import { prisma } from "~/server/utils/prisma"
+import { prisma } from '~/server/utils/prisma'
 
 const PUBLIC_ROUTES = [
   /^\/api\/register$/,
@@ -13,28 +13,25 @@ export default defineEventHandler(async (event) => {
   const isPublic = PUBLIC_ROUTES.some((pattern) => pattern.test(path))
   if (isPublic) return
 
-  if (!path.startsWith("/api/")) return
+  if (!path.startsWith('/api/')) return
 
-  const token = getCookie(event, "session_token")
+  const token = getCookie(event, 'session_token')
   if (!token) {
-    throw createError({ statusCode: 401, statusMessage: "Nicht angemeldet" })
+    throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
   }
 
   const session = await prisma.session.findUnique({
     where: { token },
     include: {
       user: {
-        include: {
-          emails: true,
-          group: true,
-        },
+        include: { emails: true },
       },
     },
   })
 
   if (!session || session.expiresAt < new Date()) {
-    deleteCookie(event, "session_token")
-    throw createError({ statusCode: 401, statusMessage: "Sitzung abgelaufen" })
+    deleteCookie(event, 'session_token')
+    throw createError({ statusCode: 401, statusMessage: 'Sitzung abgelaufen' })
   }
 
   event.context.user = session.user

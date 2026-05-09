@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
+import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -8,13 +8,13 @@ const slug = computed(() => route.params.slug as string | undefined)
 const navItems = computed(() => {
   if (!slug.value || !authStore.currentUser) return []
   const base = `/ini/${slug.value}`
-  const items = [{ label: "Dashboard", to: `${base}/dashboard` }]
-  if (authStore.currentUser.role !== "MEMBER") {
-    items.push({ label: "Mitglieder", to: `${base}/members` })
-    items.push({ label: "Gruppen", to: `${base}/groups` })
+  const items = [{ label: 'Dashboard', to: `${base}/dashboard` }]
+  if (authStore.currentUser.role !== 'MEMBER') {
+    items.push({ label: 'Mitglieder', to: `${base}/members` })
+    items.push({ label: 'Gruppen', to: `${base}/groups` })
   }
-  if (authStore.currentUser.role === "SUPERUSER") {
-    items.push({ label: "Einstellungen", to: `${base}/settings` })
+  if (authStore.currentUser.role === 'SUPERUSER') {
+    items.push({ label: 'Einstellungen', to: `${base}/settings` })
   }
   return items
 })
@@ -22,7 +22,7 @@ const navItems = computed(() => {
 async function onLogout() {
   if (!slug.value) return
   await authStore.logout(slug.value)
-  await navigateTo("/register")
+  await navigateTo('/register')
 }
 </script>
 

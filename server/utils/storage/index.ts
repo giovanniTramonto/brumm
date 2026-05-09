@@ -1,58 +1,36 @@
-import { createMemberFolder, createUploadSubfolders, deleteMemberFolder } from "./googleDrive"
-import { createMemberSheet, addMemberToMasterSheet, removeMemberFromMasterSheet } from "./sheets"
-import { getDriveClient } from "../googleAuth"
-import { generateStorageRef } from "~/server/utils/storageRef"
-import { prisma } from "~/server/utils/prisma"
-import type { GoogleDriveConfig } from "~/types"
-import type { User } from "~/types"
+import type { GoogleDriveConfig, MemberData } from '~/types'
+import { getDriveClient } from '../googleAuth'
+import { createMemberFolder, createUploadSubfolders, deleteMemberFolder } from './googleDrive'
+import { createMemberSheet, removeMemberFromMasterSheet, writeMemberToSheet } from './sheets'
 
 export async function initUserStorage(params: {
-  user: User
+  memberData: MemberData
   storageConfig: GoogleDriveConfig
-  emails: Array<{ email: string; isPrimary: boolean }>
-  groupName?: string
-}): Promise<string> {
-  const { storageConfig } = params
+}): Promise<void> {
+  const { storageConfig, memberData } = params
   const credentials = {
     serviceAccountEmail: storageConfig.serviceAccountEmail,
     serviceAccountKey: storageConfig.serviceAccountKey,
   }
 
-  const storageRef = generateStorageRef(
-    new Date(params.user.birthDate),
-    params.user.firstName,
-    params.user.lastName
-  )
-
   const memberFolderId = await createMemberFolder({
     credentials,
     parentFolderId: storageConfig.membersFolderId,
-    folderName: storageRef,
+    folderName: memberData.storageRef,
   })
 
   await Promise.all([
     createUploadSubfolders({ credentials, memberFolderId }),
-    createMemberSheet({ credentials, memberFolderId, storageRef, user: params.user }),
-    addMemberToMasterSheet({
+    createMemberSheet({ credentials, memberFolderId, memberData }),
+    writeMemberToSheet({
       credentials,
       masterSheetId: storageConfig.masterSheetId,
-      storageRef,
-      user: params.user,
-      emails: params.emails,
-      groupName: params.groupName,
+      data: memberData,
     }),
   ])
-
-  await prisma.user.update({
-    where: { id: params.user.id },
-    data: { storageRef },
-  })
-
-  return storageRef
 }
 
 export async function deleteMemberStorage(params: {
-  userId: string
   storageRef: string
   storageConfig: GoogleDriveConfig
 }): Promise<void> {
@@ -66,7 +44,7 @@ export async function deleteMemberStorage(params: {
 
   const searchResult = await drive.files.list({
     q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
-    fields: "files(id)",
+    fields: 'files(id)',
   })
 
   const folder = searchResult.data.files?.[0]

@@ -1,8 +1,8 @@
-import { createRootFolderStructure } from "./googleDrive"
-import { createMasterSheet } from "./sheets"
-import { prisma } from "~/server/utils/prisma"
-import type { GoogleCredentials } from "~/server/utils/googleAuth"
-import type { GoogleDriveConfig } from "~/types"
+import type { GoogleCredentials } from '~/server/utils/googleAuth'
+import { prisma } from '~/server/utils/prisma'
+import type { GoogleDriveConfig } from '~/types'
+import { createRootFolderStructure } from './googleDrive'
+import { createMasterSheet } from './sheets'
 
 export async function setupClubStorage(params: {
   clubId: string
@@ -32,7 +32,7 @@ export async function setupClubStorage(params: {
   await prisma.club.update({
     where: { id: params.clubId },
     data: {
-      storageType: "GOOGLE_DRIVE",
+      storageType: 'GOOGLE_DRIVE',
       storageConfig: storageConfig as object,
       isSetupDone: true,
     },

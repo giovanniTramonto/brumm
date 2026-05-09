@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
-import type { User } from '~/types'
+import type { Member } from '~/types'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -11,14 +11,14 @@ const memberId = route.params.id as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
-const member = ref<User | null>(null)
+const member = ref<Member | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const isDeactivating = ref(false)
 
 onMounted(async () => {
   try {
-    const data = await $fetch<{ member: User }>(`/api/ini/${slug}/members/${memberId}`)
+    const data = await $fetch<{ member: Member }>(`/api/ini/${slug}/members/${memberId}`)
     member.value = data.member
   } catch {
     error.value = 'Mitglied nicht gefunden'
@@ -34,7 +34,11 @@ async function onActivate() {
 }
 
 async function onDeactivate() {
-  if (!member.value || !confirm(`${member.value.firstName} ${member.value.lastName} wirklich abmelden?`)) return
+  if (
+    !member.value ||
+    !confirm(`${member.value.firstName} ${member.value.lastName} wirklich abmelden?`)
+  )
+    return
   isDeactivating.value = true
   try {
     await membersStore.deactivateMember(slug, member.value.id)

@@ -1,8 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
-    "includes": ["**", "!.nuxt", "!.output", "!node_modules", "!dist", "!prisma/migrations"]
+    "include": ["**", "!.nuxt", "!.output", "!node_modules", "!dist", "!prisma/migrations"]
   },
   "formatter": {
     "enabled": true,

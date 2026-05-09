@@ -1,12 +1,9 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-const name = ref("")
-const slug = ref("")
-const firstName = ref("")
-const lastName = ref("")
-const birthDate = ref("")
-const email = ref("")
+const name = ref('')
+const slug = ref('')
+const email = ref('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const isSuccess = ref(false)
@@ -15,12 +12,12 @@ const isSlugManuallyEdited = ref(false)
 function normalizeSlug(value: string): string {
   return value
     .toLowerCase()
-    .replace(/ä/g, "ae")
-    .replace(/ö/g, "oe")
-    .replace(/ü/g, "ue")
-    .replace(/ß/g, "ss")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 watch(name, (newName) => {
@@ -36,24 +33,23 @@ function onSlugInput(event: Event) {
 }
 
 async function onSubmit() {
-  if (!name.value.trim() || !slug.value || !firstName.value || !lastName.value || !birthDate.value || !email.value) return
+  if (!name.value.trim() || !slug.value || !email.value) return
   isLoading.value = true
   error.value = null
   try {
-    await $fetch("/api/register", {
-      method: "POST",
+    await $fetch('/api/register', {
+      method: 'POST',
       body: {
         name: name.value.trim(),
         slug: slug.value,
-        firstName: firstName.value.trim(),
-        lastName: lastName.value.trim(),
-        birthDate: birthDate.value,
         email: email.value.trim(),
       },
     })
     isSuccess.value = true
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Registrierung fehlgeschlagen"
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??
+      'Registrierung fehlgeschlagen'
   } finally {
     isLoading.value = false
   }
@@ -117,22 +113,6 @@ async function onSubmit() {
             <hr class="border-gray-200" />
 
             <p class="text-sm font-medium text-gray-700">Ihr Verwaltungs-Account</p>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label for="firstName" class="label">Vorname</label>
-                <input id="firstName" v-model="firstName" type="text" class="input mt-1" required />
-              </div>
-              <div>
-                <label for="lastName" class="label">Nachname</label>
-                <input id="lastName" v-model="lastName" type="text" class="input mt-1" required />
-              </div>
-            </div>
-
-            <div>
-              <label for="birthDate" class="label">Geburtsdatum</label>
-              <input id="birthDate" v-model="birthDate" type="date" class="input mt-1" required />
-            </div>
 
             <div>
               <label for="email" class="label">E-Mail-Adresse</label>

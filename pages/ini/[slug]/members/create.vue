@@ -46,7 +46,8 @@ async function onSubmit() {
     })
     await navigateTo(`/ini/${slug}/members/${user.id}`)
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Anlegen'
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Anlegen'
   } finally {
     isSubmitting.value = false
   }

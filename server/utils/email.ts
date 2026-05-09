@@ -1,12 +1,12 @@
-import { Resend } from "resend"
+import { Resend } from 'resend'
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY
-  if (!key) throw new Error("RESEND_API_KEY is not configured")
+  if (!key) throw new Error('RESEND_API_KEY is not configured')
   return new Resend(key)
 }
 
-const FROM_ADDRESS = process.env.EMAIL_FROM ?? "Jita Vereinsverwaltung <onboarding@resend.dev>"
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? 'Jita Vereinsverwaltung <onboarding@resend.dev>'
 
 export async function sendMagicLink(params: {
   to: string
@@ -15,7 +15,7 @@ export async function sendMagicLink(params: {
   token: string
 }): Promise<void> {
   const resend = getResend()
-  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/auth/verify/${params.token}`
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
 
   await resend.emails.send({
     from: FROM_ADDRESS,
@@ -37,7 +37,7 @@ export async function sendWelcomeEmail(params: {
   token: string
 }): Promise<void> {
   const resend = getResend()
-  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/auth/verify/${params.token}`
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
 
   await resend.emails.send({
     from: FROM_ADDRESS,
@@ -61,7 +61,7 @@ export async function sendInviteEmail(params: {
   childName: string
 }): Promise<void> {
   const resend = getResend()
-  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/auth/verify/${params.token}`
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
 
   await resend.emails.send({
     from: FROM_ADDRESS,
@@ -84,7 +84,7 @@ export async function sendSuperUserNotification(params: {
   userId: string
 }): Promise<void> {
   const resend = getResend()
-  const link = `${process.env.APP_URL ?? ""}/ini/${params.clubSlug}/members/${params.userId}`
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/members/${params.userId}`
 
   await resend.emails.send({
     from: FROM_ADDRESS,

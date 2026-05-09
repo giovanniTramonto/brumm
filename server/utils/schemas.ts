@@ -1,71 +1,68 @@
-import { z } from "zod"
+import { z } from 'zod'
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "Vereinsname zu kurz (min. 2 Zeichen)"),
+  name: z.string().min(2, 'Vereinsname zu kurz (min. 2 Zeichen)'),
   slug: z.string().min(2).optional(),
-  firstName: z.string().min(1, "Vorname fehlt"),
-  lastName: z.string().min(1, "Nachname fehlt"),
-  birthDate: z.string().refine((v) => !isNaN(Date.parse(v)), "Ungültiges Geburtsdatum"),
-  email: z.string().email("Ungültige E-Mail-Adresse"),
+  email: z.string().email('Ungültige E-Mail-Adresse'),
 })
 
 export const magicLinkSchema = z.object({
-  email: z.string().email("Ungültige E-Mail-Adresse"),
+  email: z.string().email('Ungültige E-Mail-Adresse'),
 })
 
-export const storageSetupSchema = z.discriminatedUnion("managed", [
+export const storageSetupSchema = z.discriminatedUnion('managed', [
   z.object({
     managed: z.literal(true),
   }),
   z.object({
     managed: z.literal(false).optional(),
-    serviceAccountEmail: z.string().email("Ungültige Service Account E-Mail"),
-    serviceAccountKey: z.string().min(1, "Private Key fehlt"),
+    serviceAccountEmail: z.string().email('Ungültige Service Account E-Mail'),
+    serviceAccountKey: z.string().min(1, 'Private Key fehlt'),
   }),
 ])
 
 export const createMemberSchema = z.object({
-  firstName: z.string().min(1, "Vorname fehlt"),
-  lastName: z.string().min(1, "Nachname fehlt"),
-  birthDate: z.string().refine((v) => !isNaN(Date.parse(v)), "Ungültiges Geburtsdatum"),
+  firstName: z.string().min(1, 'Vorname fehlt'),
+  lastName: z.string().min(1, 'Nachname fehlt'),
+  birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
   guardian1Name: z.string().optional(),
   guardian2Name: z.string().optional(),
-  email1: z.string().email("Ungültige E-Mail-Adresse (Elternteil 1)"),
-  email2: z.string().email("Ungültige E-Mail-Adresse (Elternteil 2)").optional().or(z.literal("")),
+  email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
+  email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
   groupId: z.string().optional(),
 })
 
 export const createGroupSchema = z.object({
-  name: z.string().min(2, "Gruppenname zu kurz"),
-  email: z.string().email("Ungültige E-Mail-Adresse").optional().or(z.literal("")),
+  name: z.string().min(2, 'Gruppenname zu kurz'),
+  email: z.string().email('Ungültige E-Mail-Adresse').optional().or(z.literal('')),
 })
 
 export const updateGroupSchema = z.object({
   name: z.string().min(2).optional(),
-  email: z.string().email().optional().nullable().or(z.literal("")),
+  email: z.string().email().optional().nullable().or(z.literal('')),
 })
 
 export const importPreviewSchema = z.object({
-  csvContent: z.string().min(1, "CSV-Inhalt fehlt"),
+  csvContent: z.string().min(1, 'CSV-Inhalt fehlt'),
 })
 
 export const importRowSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  birthDate: z.string().refine((v) => !isNaN(Date.parse(v)), "Ungültiges Datum"),
+  birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Datum'),
   guardian1Name: z.string(),
   guardian2Name: z.string().optional(),
   email1: z.string().email(),
-  email2: z.string().email().optional().or(z.literal("")),
+  email2: z.string().email().optional().or(z.literal('')),
   groupId: z.string().optional(),
   rowIndex: z.number(),
 })
 
 export const importConfirmSchema = z.object({
-  rows: z.array(importRowSchema).min(1).max(50, "Maximal 50 Einträge pro Import"),
+  rows: z.array(importRowSchema).min(1).max(50, 'Maximal 50 Einträge pro Import'),
 })
 
 // Hilfsfunktion: Zod-Fehler in einen lesbaren String umwandeln
 export function formatZodError(error: z.ZodError): string {
-  return error.errors.map((e) => e.message).join(", ")
+  return error.errors.map((e) => e.message).join(', ')
 }

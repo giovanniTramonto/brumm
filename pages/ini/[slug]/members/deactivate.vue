@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth"
-import { useMembersStore } from "~/stores/members"
+import { useAuthStore } from '~/stores/auth'
+import { useMembersStore } from '~/stores/members'
 
-definePageMeta({ middleware: ["auth"] })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string
@@ -20,9 +20,11 @@ async function onDeactivate() {
   try {
     await membersStore.deactivateMember(slug, authStore.currentUser.id)
     authStore.clearAuth()
-    await navigateTo("/register")
+    await navigateTo('/register')
   } catch (err: unknown) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? "Abmeldung fehlgeschlagen"
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??
+      'Abmeldung fehlgeschlagen'
   } finally {
     isLoading.value = false
   }

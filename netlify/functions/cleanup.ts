@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client"
-import { google } from "googleapis"
-import { GoogleAuth } from "google-auth-library"
-import type { GoogleDriveConfig } from "../../types/index"
+import { Prisma, PrismaClient } from '@prisma/client'
+import { GoogleAuth } from 'google-auth-library'
+import { google } from 'googleapis'
+import type { GoogleDriveConfig } from '../../types/index'
 
 const prisma = new PrismaClient()
 
@@ -12,15 +12,15 @@ function getGoogleAuth(config: GoogleDriveConfig): GoogleAuth {
       private_key: config.serviceAccountKey,
     },
     scopes: [
-      "https://www.googleapis.com/auth/drive",
-      "https://www.googleapis.com/auth/spreadsheets",
+      'https://www.googleapis.com/auth/drive',
+      'https://www.googleapis.com/auth/spreadsheets',
     ],
   })
 }
 
 async function deleteFromDrive(config: GoogleDriveConfig, folderId: string): Promise<void> {
   const auth = getGoogleAuth(config)
-  const drive = google.drive({ version: "v3", auth })
+  const drive = google.drive({ version: 'v3', auth })
   try {
     await drive.files.delete({ fileId: folderId })
   } catch {
@@ -30,11 +30,12 @@ async function deleteFromDrive(config: GoogleDriveConfig, folderId: string): Pro
 
 async function removeFromMasterSheet(config: GoogleDriveConfig, storageRef: string): Promise<void> {
   const auth = getGoogleAuth(config)
-  const sheets = google.sheets({ version: "v4", auth })
+  const sheets = google.sheets({ version: 'v4', auth })
 
+  // storageRef is in column B (index 1) in the new schema
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: config.masterSheetId,
-    range: "A:A",
+    range: 'B:B',
   })
 
   const rows = response.data.values ?? []
@@ -49,7 +50,7 @@ async function removeFromMasterSheet(config: GoogleDriveConfig, storageRef: stri
           deleteDimension: {
             range: {
               sheetId: 0,
-              dimension: "ROWS",
+              dimension: 'ROWS',
               startIndex: rowIndex,
               endIndex: rowIndex + 1,
             },
@@ -60,32 +61,51 @@ async function removeFromMasterSheet(config: GoogleDriveConfig, storageRef: stri
   })
 }
 
+type LocalData = {
+  storageRef?: string
+  deactivatedAt?: string
+  [key: string]: unknown
+}
+
 export default async function handler() {
   const oneYearAgo = new Date()
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
 
-  const expiredUsers = await prisma.user.findMany({
+  // Find users that have been deactivated more than one year ago.
+  // deactivatedAt is stored in localData (JSON) when !isSetupDone,
+  // or in the master sheet when isSetupDone. We check both.
+  const inactiveUsers = await prisma.user.findMany({
     where: {
       isActive: false,
-      deactivatedAt: { lte: oneYearAgo },
-      storageRef: { not: null },
+      storageId: { not: null },
     },
     include: { club: true },
   })
 
-  console.log(`DSGVO-Cleanup: ${expiredUsers.length} Mitglieder zu bereinigen`)
+  // Filter by deactivatedAt from localData or from Sheets
+  // For simplicity in cleanup, we only handle users with localData here;
+  // sheet-based cleanup requires fetching the sheet per club.
+  const expiredLocalUsers = inactiveUsers.filter((user) => {
+    const d = user.localData as LocalData | null
+    if (!d?.deactivatedAt) return false
+    return new Date(d.deactivatedAt) <= oneYearAgo
+  })
 
-  for (const user of expiredUsers) {
+  console.log(`DSGVO-Cleanup (localData): ${expiredLocalUsers.length} Mitglieder zu bereinigen`)
+
+  for (const user of expiredLocalUsers) {
     try {
       const storageConfig = user.club.storageConfig as unknown as GoogleDriveConfig | null
+      const localData = user.localData as LocalData | null
+      const storageRef = localData?.storageRef ?? null
 
-      if (storageConfig?.serviceAccountEmail && user.storageRef) {
+      if (storageConfig?.serviceAccountEmail && storageRef) {
         const auth = getGoogleAuth(storageConfig)
-        const drive = google.drive({ version: "v3", auth })
+        const drive = google.drive({ version: 'v3', auth })
 
         const searchResult = await drive.files.list({
-          q: `name = '${user.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
-          fields: "files(id)",
+          q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
+          fields: 'files(id)',
         })
 
         const folder = searchResult.data.files?.[0]
@@ -93,23 +113,19 @@ export default async function handler() {
           await deleteFromDrive(storageConfig, folder.id)
         }
 
-        await removeFromMasterSheet(storageConfig, user.storageRef)
+        await removeFromMasterSheet(storageConfig, storageRef)
       }
 
       await prisma.session.deleteMany({ where: { userId: user.id } })
       await prisma.magicLink.deleteMany({ where: { userId: user.id } })
       await prisma.invite.deleteMany({ where: { userId: user.id } })
 
+      // Clear personal data: remove localData and storageId
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          firstName: "Gelöscht",
-          lastName: "Gelöscht",
-          birthDate: new Date("1900-01-01"),
-          guardian1Name: null,
-          guardian2Name: null,
-          storageRef: null,
-          groupId: null,
+          localData: null,
+          storageId: null,
         },
       })
 
@@ -119,10 +135,81 @@ export default async function handler() {
     }
   }
 
+  // Handle sheet-based cleanup (isSetupDone clubs)
+  const clubs = await prisma.club.findMany({
+    where: { isSetupDone: true, storageConfig: { not: Prisma.DbNull } },
+  })
+
+  let sheetCleaned = 0
+
+  for (const club of clubs) {
+    try {
+      const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
+      const auth = getGoogleAuth(storageConfig)
+      const sheets = google.sheets({ version: 'v4', auth })
+
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: storageConfig.masterSheetId,
+        range: 'A:M',
+      })
+
+      const rows = response.data.values ?? []
+      // Skip header; columns: userId(0), storageRef(1), ..., isActive(10), deactivatedAt(11)
+      for (const row of rows.slice(1)) {
+        const userId = row[0] as string
+        const storageRef = row[1] as string
+        const isActiveStr = row[10] as string
+        const deactivatedAtStr = row[11] as string
+
+        if (isActiveStr === 'true') continue
+        if (!deactivatedAtStr) continue
+
+        const deactivatedAt = new Date(deactivatedAtStr)
+        if (deactivatedAt > oneYearAgo) continue
+
+        // Find the Neon user
+        const user = await prisma.user.findFirst({
+          where: { id: userId, clubId: club.id },
+        })
+        if (!user) continue
+
+        // Delete Drive folder
+        if (storageRef) {
+          const drive = google.drive({ version: 'v3', auth })
+          const searchResult = await drive.files.list({
+            q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
+            fields: 'files(id)',
+          })
+          const folder = searchResult.data.files?.[0]
+          if (folder?.id) {
+            await deleteFromDrive(storageConfig, folder.id)
+          }
+          await removeFromMasterSheet(storageConfig, storageRef)
+        }
+
+        await prisma.session.deleteMany({ where: { userId } })
+        await prisma.magicLink.deleteMany({ where: { userId } })
+        await prisma.invite.deleteMany({ where: { userId } })
+
+        await prisma.user.update({
+          where: { id: userId },
+          data: { storageId: null },
+        })
+
+        sheetCleaned++
+        console.log(`Bereinigt (Sheet): user.id=${userId}`)
+      }
+    } catch (err) {
+      console.error(`Fehler bei club.id=${club.id}:`, err)
+    }
+  }
+
+  console.log(`DSGVO-Cleanup (Sheet): ${sheetCleaned} Mitglieder bereinigt`)
+
   await prisma.$disconnect()
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ cleaned: expiredUsers.length }),
+    body: JSON.stringify({ cleaned: expiredLocalUsers.length + sheetCleaned }),
   }
 }
