@@ -5,7 +5,7 @@
 - Pinia (State Management), TypeScript strict
 - Reka UI + Tailwind CSS
 - Prisma ORM + Neon (PostgreSQL)
-- googleapis (Google Drive + Sheets), google-auth-library (Service Account)
+- googleapis (Google Drive + Sheets), google-auth-library (OAuth 2.0)
 - Resend (E-Mails), @paralleldrive/cuid2 (IDs)
 - Biome (Formatter + Linter), Netlify (Hosting + Scheduled Functions)
 
@@ -31,6 +31,7 @@
 /ini/{slug}/members/create
 /ini/{slug}/members/import
 /ini/{slug}/members/{id}
+/ini/{slug}/members/{id}/edit
 /ini/{slug}/members/deactivate
 /ini/{slug}/groups
 /ini/{slug}/settings
@@ -40,19 +41,26 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 
 ## Architektur
 - **Multi-Tenant**: Jeder Verein hat einen eigenen Slug, alle Daten über `clubId` isoliert
-- **Storage pro Verein**: Google Drive-Credentials werden beim Onboarding eingegeben und in `Club.storageConfig` (Neon) gespeichert – kein globaler Service Account
+- **Storage pro Verein**: Beim Onboarding verbindet der SUPERUSER seinen Google-Account via OAuth 2.0. Das OAuth-Token wird in `Club.oauthToken` (Neon) gespeichert. Kein globaler Service Account, kein GCP-Setup durch den Verein nötig.
 - **Datentrennung**: Neon speichert ausschließlich technische/Auth-Daten (`id`, `clubId`, `role`, `isActive`, `storageId`). Alle persönlichen Mitgliederdaten (`firstName`, `lastName`, `birthDate`, `emails`, etc.) leben ausschließlich in Google Sheets
 - **storageId vs. storageRef**: In Neon wird nur die 8-stellige `storageId` (cuid2) gespeichert. Der vollständige `storageRef` (`YYYY-MM-DD-vorname-nachname_storageId`) existiert nur in Sheets und wird bei Bedarf daraus rekonstruiert
 - **Dev-Fallback**: Solange `isSetupDone = false` werden Mitgliederdaten in `User.localData` (Neon JSON) zwischengespeichert. Nach dem Storage-Onboarding werden sie nach Sheets migriert und aus Neon gelöscht
-- **Auth**: Magic Link (15 min), HttpOnly Cookie, max. 1 aktive Session pro User
+- **Auth**: Magic Link (15 min) für SUPERUSER; Invite-Link (7 Tage) für Eltern. HttpOnly Cookie, max. 1 aktive Session pro User
+- **Invite-Logik**: Beim Anlegen eines Kindes wird ein Invite erstellt und per E-Mail an die Erziehungsberechtigten gesendet. Ist eine der Guardian-E-Mails bereits als registrierter Nutzer im Verein bekannt, wird kein Invite verschickt (Opt-in nicht nötig).
+- **Kind-Status**: `Ausstehend` (offener Invite), `Bestätigt` (Invite geklickt oder Elternteil bereits registriert, wartet auf SUPERUSER-Freischaltung), `Aktiv` (freigeschaltet), `Abgemeldet` (deaktiviert)
 - **Magic-Link-Lookup**: 1. UserEmail in Neon (SUPERUSER), 2. Sheets `findUserIdByEmail` (wenn Setup fertig), 3. `localData`-Suche in Neon (Dev-Fallback)
+- **Verify-Endpoint**: `/api/ini/{slug}/auth/verify/{token}` prüft zuerst `MagicLink`, dann `Invite` – ein Token-Typ reicht für beide Auth-Flows
 
 ## Environment Variables
 ```
-DATABASE_URL     # Neon Pooled Connection
-DIRECT_URL       # Neon Direct Connection (für Migrationen)
-RESEND_API_KEY   # Resend (plattformweiter E-Mail-Dienst)
-ADMIN_SECRET     # Jita Admin-Bereich (/admin)
+DATABASE_URL          # Neon Pooled Connection
+DIRECT_URL            # Neon Direct Connection (für Migrationen)
+RESEND_API_KEY        # Resend (plattformweiter E-Mail-Dienst)
+EMAIL_FROM            # Absender-Adresse (z.B. "Jita <noreply@example.com>")
+ADMIN_SECRET          # Jita Admin-Bereich (/admin)
+APP_URL               # Basis-URL der App (z.B. http://localhost:3001)
+GOOGLE_CLIENT_ID      # Google OAuth 2.0 Client ID
+GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
 ```
 
 ## Wichtige Pfade
@@ -60,7 +68,8 @@ ADMIN_SECRET     # Jita Admin-Bereich (/admin)
 |---|---|
 | Prisma Schema | `prisma/schema.prisma` |
 | Zod Schemas (API-Validierung) | `server/utils/schemas.ts` |
-| Google Auth | `server/utils/googleAuth.ts` |
+| Google Auth (OAuth) | `server/utils/googleAuth.ts` |
+| Google OAuth Callback | `server/api/auth/google/callback.get.ts` |
 | Mitgliederdaten (Sheets/localData) | `server/utils/memberData.ts` |
 | Storage Utils | `server/utils/storage/` |
 | E-Mail Utils | `server/utils/email.ts` |

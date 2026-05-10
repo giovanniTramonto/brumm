@@ -8,7 +8,7 @@ Multi-Tenant SPA für Kindergarten-Vereinsverwaltung. Jeder Verein ist komplett 
 
 - **Nuxt 3** – Hybrid SSG/SPA
 - **Prisma + Neon** – PostgreSQL (nur Auth/Tech-Daten, Multi-Tenant via `clubId`)
-- **Google Drive + Sheets** – Persönliche Mitgliederdaten, Storage pro Verein (Service Account)
+- **Google Drive + Sheets** – Persönliche Mitgliederdaten, Storage pro Verein (OAuth 2.0)
 - **Resend** – Transaktionale E-Mails
 - **Tailwind CSS + Reka UI** – UI
 - **Netlify** – Hosting + Scheduled Functions
@@ -35,9 +35,10 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/onboarding             → Google Drive Einrichten
 /ini/{slug}/dashboard
 /ini/{slug}/members
-/ini/{slug}/members/create         → Mitglied anlegen
+/ini/{slug}/members/create         → Kind anlegen
 /ini/{slug}/members/import         → CSV-Import (max. 50)
-/ini/{slug}/members/{id}           → Mitglied-Detailseite
+/ini/{slug}/members/{id}           → Kind-Detailseite
+/ini/{slug}/members/{id}/edit      → Kind bearbeiten
 /ini/{slug}/members/deactivate     → Selbst abmelden
 /ini/{slug}/groups
 /ini/{slug}/settings
@@ -48,9 +49,9 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 
 | Rolle | Rechte |
 |---|---|
-| `SUPERUSER` | Alles, inkl. Mitglieder freischalten, Settings |
-| `TEAM` | Alle Daten lesen, eigene Daten bearbeiten |
-| `MEMBER` | Nur eigene Daten |
+| `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Settings, Google Drive verbinden |
+| `TEAM` | Alle Daten lesen |
+| `MEMBER` | Elternteil eines Kindes – nur eigene Daten |
 
 ## Lizenz
 
