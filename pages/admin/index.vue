@@ -7,7 +7,6 @@ interface ClubWithCount {
   name: string
   storageType: string | null
   isSetupDone: boolean
-  isSetupRequested: boolean
   superuserHasLoggedIn: boolean
   createdAt: string
   _count: { users: number }
@@ -28,13 +27,6 @@ onMounted(async () => {
     // no valid session cookie — show login form
   }
 })
-
-const setupClubId = ref<string | null>(null)
-const setupEmail = ref('')
-const setupKey = ref('')
-const isSetupLoading = ref(false)
-const setupError = ref<string | null>(null)
-const setupSuccess = ref<string | null>(null)
 
 const deleteClubId = ref<string | null>(null)
 const isDeleteLoading = ref(false)
@@ -97,30 +89,6 @@ async function onDeleteClub(clubId: string) {
     isDeleteLoading.value = false
   }
 }
-
-async function onSetupStorage(clubId: string) {
-  if (!setupEmail.value || !setupKey.value) return
-  isSetupLoading.value = true
-  setupError.value = null
-  setupSuccess.value = null
-  try {
-    await $fetch(`/api/admin/clubs/${clubId}/storage`, {
-      method: 'PATCH',
-      body: { serviceAccountEmail: setupEmail.value, serviceAccountKey: setupKey.value },
-    })
-    setupSuccess.value = clubId
-    setupClubId.value = null
-    setupEmail.value = ''
-    setupKey.value = ''
-    const data = await $fetch<{ clubs: ClubWithCount[] }>('/api/admin/clubs')
-    clubs.value = data.clubs
-  } catch (err: unknown) {
-    setupError.value =
-      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
-  } finally {
-    isSetupLoading.value = false
-  }
-}
 </script>
 
 <template>
@@ -159,7 +127,7 @@ async function onSetupStorage(clubId: string) {
               <tr>
                 <th class="px-4 py-3 text-left font-medium text-gray-500">Verein</th>
                 <th class="px-4 py-3 text-left font-medium text-gray-500">Slug</th>
-                <th class="px-4 py-3 text-left font-medium text-gray-500">Mitglieder</th>
+                <th class="px-4 py-3 text-left font-medium text-gray-500">Kinder</th>
                 <th class="px-4 py-3 text-left font-medium text-gray-500">Storage</th>
                 <th class="px-4 py-3 text-left font-medium text-gray-500">Status</th>
                 <th class="px-4 py-3" />
@@ -178,39 +146,22 @@ async function onSetupStorage(clubId: string) {
                       :class="
                         club.isSetupDone
                           ? 'bg-green-100 text-green-800'
-                          : club.isSetupRequested
-                            ? 'bg-amber-100 text-amber-800'
-                            : club.superuserHasLoggedIn
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-600'
+                          : club.superuserHasLoggedIn
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-600'
                       "
                     >
                       {{
                         club.isSetupDone
                           ? "Aktiv"
-                          : club.isSetupRequested
-                            ? "Setup angefragt"
-                            : club.superuserHasLoggedIn
-                              ? "Einrichtung ausstehend"
-                              : "Ausstehend"
+                          : club.superuserHasLoggedIn
+                            ? "Einrichtung ausstehend"
+                            : "Ausstehend"
                       }}
-                    </span>
-                    <span
-                      v-if="setupSuccess === club.id"
-                      class="ml-2 text-xs text-green-700"
-                    >
-                      ✓ Eingerichtet
                     </span>
                   </td>
                   <td class="px-4 py-3 text-right">
                     <div class="flex justify-end gap-2">
-                      <button
-                        v-if="!club.isSetupDone"
-                        class="btn-secondary py-1 text-xs"
-                        @click="setupClubId = setupClubId === club.id ? null : club.id; deleteClubId = null"
-                      >
-                        Storage einrichten
-                      </button>
                       <button
                         v-if="!club.isSetupDone && !club.superuserHasLoggedIn && !resendedClubs.has(club.id)"
                         class="btn-secondary py-1 text-xs"
@@ -221,7 +172,7 @@ async function onSetupStorage(clubId: string) {
                       </button>
                       <button
                         class="btn-danger py-1 text-xs"
-                        @click="deleteClubId = deleteClubId === club.id ? null : club.id; setupClubId = null"
+                        @click="deleteClubId = deleteClubId === club.id ? null : club.id"
                       >
                         Löschen
                       </button>
@@ -250,44 +201,6 @@ async function onSetupStorage(clubId: string) {
                           {{ isDeleteLoading ? "Wird gelöscht…" : "Ja, löschen" }}
                         </button>
                         <button class="btn-secondary py-1 text-xs" @click="deleteClubId = null">
-                          Abbrechen
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- Setup-Formular -->
-                <tr v-if="setupClubId === club.id">
-                  <td colspan="6" class="bg-gray-50 px-4 py-4">
-                    <div class="max-w-lg space-y-3">
-                      <h3 class="font-medium text-gray-900">
-                        Google Drive einrichten für {{ club.name }}
-                      </h3>
-                      <div>
-                        <label class="label">Service Account E-Mail</label>
-                        <input v-model="setupEmail" type="email" class="input mt-1" />
-                      </div>
-                      <div>
-                        <label class="label">Private Key (JSON-Inhalt)</label>
-                        <textarea
-                          v-model="setupKey"
-                          class="input mt-1 font-mono text-xs"
-                          rows="3"
-                        />
-                      </div>
-                      <div v-if="setupError" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                        {{ setupError }}
-                      </div>
-                      <div class="flex gap-3">
-                        <button
-                          class="btn-primary text-sm"
-                          :disabled="isSetupLoading"
-                          @click="onSetupStorage(club.id)"
-                        >
-                          {{ isSetupLoading ? "Wird eingerichtet…" : "Einrichten" }}
-                        </button>
-                        <button class="btn-secondary text-sm" @click="setupClubId = null">
                           Abbrechen
                         </button>
                       </div>

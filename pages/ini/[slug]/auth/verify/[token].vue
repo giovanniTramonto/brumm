@@ -14,9 +14,15 @@ const isLoading = ref(true)
 onMounted(async () => {
   try {
     await authStore.verifyToken(slug, token)
-    const target = authStore.currentClub?.isSetupDone
-      ? `/ini/${slug}/dashboard`
-      : `/ini/${slug}/onboarding`
+    const user = authStore.currentUser
+    let target: string
+    if (user?.role === 'MEMBER') {
+      target = `/ini/${slug}/members/${user.id}`
+    } else if (authStore.currentClub?.isSetupDone) {
+      target = `/ini/${slug}/dashboard`
+    } else {
+      target = `/ini/${slug}/onboarding`
+    }
     await navigateTo(target)
   } catch (err: unknown) {
     error.value =

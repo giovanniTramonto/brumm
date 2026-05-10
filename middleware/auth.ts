@@ -5,7 +5,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   if (!authStore.currentUser) {
     const slug = to.params.slug as string | undefined
-    const loginPath = slug ? `/ini/${slug}/login` : '/register'
-    return navigateTo(loginPath)
+    if (slug) {
+      const ok = await authStore.fetchSession(slug)
+      if (!ok) return navigateTo(`/ini/${slug}/login`)
+    } else {
+      return navigateTo('/register')
+    }
   }
 })

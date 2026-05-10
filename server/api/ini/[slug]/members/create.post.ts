@@ -3,9 +3,8 @@ import { saveMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { createMemberSchema, formatZodError } from '~/server/utils/schemas'
 import { initUserStorage } from '~/server/utils/storage'
-import { findUserIdByEmail } from '~/server/utils/storage/sheets'
 import { buildStorageRef, generateStorageId } from '~/server/utils/storageRef'
-import type { GoogleDriveConfig, MemberData } from '~/types'
+import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -23,45 +22,14 @@ export default defineEventHandler(async (event) => {
   const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, groupId } =
     parsed.data
 
-  // Check email uniqueness: SUPERUSER emails in Neon, member emails in Sheets/localData
-  const existingNeonEmail = await prisma.userEmail.findUnique({
-    where: { email: email1.toLowerCase() },
-  })
-  if (existingNeonEmail) {
-    throw createError({ statusCode: 409, statusMessage: 'E-Mail-Adresse bereits registriert' })
-  }
-
-  if (email2) {
-    const existingNeonEmail2 = await prisma.userEmail.findUnique({
-      where: { email: email2.toLowerCase() },
-    })
-    if (existingNeonEmail2) {
-      throw createError({
-        statusCode: 409,
-        statusMessage: 'Zweite E-Mail-Adresse bereits registriert',
-      })
-    }
-  }
-
-  // Check email uniqueness in Sheets if setup is done
-  if (club.isSetupDone && club.storageConfig) {
-    const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
-    const credentials = {
-      serviceAccountEmail: storageConfig.serviceAccountEmail,
-      serviceAccountKey: storageConfig.serviceAccountKey,
-    }
-    const existingUserId = await findUserIdByEmail({
-      credentials,
-      masterSheetId: storageConfig.masterSheetId,
-      email: email1.toLowerCase(),
-    })
-    if (existingUserId) {
-      throw createError({ statusCode: 409, statusMessage: 'E-Mail-Adresse bereits registriert' })
-    }
-  }
-
   const storageId = generateStorageId()
   const storageRef = buildStorageRef(new Date(birthDate), firstName, lastName, storageId)
+
+  const emails = [email1.toLowerCase(), ...(email2 ? [email2.toLowerCase()] : [])]
+  const existingUserEmail = await prisma.userEmail.findFirst({
+    where: { email: { in: emails }, user: { clubId: club.id } },
+  })
+  const parentAlreadyRegistered = !!existingUserEmail
 
   const user = await prisma.user.create({
     data: {
@@ -90,41 +58,33 @@ export default defineEventHandler(async (event) => {
 
   await saveMemberData(memberData, club)
 
-  const invite = await prisma.invite.create({
-    data: {
-      clubId: club.id,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  })
-
-  if (club.isSetupDone && club.storageConfig) {
+  if (club.isSetupDone && club.storageConfig && club.oauthToken) {
     try {
+      const tokens = club.oauthToken as unknown as OAuthTokens
       await initUserStorage({
         memberData,
         storageConfig: club.storageConfig as unknown as GoogleDriveConfig,
+        tokens,
       })
     } catch (err) {
       console.error('Storage-Initialisierung fehlgeschlagen:', err)
     }
   }
 
-  await sendInviteEmail({
-    to: email1,
-    clubName: club.name,
-    clubSlug: club.slug,
-    token: invite.token,
-    childName: `${firstName} ${lastName}`,
-  })
-
-  if (email2) {
-    await sendInviteEmail({
-      to: email2,
-      clubName: club.name,
-      clubSlug: club.slug,
-      token: invite.token,
-      childName: `${firstName} ${lastName}`,
+  if (!parentAlreadyRegistered) {
+    const invite = await prisma.invite.create({
+      data: {
+        clubId: club.id,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
     })
+
+    const childName = `${firstName} ${lastName}`
+    await sendInviteEmail({ to: email1, clubName: club.name, clubSlug: club.slug, token: invite.token, childName })
+    if (email2) {
+      await sendInviteEmail({ to: email2, clubName: club.name, clubSlug: club.slug, token: invite.token, childName })
+    }
   }
 
   return { user }

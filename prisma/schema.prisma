@@ -12,10 +12,10 @@ model Club {
   id               String   @id @default(cuid())
   slug             String   @unique
   name             String
-  storageType      Storage?
-  storageConfig    Json?
-  isSetupRequested Boolean  @default(false)
-  isSetupDone      Boolean  @default(false)
+  storageType   Storage?
+  storageConfig Json?
+  oauthToken    Json?
+  isSetupDone   Boolean  @default(false)
   createdAt        DateTime @default(now())
 
   users    User[]

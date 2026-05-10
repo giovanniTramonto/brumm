@@ -15,7 +15,11 @@ export default defineEventHandler(async (event) => {
   })
 
   const userIds = users.map((u) => u.id)
-  const memberDataList = await getAllMemberData(userIds, club)
+  const [memberDataList, pendingInvites] = await Promise.all([
+    getAllMemberData(userIds, club),
+    prisma.invite.findMany({ where: { userId: { in: userIds }, isUsed: false }, select: { userId: true } }),
+  ])
+  const pendingInviteUserIds = new Set(pendingInvites.map((i) => i.userId))
 
   const memberDataMap = new Map(memberDataList.map((md) => [md.userId, md]))
 
@@ -39,6 +43,8 @@ export default defineEventHandler(async (event) => {
         email2: md.email2,
         groupId: md.groupId,
         storageRef: md.storageRef,
+        deactivatedAt: md.deactivatedAt,
+        hasPendingInvite: pendingInviteUserIds.has(u.id),
       } satisfies Member
     })
     .filter((m): m is Member => m !== null)

@@ -30,7 +30,7 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
 
     <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="grid gap-6 sm:grid-cols-3">
       <div class="card">
-        <p class="text-sm font-medium text-gray-500">Aktive Mitglieder</p>
+        <p class="text-sm font-medium text-gray-500">Aktive Kinder</p>
         <p class="mt-2 text-3xl font-bold text-gray-900">{{ activeCount }}</p>
       </div>
       <div class="card">
@@ -64,11 +64,11 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
     <div v-if="pendingCount > 0 && authStore.currentUser?.role === 'SUPERUSER'" class="mt-6">
       <div class="rounded-md bg-amber-50 p-4">
         <p class="text-sm text-amber-800">
-          <strong>{{ pendingCount }}</strong> Mitglied{{ pendingCount !== 1 ? "er" : "" }}
+          <strong>{{ pendingCount }}</strong> Kind{{ pendingCount !== 1 ? "er" : "" }}
           warte{{ pendingCount !== 1 ? "n" : "t" }} auf Freischaltung.
         </p>
         <NuxtLink :to="`/ini/${slug}/members`" class="mt-2 inline-block text-sm font-medium text-amber-700 hover:text-amber-900">
-          Zur Mitgliederliste →
+          Zur Kinderliste →
         </NuxtLink>
       </div>
     </div>

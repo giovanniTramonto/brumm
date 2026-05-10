@@ -15,13 +15,16 @@ const member = ref<Member | null>(null)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const isDeactivating = ref(false)
+const isResendingInvite = ref(false)
+const isCancellingInvite = ref(false)
+const inviteActionError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
     const data = await $fetch<{ member: Member }>(`/api/ini/${slug}/members/${memberId}`)
     member.value = data.member
   } catch {
-    error.value = 'Mitglied nicht gefunden'
+    error.value = 'Kind nicht gefunden'
   } finally {
     isLoading.value = false
   }
@@ -47,6 +50,39 @@ async function onDeactivate() {
     isDeactivating.value = false
   }
 }
+
+async function onResendInvite() {
+  if (!member.value) return
+  inviteActionError.value = null
+  isResendingInvite.value = true
+  try {
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/resend-invite`, { method: 'POST' })
+  } catch (err: unknown) {
+    inviteActionError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    isResendingInvite.value = false
+  }
+}
+
+async function onCancelInvite() {
+  if (
+    !member.value ||
+    !confirm(`${member.value.firstName} ${member.value.lastName} wirklich abmelden und löschen?`)
+  )
+    return
+  inviteActionError.value = null
+  isCancellingInvite.value = true
+  try {
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/cancel-invite`, { method: 'POST' })
+    await navigateTo(`/ini/${slug}/members`)
+  } catch (err: unknown) {
+    inviteActionError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    isCancellingInvite.value = false
+  }
+}
 </script>
 
 <template>
@@ -55,7 +91,7 @@ async function onDeactivate() {
       <NuxtLink :to="`/ini/${slug}/members`" class="text-sm text-gray-500 hover:text-gray-900">
         ← Zurück
       </NuxtLink>
-      <h1 class="text-2xl font-bold text-gray-900">Mitglied</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Kind</h1>
     </div>
 
     <div v-if="isLoading" class="py-12 text-center text-gray-500">Wird geladen…</div>
@@ -72,9 +108,9 @@ async function onDeactivate() {
           </div>
           <span
             class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="member.isActive ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'"
+            :class="member.isActive ? 'bg-green-100 text-green-800' : member.deactivatedAt ? 'bg-gray-100 text-gray-600' : member.hasPendingInvite ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
           >
-            {{ member.isActive ? 'Aktiv' : 'Ausstehend' }}
+            {{ member.isActive ? 'Aktiv' : member.deactivatedAt ? 'Abgemeldet' : member.hasPendingInvite ? 'Ausstehend' : 'Bestätigt' }}
           </span>
         </div>
 
@@ -97,22 +133,41 @@ async function onDeactivate() {
           </div>
         </dl>
 
-        <div v-if="authStore.currentUser?.role === 'SUPERUSER'" class="flex gap-3 pt-2">
-          <button
-            v-if="!member.isActive"
-            class="btn-primary text-sm"
-            @click="onActivate"
-          >
-            Freischalten
-          </button>
-          <button
-            v-if="member.isActive"
-            class="btn-danger text-sm"
-            :disabled="isDeactivating"
-            @click="onDeactivate"
-          >
-            Abmelden
-          </button>
+        <div v-if="authStore.currentUser?.role === 'SUPERUSER'" class="space-y-2 pt-2">
+          <div class="flex gap-3">
+            <button
+              v-if="!member.isActive && !member.deactivatedAt"
+              class="btn-primary text-sm"
+              @click="onActivate"
+            >
+              Freischalten
+            </button>
+            <button
+              v-if="!member.isActive && !member.deactivatedAt && member.hasPendingInvite"
+              class="btn-secondary text-sm"
+              :disabled="isResendingInvite"
+              @click="onResendInvite"
+            >
+              {{ isResendingInvite ? 'Wird gesendet…' : 'Einladung erneut senden' }}
+            </button>
+            <button
+              v-if="!member.isActive"
+              class="btn-danger text-sm"
+              :disabled="isCancellingInvite"
+              @click="onCancelInvite"
+            >
+              Kind abmelden
+            </button>
+            <button
+              v-if="member.isActive"
+              class="btn-danger text-sm"
+              :disabled="isDeactivating"
+              @click="onDeactivate"
+            >
+              Abmelden
+            </button>
+          </div>
+          <p v-if="inviteActionError" class="text-sm text-red-700">{{ inviteActionError }}</p>
         </div>
       </div>
     </template>

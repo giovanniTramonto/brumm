@@ -2,12 +2,18 @@ export type Role = 'SUPERUSER' | 'TEAM' | 'MEMBER'
 export type Storage = 'GOOGLE_DRIVE' | 'S3' | 'R2'
 
 export interface GoogleDriveConfig {
-  serviceAccountEmail: string
-  serviceAccountKey: string
   rootFolderId: string
   appFolderId: string
   membersFolderId: string
   masterSheetId: string
+}
+
+export interface OAuthTokens {
+  access_token: string | null
+  refresh_token: string
+  expiry_date: number
+  token_type: string
+  scope: string
 }
 
 export interface S3Config {
@@ -25,7 +31,6 @@ export interface Club {
   name: string
   storageType: Storage | null
   storageConfig: StorageConfig | null
-  isSetupRequested: boolean
   isSetupDone: boolean
   createdAt: string
 }
@@ -74,7 +79,9 @@ export interface Member extends User {
   email1: string
   email2: string | null
   groupId: string | null
-  storageRef: string | null
+  storageRef: string
+  deactivatedAt: string | null
+  hasPendingInvite: boolean
   group?: Group | null
 }
 

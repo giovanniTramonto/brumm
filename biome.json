@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "files": {
-    "include": ["**", "!.nuxt", "!.output", "!node_modules", "!dist", "!prisma/migrations"]
+    "ignore": [".nuxt/**", ".output/**", "node_modules/**", "dist/**", "prisma/migrations/**"]
   },
   "formatter": {
     "enabled": true,

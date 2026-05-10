@@ -10,7 +10,7 @@ const navItems = computed(() => {
   const base = `/ini/${slug.value}`
   const items = [{ label: 'Dashboard', to: `${base}/dashboard` }]
   if (authStore.currentUser.role !== 'MEMBER') {
-    items.push({ label: 'Mitglieder', to: `${base}/members` })
+    items.push({ label: 'Kinder', to: `${base}/members` })
     items.push({ label: 'Gruppen', to: `${base}/groups` })
   }
   if (authStore.currentUser.role === 'SUPERUSER') {

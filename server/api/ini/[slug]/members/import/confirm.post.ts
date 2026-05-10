@@ -4,7 +4,7 @@ import { prisma } from '~/server/utils/prisma'
 import { formatZodError, importConfirmSchema } from '~/server/utils/schemas'
 import { initUserStorage } from '~/server/utils/storage'
 import { buildStorageRef, generateStorageId } from '~/server/utils/storageRef'
-import type { GoogleDriveConfig, MemberData } from '~/types'
+import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
 import type { ImportConfirmResult } from '~/types/import'
 
 export default defineEventHandler(async (event) => {
@@ -22,7 +22,11 @@ export default defineEventHandler(async (event) => {
 
   const { rows } = parsed.data
 
-  const storageConfig = club.storageConfig as unknown as GoogleDriveConfig | null
+  const storageConfig = club.isSetupDone
+    ? (club.storageConfig as unknown as GoogleDriveConfig | null)
+    : null
+  const tokens = club.oauthToken ? (club.oauthToken as unknown as OAuthTokens) : null
+
   let succeeded = 0
   let failed = 0
   const errors: Array<{ rowIndex: number; message: string }> = []
@@ -64,8 +68,8 @@ export default defineEventHandler(async (event) => {
 
       await saveMemberData(memberData, club)
 
-      if (club.isSetupDone && storageConfig) {
-        await initUserStorage({ memberData, storageConfig })
+      if (club.isSetupDone && storageConfig && tokens) {
+        await initUserStorage({ memberData, storageConfig, tokens })
       }
 
       succeeded++

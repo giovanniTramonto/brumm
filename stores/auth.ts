@@ -42,9 +42,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function setUser(user: AuthUser, club: Club): void {
-    currentUser.value = user
-    currentClub.value = club
+  async function fetchSession(slug: string): Promise<boolean> {
+    try {
+      const data = await $fetch<{ user: AuthUser; club: Club }>(`/api/ini/${slug}/auth/me`)
+      currentUser.value = data.user
+      currentClub.value = data.club
+      return true
+    } catch {
+      return false
+    }
   }
 
   function clearAuth(): void {
@@ -59,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     verifyToken,
     logout,
-    setUser,
+    fetchSession,
     clearAuth,
   }
 })

@@ -172,7 +172,7 @@ async function onDownloadTemplate() {
           :disabled="previewResult.importable === 0 || isLoading"
           @click="onConfirm"
         >
-          {{ isLoading ? "Wird importiert…" : `${previewResult.importable} Mitglieder importieren` }}
+          {{ isLoading ? "Wird importiert…" : `${previewResult.importable} Kinder importieren` }}
         </button>
       </div>
       <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
@@ -188,7 +188,7 @@ async function onDownloadTemplate() {
         </span>
       </p>
       <NuxtLink :to="`/ini/${slug}/members`" class="btn-primary inline-block">
-        Zur Mitgliederliste
+        Zur Kinderliste
       </NuxtLink>
     </div>
   </div>

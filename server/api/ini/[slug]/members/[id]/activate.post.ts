@@ -1,4 +1,5 @@
-import { updateMemberData } from '~/server/utils/memberData'
+import { sendActivationEmail } from '~/server/utils/email'
+import { getMemberData, updateMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -32,6 +33,16 @@ export default defineEventHandler(async (event) => {
   })
 
   await updateMemberData(memberId, { isActive: true }, club)
+
+  const md = await getMemberData(memberId, club)
+  if (md) {
+    const emails = [md.email1, ...(md.email2 ? [md.email2] : [])]
+    await sendActivationEmail({
+      to: emails,
+      clubName: club.name,
+      childName: `${md.firstName} ${md.lastName}`,
+    })
+  }
 
   return { member: updated }
 })

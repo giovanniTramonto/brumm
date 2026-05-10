@@ -16,9 +16,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  const user = await prisma.user.findFirst({
-    where: { id: memberId, clubId: club.id },
-  })
+  const [user, pendingInvite] = await Promise.all([
+    prisma.user.findFirst({ where: { id: memberId, clubId: club.id } }),
+    prisma.invite.findFirst({ where: { userId: memberId, isUsed: false } }),
+  ])
 
   if (!user) {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
@@ -46,6 +47,8 @@ export default defineEventHandler(async (event) => {
     email2: md.email2,
     groupId: md.groupId,
     storageRef: md.storageRef,
+    deactivatedAt: md.deactivatedAt,
+    hasPendingInvite: !!pendingInvite,
   }
 
   return { member }

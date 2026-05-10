@@ -12,7 +12,6 @@ const membersStore = useMembersStore()
 
 const search = ref('')
 const isActivating = ref<string | null>(null)
-const isDeactivating = ref<string | null>(null)
 
 onMounted(() => membersStore.fetchMembers(slug))
 
@@ -32,21 +31,12 @@ async function onActivate(member: Member) {
   }
 }
 
-async function onDeactivate(member: Member) {
-  if (!confirm(`${member.firstName} ${member.lastName} wirklich abmelden?`)) return
-  isDeactivating.value = member.id
-  try {
-    await membersStore.deactivateMember(slug, member.id)
-  } finally {
-    isDeactivating.value = null
-  }
-}
 </script>
 
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">Mitglieder</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Kinder</h1>
       <div class="flex gap-3">
         <NuxtLink
           v-if="authStore.currentUser?.role === 'SUPERUSER'"
@@ -60,7 +50,7 @@ async function onDeactivate(member: Member) {
           :to="`/ini/${slug}/members/create`"
           class="btn-primary"
         >
-          Mitglied anlegen
+          Kind anlegen
         </NuxtLink>
       </div>
     </div>
@@ -77,7 +67,7 @@ async function onDeactivate(member: Member) {
     <div v-if="membersStore.isLoading" class="py-12 text-center text-gray-500">Wird geladen…</div>
 
     <div v-else-if="filteredMembers.length === 0" class="py-12 text-center text-gray-500">
-      Keine Mitglieder gefunden.
+      Keine Kinder gefunden.
     </div>
 
     <div v-else class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5">
@@ -101,9 +91,9 @@ async function onDeactivate(member: Member) {
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="member.isActive ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'"
+                :class="member.isActive ? 'bg-green-100 text-green-800' : member.deactivatedAt ? 'bg-gray-100 text-gray-600' : member.hasPendingInvite ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
               >
-                {{ member.isActive ? "Aktiv" : "Ausstehend" }}
+                {{ member.isActive ? "Aktiv" : member.deactivatedAt ? "Abgemeldet" : member.hasPendingInvite ? "Ausstehend" : "Bestätigt" }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
@@ -112,21 +102,19 @@ async function onDeactivate(member: Member) {
                 class="flex justify-end gap-2"
               >
                 <button
-                  v-if="!member.isActive"
+                  v-if="!member.isActive && !member.deactivatedAt"
                   class="btn-primary py-1 text-xs"
                   :disabled="isActivating === member.id"
                   @click="onActivate(member)"
                 >
                   Freischalten
                 </button>
-                <button
-                  v-if="member.isActive"
-                  class="btn-danger py-1 text-xs"
-                  :disabled="isDeactivating === member.id"
-                  @click="onDeactivate(member)"
+                <NuxtLink
+                  :to="`/ini/${slug}/members/${member.id}/edit`"
+                  class="btn-secondary py-1 text-xs"
                 >
-                  Abmelden
-                </button>
+                  Bearbeiten
+                </NuxtLink>
               </div>
             </td>
           </tr>

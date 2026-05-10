@@ -1,40 +1,22 @@
-import { GoogleAuth } from 'google-auth-library'
 import { google } from 'googleapis'
+import type { OAuthTokens } from '~/types'
 
-export interface GoogleCredentials {
-  serviceAccountEmail: string
-  serviceAccountKey: string
+export function getOAuth2Client() {
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${process.env.APP_URL}/api/auth/google/callback`,
+  )
 }
 
-function extractPrivateKey(raw: string): string {
-  try {
-    const parsed = JSON.parse(raw) as { private_key?: string }
-    if (parsed.private_key) return parsed.private_key.replace(/\\n/g, '\n')
-  } catch {
-    // not JSON — treat as raw PEM
-  }
-  return raw.replace(/\\n/g, '\n')
-}
-
-export function getGoogleAuth(credentials: GoogleCredentials): GoogleAuth {
-  return new GoogleAuth({
-    credentials: {
-      client_email: credentials.serviceAccountEmail,
-      private_key: extractPrivateKey(credentials.serviceAccountKey),
-    },
-    scopes: [
-      'https://www.googleapis.com/auth/drive',
-      'https://www.googleapis.com/auth/spreadsheets',
-    ],
-  })
-}
-
-export function getDriveClient(credentials: GoogleCredentials) {
-  const auth = getGoogleAuth(credentials)
+export function getDriveClientFromTokens(tokens: OAuthTokens) {
+  const auth = getOAuth2Client()
+  auth.setCredentials(tokens)
   return google.drive({ version: 'v3', auth })
 }
 
-export function getSheetsClient(credentials: GoogleCredentials) {
-  const auth = getGoogleAuth(credentials)
+export function getSheetsClientFromTokens(tokens: OAuthTokens) {
+  const auth = getOAuth2Client()
+  auth.setCredentials(tokens)
   return google.sheets({ version: 'v4', auth })
 }

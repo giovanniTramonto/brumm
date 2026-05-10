@@ -5,6 +5,8 @@ const PUBLIC_ROUTES = [
   /^\/api\/admin\//,
   /^\/api\/ini\/[^/]+\/auth\/magic-link$/,
   /^\/api\/ini\/[^/]+\/auth\/verify\//,
+  /^\/api\/ini\/[^/]+\/auth\/google$/,
+  /^\/api\/auth\/google\/callback$/,
 ]
 
 export default defineEventHandler(async (event) => {

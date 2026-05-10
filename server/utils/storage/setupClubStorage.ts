@@ -1,28 +1,25 @@
-import type { GoogleCredentials } from '~/server/utils/googleAuth'
 import { prisma } from '~/server/utils/prisma'
-import type { GoogleDriveConfig } from '~/types'
+import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 import { createRootFolderStructure } from './googleDrive'
 import { createMasterSheet } from './sheets'
 
 export async function setupClubStorage(params: {
   clubId: string
   clubName: string
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
 }): Promise<GoogleDriveConfig> {
   const { rootFolderId, appFolderId, membersFolderId } = await createRootFolderStructure({
-    credentials: params.credentials,
+    tokens: params.tokens,
     clubName: params.clubName,
   })
 
   const masterSheetId = await createMasterSheet({
-    credentials: params.credentials,
+    tokens: params.tokens,
     appFolderId,
     clubName: params.clubName,
   })
 
   const storageConfig: GoogleDriveConfig = {
-    serviceAccountEmail: params.credentials.serviceAccountEmail,
-    serviceAccountKey: params.credentials.serviceAccountKey,
     rootFolderId,
     appFolderId,
     membersFolderId,
@@ -34,6 +31,7 @@ export async function setupClubStorage(params: {
     data: {
       storageType: 'GOOGLE_DRIVE',
       storageConfig: storageConfig as object,
+      oauthToken: params.tokens as object,
       isSetupDone: true,
     },
   })

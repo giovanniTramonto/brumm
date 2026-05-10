@@ -1,6 +1,5 @@
-import type { MemberData } from '~/types'
-import { getDriveClient, getSheetsClient } from '../googleAuth'
-import type { GoogleCredentials } from '../googleAuth'
+import type { MemberData, OAuthTokens } from '~/types'
+import { getDriveClientFromTokens, getSheetsClientFromTokens } from '../googleAuth'
 
 const MASTER_SHEET_HEADERS = [
   'userId',
@@ -37,14 +36,15 @@ function rowToMemberData(row: string[]): MemberData {
 }
 
 export async function createMasterSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   appFolderId: string
   clubName: string
 }): Promise<string> {
-  const drive = getDriveClient(params.credentials)
-  const sheets = getSheetsClient(params.credentials)
+  const drive = getDriveClientFromTokens(params.tokens)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const file = await drive.files.create({
+    supportsAllDrives: true,
     requestBody: {
       name: 'master',
       mimeType: 'application/vnd.google-apps.spreadsheet',
@@ -67,16 +67,17 @@ export async function createMasterSheet(params: {
 }
 
 export async function createMemberSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   memberFolderId: string
   memberData: MemberData
 }): Promise<string> {
-  const drive = getDriveClient(params.credentials)
-  const sheets = getSheetsClient(params.credentials)
+  const drive = getDriveClientFromTokens(params.tokens)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const { memberData } = params
 
   const file = await drive.files.create({
+    supportsAllDrives: true,
     requestBody: {
       name: memberData.storageRef,
       mimeType: 'application/vnd.google-apps.spreadsheet',
@@ -107,11 +108,11 @@ export async function createMemberSheet(params: {
 }
 
 export async function writeMemberToSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   masterSheetId: string
   data: MemberData
 }): Promise<void> {
-  const sheets = getSheetsClient(params.credentials)
+  const sheets = getSheetsClientFromTokens(params.tokens)
   const { data } = params
 
   const row = [
@@ -140,11 +141,11 @@ export async function writeMemberToSheet(params: {
 }
 
 export async function removeMemberFromMasterSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   masterSheetId: string
   storageRef: string
 }): Promise<void> {
-  const sheets = getSheetsClient(params.credentials)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
@@ -175,10 +176,10 @@ export async function removeMemberFromMasterSheet(params: {
 }
 
 export async function getAllMembersFromSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   masterSheetId: string
 }): Promise<MemberData[]> {
-  const sheets = getSheetsClient(params.credentials)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
@@ -186,16 +187,15 @@ export async function getAllMembersFromSheet(params: {
   })
 
   const rows = response.data.values ?? []
-  // Skip header row
   return rows.slice(1).map((row) => rowToMemberData(row as string[]))
 }
 
 export async function getMemberFromSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   masterSheetId: string
   userId: string
 }): Promise<MemberData | null> {
-  const sheets = getSheetsClient(params.credentials)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
@@ -203,7 +203,6 @@ export async function getMemberFromSheet(params: {
   })
 
   const rows = response.data.values ?? []
-  // Skip header row, find by userId (column A)
   const dataRow = rows.slice(1).find((row) => row[0] === params.userId)
   if (!dataRow) return null
 
@@ -211,11 +210,11 @@ export async function getMemberFromSheet(params: {
 }
 
 export async function findUserIdByEmail(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   masterSheetId: string
   email: string
 }): Promise<string | null> {
-  const sheets = getSheetsClient(params.credentials)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
@@ -223,7 +222,6 @@ export async function findUserIdByEmail(params: {
   })
 
   const rows = response.data.values ?? []
-  // Skip header row, search email1 (col H = index 7) and email2 (col I = index 8)
   const match = rows
     .slice(1)
     .find(
@@ -236,12 +234,12 @@ export async function findUserIdByEmail(params: {
 }
 
 export async function updateMemberInSheet(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   masterSheetId: string
   userId: string
   updates: Partial<MemberData>
 }): Promise<void> {
-  const sheets = getSheetsClient(params.credentials)
+  const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
@@ -249,7 +247,6 @@ export async function updateMemberInSheet(params: {
   })
 
   const rows = response.data.values ?? []
-  // Find row by userId (column A), including header at index 0
   const rowIndex = rows.findIndex((row, i) => i > 0 && row[0] === params.userId)
   if (rowIndex === -1) return
 
@@ -272,7 +269,6 @@ export async function updateMemberInSheet(params: {
     merged.deactivatedBy ?? '',
   ]
 
-  // rowIndex is 1-based in spreadsheet (A1 is row 1, data starts at row 2)
   const sheetRow = rowIndex + 1
   await sheets.spreadsheets.values.update({
     spreadsheetId: params.masterSheetId,

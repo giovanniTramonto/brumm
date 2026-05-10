@@ -1,14 +1,15 @@
-import { getDriveClient } from '../googleAuth'
-import type { GoogleCredentials } from '../googleAuth'
+import type { OAuthTokens } from '~/types'
+import { getDriveClientFromTokens } from '../googleAuth'
 
 export async function createMemberFolder(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   parentFolderId: string
   folderName: string
 }): Promise<string> {
-  const drive = getDriveClient(params.credentials)
+  const drive = getDriveClientFromTokens(params.tokens)
 
   const folder = await drive.files.create({
+    supportsAllDrives: true,
     requestBody: {
       name: params.folderName,
       mimeType: 'application/vnd.google-apps.folder',
@@ -23,13 +24,14 @@ export async function createMemberFolder(params: {
 }
 
 export async function createUploadSubfolders(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   memberFolderId: string
 }): Promise<{ documentsId: string; imagesId: string; miscId: string }> {
-  const drive = getDriveClient(params.credentials)
+  const drive = getDriveClientFromTokens(params.tokens)
 
   const createFolder = async (name: string): Promise<string> => {
     const result = await drive.files.create({
+      supportsAllDrives: true,
       requestBody: {
         name,
         mimeType: 'application/vnd.google-apps.folder',
@@ -52,25 +54,26 @@ export async function createUploadSubfolders(params: {
 }
 
 export async function deleteMemberFolder(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   folderId: string
 }): Promise<void> {
-  const drive = getDriveClient(params.credentials)
-  await drive.files.delete({ fileId: params.folderId })
+  const drive = getDriveClientFromTokens(params.tokens)
+  await drive.files.delete({ fileId: params.folderId, supportsAllDrives: true })
 }
 
 export async function createRootFolderStructure(params: {
-  credentials: GoogleCredentials
+  tokens: OAuthTokens
   clubName: string
 }): Promise<{
   rootFolderId: string
   appFolderId: string
   membersFolderId: string
 }> {
-  const drive = getDriveClient(params.credentials)
+  const drive = getDriveClientFromTokens(params.tokens)
 
   const createFolder = async (name: string, parentId?: string): Promise<string> => {
     const result = await drive.files.create({
+      supportsAllDrives: true,
       requestBody: {
         name,
         mimeType: 'application/vnd.google-apps.folder',

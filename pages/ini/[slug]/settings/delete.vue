@@ -43,7 +43,7 @@ async function onDelete() {
       <div>
         <h1 class="text-xl font-bold text-red-700">Verein löschen</h1>
         <p class="mt-2 text-sm text-gray-600">
-          Diese Aktion löscht den Verein und alle zugehörigen Daten (Mitglieder, Gruppen,
+          Diese Aktion löscht den Verein und alle zugehörigen Daten (Kinder, Gruppen,
           Sitzungen) unwiderruflich. Dateien in Google Drive bleiben erhalten.
         </p>
       </div>

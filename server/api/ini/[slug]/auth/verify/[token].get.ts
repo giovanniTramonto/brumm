@@ -13,31 +13,55 @@ export default defineEventHandler(async (event) => {
     include: { user: true },
   })
 
-  if (!magicLink || magicLink.isUsed || magicLink.expiresAt < new Date()) {
-    throw createError({ statusCode: 400, statusMessage: 'Link ungültig oder abgelaufen' })
+  if (magicLink) {
+    if (magicLink.isUsed || magicLink.expiresAt < new Date()) {
+      throw createError({ statusCode: 400, statusMessage: 'Link ungültig oder abgelaufen' })
+    }
+    if (magicLink.user.clubId !== club.id) {
+      throw createError({ statusCode: 403, statusMessage: 'Zugriff verweigert' })
+    }
+
+    await prisma.session.deleteMany({ where: { userId: magicLink.userId } })
+    await prisma.magicLink.update({ where: { id: magicLink.id }, data: { isUsed: true } })
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    const session = await prisma.session.create({
+      data: { userId: magicLink.userId, clubId: club.id, expiresAt },
+    })
+    setCookie(event, 'session_token', session.token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      expires: expiresAt,
+      path: '/',
+    })
+
+    const user = await prisma.user.findUnique({
+      where: { id: magicLink.userId },
+      include: { emails: true },
+    })
+    return { user, club }
   }
 
-  if (magicLink.user.clubId !== club.id) {
+  const invite = await prisma.invite.findUnique({
+    where: { token },
+    include: { user: true },
+  })
+
+  if (!invite || invite.isUsed || invite.expiresAt < new Date()) {
+    throw createError({ statusCode: 400, statusMessage: 'Link ungültig oder abgelaufen' })
+  }
+  if (invite.user.clubId !== club.id) {
     throw createError({ statusCode: 403, statusMessage: 'Zugriff verweigert' })
   }
 
-  await prisma.session.deleteMany({ where: { userId: magicLink.userId } })
-
-  await prisma.magicLink.update({
-    where: { id: magicLink.id },
-    data: { isUsed: true },
-  })
+  await prisma.session.deleteMany({ where: { userId: invite.userId } })
+  await prisma.invite.update({ where: { id: invite.id }, data: { isUsed: true } })
 
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-
   const session = await prisma.session.create({
-    data: {
-      userId: magicLink.userId,
-      clubId: club.id,
-      expiresAt,
-    },
+    data: { userId: invite.userId, clubId: club.id, expiresAt },
   })
-
   setCookie(event, 'session_token', session.token, {
     httpOnly: true,
     secure: true,
@@ -47,9 +71,8 @@ export default defineEventHandler(async (event) => {
   })
 
   const user = await prisma.user.findUnique({
-    where: { id: magicLink.userId },
+    where: { id: invite.userId },
     include: { emails: true },
   })
-
   return { user, club }
 })

@@ -10,22 +10,22 @@ export const magicLinkSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
 })
 
-export const storageSetupSchema = z.discriminatedUnion('managed', [
-  z.object({
-    managed: z.literal(true),
-  }),
-  z.object({
-    managed: z.literal(false).optional(),
-    serviceAccountEmail: z.string().email('Ungültige Service Account E-Mail'),
-    serviceAccountKey: z.string().min(1, 'Private Key fehlt'),
-  }),
-])
-
 export const createMemberSchema = z.object({
   firstName: z.string().min(1, 'Vorname fehlt'),
   lastName: z.string().min(1, 'Nachname fehlt'),
   birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
-  guardian1Name: z.string().optional(),
+  guardian1Name: z.string().min(1, 'Erziehungsberechtigter 1 fehlt'),
+  guardian2Name: z.string().optional(),
+  email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
+  email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
+  groupId: z.string().optional(),
+})
+
+export const updateMemberSchema = z.object({
+  firstName: z.string().min(1, 'Vorname fehlt'),
+  lastName: z.string().min(1, 'Nachname fehlt'),
+  birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
+  guardian1Name: z.string().min(1, 'Erziehungsberechtigter 1 fehlt'),
   guardian2Name: z.string().optional(),
   email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
   email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),

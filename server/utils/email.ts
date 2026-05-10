@@ -6,6 +6,12 @@ function getResend(): Resend {
   return new Resend(key)
 }
 
+async function send(...args: Parameters<Resend['emails']['send']>): Promise<void> {
+  const resend = getResend()
+  const { error } = await resend.emails.send(...args)
+  if (error) throw new Error(`Resend error: ${error.message}`)
+}
+
 const FROM_ADDRESS = process.env.EMAIL_FROM ?? 'Jita Vereinsverwaltung <onboarding@resend.dev>'
 
 export async function sendMagicLink(params: {
@@ -14,10 +20,8 @@ export async function sendMagicLink(params: {
   clubSlug: string
   token: string
 }): Promise<void> {
-  const resend = getResend()
   const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
-
-  await resend.emails.send({
+  await send({
     from: FROM_ADDRESS,
     to: params.to,
     subject: `Anmeldung bei ${params.clubName}`,
@@ -36,10 +40,8 @@ export async function sendWelcomeEmail(params: {
   clubSlug: string
   token: string
 }): Promise<void> {
-  const resend = getResend()
   const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
-
-  await resend.emails.send({
+  await send({
     from: FROM_ADDRESS,
     to: params.to,
     subject: `Willkommen bei Jita – ${params.clubName} einrichten`,
@@ -60,17 +62,15 @@ export async function sendInviteEmail(params: {
   token: string
   childName: string
 }): Promise<void> {
-  const resend = getResend()
   const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
-
-  await resend.emails.send({
+  await send({
     from: FROM_ADDRESS,
     to: params.to,
     subject: `Einladung: ${params.childName} bei ${params.clubName}`,
     html: `
       <h2>Willkommen bei ${params.clubName}!</h2>
       <p>Ihr Kind <strong>${params.childName}</strong> wurde angemeldet.</p>
-      <p>Bitte klickt auf den folgenden Link, um euer Profil einzurichten. Der Link ist 7 Tage gültig.</p>
+      <p>Bitte klicken Sie auf den folgenden Link, um Ihr Profil einzurichten. Der Link ist 7 Tage gültig.</p>
       <p><a href="${link}">Profil einrichten</a></p>
     `,
   })
@@ -83,17 +83,32 @@ export async function sendSuperUserNotification(params: {
   clubSlug: string
   userId: string
 }): Promise<void> {
-  const resend = getResend()
   const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/members/${params.userId}`
-
-  await resend.emails.send({
+  await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `Neues Mitglied wartet auf Freischaltung: ${params.childName}`,
+    subject: `Neues Kind wartet auf Freischaltung: ${params.childName}`,
     html: `
-      <h2>Neues Mitglied bei ${params.clubName}</h2>
+      <h2>Neues Kind bei ${params.clubName}</h2>
       <p><strong>${params.childName}</strong> hat das Onboarding abgeschlossen und wartet auf Freischaltung.</p>
-      <p><a href="${link}">Mitglied freischalten</a></p>
+      <p><a href="${link}">Kind freischalten</a></p>
+    `,
+  })
+}
+
+export async function sendActivationEmail(params: {
+  to: string[]
+  clubName: string
+  childName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `${params.childName} wurde freigeschaltet – ${params.clubName}`,
+    html: `
+      <h2>Freischaltung bestätigt</h2>
+      <p><strong>${params.childName}</strong> wurde erfolgreich bei <strong>${params.clubName}</strong> freigeschaltet.</p>
+      <p>Wir freuen uns auf eine schöne gemeinsame Zeit!</p>
     `,
   })
 }
@@ -103,9 +118,7 @@ export async function sendDeactivationConfirmation(params: {
   clubName: string
   childName: string
 }): Promise<void> {
-  const resend = getResend()
-
-  await resend.emails.send({
+  await send({
     from: FROM_ADDRESS,
     to: params.to,
     subject: `Abmeldung bestätigt: ${params.childName}`,
@@ -124,9 +137,7 @@ export async function sendImportSummary(params: {
   failed: number
   total: number
 }): Promise<void> {
-  const resend = getResend()
-
-  await resend.emails.send({
+  await send({
     from: FROM_ADDRESS,
     to: params.to,
     subject: `CSV-Import abgeschlossen: ${params.clubName}`,

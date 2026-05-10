@@ -1,8 +1,9 @@
+import { Prisma } from '@prisma/client'
 import { sendMagicLink } from '~/server/utils/email'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
 import { findUserIdByEmail } from '~/server/utils/storage/sheets'
-import type { GoogleDriveConfig } from '~/types'
+import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -38,21 +39,17 @@ export default defineEventHandler(async (event) => {
   // Second: search in Sheets (setup done) or localData (setup not done)
   let userId: string | null = null
 
-  if (club.isSetupDone && club.storageConfig) {
+  if (club.isSetupDone && club.storageConfig && club.oauthToken) {
     const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
-    const credentials = {
-      serviceAccountEmail: storageConfig.serviceAccountEmail,
-      serviceAccountKey: storageConfig.serviceAccountKey,
-    }
+    const tokens = club.oauthToken as unknown as OAuthTokens
     userId = await findUserIdByEmail({
-      credentials,
+      tokens,
       masterSheetId: storageConfig.masterSheetId,
       email: normalizedEmail,
     })
   } else {
-    // Search localData in Neon for matching email
     const usersWithLocalData = await prisma.user.findMany({
-      where: { clubId: club.id, localData: { not: null } },
+      where: { clubId: club.id, localData: { not: Prisma.DbNull } },
     })
     const match = usersWithLocalData.find((u) => {
       const d = u.localData as Record<string, unknown> | null
