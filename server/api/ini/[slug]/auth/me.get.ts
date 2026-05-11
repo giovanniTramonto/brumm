@@ -1,9 +1,18 @@
-export default defineEventHandler((event) => {
+import { getMemberData } from '~/server/utils/memberData'
+
+export default defineEventHandler(async (event) => {
   const user = event.context.user
   const club = event.context.club
 
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
+  }
+
+  if (user.role === 'MEMBER') {
+    const memberData = await getMemberData(user.id, club)
+    if (memberData) {
+      return { user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName }, club }
+    }
   }
 
   return { user, club }

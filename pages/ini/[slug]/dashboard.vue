@@ -61,6 +61,13 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       </dl>
     </div>
 
+    <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="card mt-6">
+      <h2 class="mb-3 text-sm font-medium text-gray-900">Aktuell</h2>
+      <NuxtLink :to="`/ini/${slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
+        Adressliste →
+      </NuxtLink>
+    </div>
+
     <div v-if="pendingCount > 0 && authStore.currentUser?.role === 'SUPERUSER'" class="mt-6">
       <div class="rounded-md bg-amber-50 p-4">
         <p class="text-sm text-amber-800">

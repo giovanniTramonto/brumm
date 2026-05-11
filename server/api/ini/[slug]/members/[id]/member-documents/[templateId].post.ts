@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
   if (existing) {
     try {
       const drive = (await import('~/server/utils/googleAuth')).getDriveClientFromTokens(tokens)
-      await drive.files.delete({ fileId: existing.driveFileId, supportsAllDrives: true })
+      await drive.files.delete({ fileId: existing.driveFileId ?? undefined, supportsAllDrives: true })
     } catch {
       // ignore if already deleted
     }

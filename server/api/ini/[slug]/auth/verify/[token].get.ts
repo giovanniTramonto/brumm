@@ -1,3 +1,4 @@
+import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -40,6 +41,10 @@ export default defineEventHandler(async (event) => {
       where: { id: magicLink.userId },
       include: { emails: true },
     })
+    if (user?.role === 'MEMBER') {
+      const memberData = await getMemberData(user.id, club)
+      if (memberData) return { user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName }, club }
+    }
     return { user, club }
   }
 
@@ -74,5 +79,9 @@ export default defineEventHandler(async (event) => {
     where: { id: invite.userId },
     include: { emails: true },
   })
+  if (user?.role === 'MEMBER') {
+    const memberData = await getMemberData(user.id, club)
+    if (memberData) return { user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName }, club }
+  }
   return { user, club }
 })

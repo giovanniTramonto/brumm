@@ -60,6 +60,8 @@ export default defineEventHandler(async (event) => {
         guardian2Name: row.guardian2Name || null,
         email1: row.email1.toLowerCase(),
         email2: row.email2 ? row.email2.toLowerCase() : null,
+        phone1: null,
+        phone2: null,
         groupId: row.groupId || null,
         isActive: true,
         deactivatedAt: null,

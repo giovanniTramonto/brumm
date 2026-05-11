@@ -93,6 +93,8 @@ export interface Member extends User {
 
 export interface AuthUser extends User {
   emails: UserEmail[]
+  firstName?: string | null
+  lastName?: string | null
 }
 
 export interface UserEmail {

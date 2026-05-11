@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const submission = await prisma.memberDocument.findUnique({
     where: { memberId_templateId: { memberId, templateId } },
   })
-  if (!submission) {
+  if (!submission?.driveFileId) {
     throw createError({ statusCode: 404, statusMessage: 'Dokument nicht gefunden' })
   }
 
