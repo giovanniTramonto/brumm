@@ -18,10 +18,11 @@ model Club {
   isSetupDone   Boolean  @default(false)
   createdAt        DateTime @default(now())
 
-  users    User[]
-  sessions Session[]
-  invites  Invite[]
-  groups   Group[]
+  users             User[]
+  sessions          Session[]
+  invites           Invite[]
+  groups            Group[]
+  documentTemplates DocumentTemplate[]
 }
 
 model Group {
@@ -45,11 +46,12 @@ model User {
 
   createdAt DateTime @default(now())
 
-  club       Club        @relation(fields: [clubId], references: [id])
-  emails     UserEmail[]
-  sessions   Session[]
-  magicLinks MagicLink[]
-  invites    Invite[]
+  club            Club             @relation(fields: [clubId], references: [id])
+  emails          UserEmail[]
+  sessions        Session[]
+  magicLinks      MagicLink[]
+  invites         Invite[]
+  memberDocuments MemberDocument[]
 
   @@unique([storageId, clubId])
 }
@@ -98,6 +100,37 @@ model Session {
 
   user User @relation(fields: [userId], references: [id])
   club Club @relation(fields: [clubId], references: [id])
+}
+
+model DocumentTemplate {
+  id            String           @id @default(cuid())
+  clubId        String
+  name          String
+  ref           String
+  order         Int              @default(0)
+  documentType  String?
+  driveFileId   String?
+  driveFileName String?
+  createdAt     DateTime         @default(now())
+
+  club        Club             @relation(fields: [clubId], references: [id])
+  submissions MemberDocument[]
+
+  @@unique([clubId, ref])
+}
+
+model MemberDocument {
+  id          String   @id @default(cuid())
+  memberId    String
+  templateId  String
+  driveFileId String
+  filename    String
+  uploadedAt  DateTime @default(now())
+
+  member   User             @relation(fields: [memberId], references: [id])
+  template DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, templateId])
 }
 
 enum Role {

@@ -64,6 +64,7 @@ export default defineEventHandler(async (event) => {
         isActive: true,
         deactivatedAt: null,
         deactivatedBy: null,
+        contractEnd: null,
       }
 
       await saveMemberData(memberData, club)

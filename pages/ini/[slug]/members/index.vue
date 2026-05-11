@@ -40,6 +40,13 @@ async function onActivate(member: Member) {
       <div class="flex gap-3">
         <NuxtLink
           v-if="authStore.currentUser?.role === 'SUPERUSER'"
+          :to="`/ini/${slug}/document-templates`"
+          class="btn-secondary"
+        >
+          Unterlagen
+        </NuxtLink>
+        <NuxtLink
+          v-if="authStore.currentUser?.role === 'SUPERUSER'"
           :to="`/ini/${slug}/members/import`"
           class="btn-secondary"
         >

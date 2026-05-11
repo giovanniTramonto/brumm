@@ -25,9 +25,20 @@ const inviteActionError = ref<string | null>(null)
 type DocumentEntry = { id: string; name: string; createdTime: string | null }
 const documents = ref<DocumentEntry[]>([])
 const isLoadingDocs = ref(false)
-const selectedFiles = ref<File[]>([])
-const isUploading = ref(false)
-const uploadError = ref<string | null>(null)
+
+type TemplateEntry = {
+  id: string
+  name: string
+  documentType: string | null
+  hasFile: boolean
+  submission: { id: string; filename: string; uploadedAt: string } | null
+}
+const memberDocTemplates = ref<TemplateEntry[]>([])
+const allSubmitted = ref(false)
+const isLoadingTemplates = ref(false)
+const uploadingTemplateId = ref<string | null>(null)
+const uploadErrors = ref<Record<string, string>>({})
+const submitted = ref(false)
 
 const isSuperUser = computed(() => authStore.currentUser?.role === 'SUPERUSER')
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
@@ -56,6 +67,21 @@ async function loadDocuments() {
   }
 }
 
+async function loadMemberDocTemplates() {
+  isLoadingTemplates.value = true
+  try {
+    const data = await $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
+      `/api/ini/${slug}/members/${memberId}/member-documents`,
+    )
+    memberDocTemplates.value = data.templates
+    allSubmitted.value = data.allSubmitted
+  } catch {
+    // ignore
+  } finally {
+    isLoadingTemplates.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const [memberData, groupsData] = await Promise.all([
@@ -76,7 +102,15 @@ onMounted(async () => {
     form.contractEnd = m.contractEnd ?? ''
 
     if (isMember.value) {
-      await loadDocuments()
+      await loadMemberDocTemplates()
+      if (memberData.member.isActive) await loadDocuments()
+    } else if (isSuperUser.value) {
+      const m = memberData.member
+      if (m.isActive) {
+        await loadDocuments()
+      } else if (!m.hasPendingInvite && !m.deactivatedAt) {
+        await loadMemberDocTemplates()
+      }
     }
   } catch {
     error.value = 'Kind nicht gefunden'
@@ -168,29 +202,30 @@ async function onCancelInvite() {
   }
 }
 
-function onFilesSelected(event: Event) {
+async function onUploadForTemplate(templateId: string, event: Event) {
   const input = event.target as HTMLInputElement
-  selectedFiles.value = input.files ? Array.from(input.files) : []
+  const file = input.files?.[0]
+  if (!file) return
+  uploadErrors.value = { ...uploadErrors.value, [templateId]: '' }
+  uploadingTemplateId.value = templateId
+  try {
+    const body = new FormData()
+    body.append('file', file, file.name)
+    await $fetch(`/api/ini/${slug}/members/${memberId}/member-documents/${templateId}`, { method: 'POST', body })
+    await loadMemberDocTemplates()
+  } catch (err: unknown) {
+    uploadErrors.value = {
+      ...uploadErrors.value,
+      [templateId]: (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler',
+    }
+  } finally {
+    uploadingTemplateId.value = null
+    input.value = ''
+  }
 }
 
-async function onUpload() {
-  if (!selectedFiles.value.length) return
-  uploadError.value = null
-  isUploading.value = true
-  try {
-    for (const file of selectedFiles.value) {
-      const body = new FormData()
-      body.append('file', file, file.name)
-      await $fetch(`/api/ini/${slug}/members/${memberId}/documents`, { method: 'POST', body })
-    }
-    selectedFiles.value = []
-    await loadDocuments()
-  } catch (err: unknown) {
-    uploadError.value =
-      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Hochladen'
-  } finally {
-    isUploading.value = false
-  }
+function onSubmit() {
+  submitted.value = true
 }
 </script>
 
@@ -322,44 +357,73 @@ async function onUpload() {
           </div>
         </template>
 
-        <!-- MEMBER: Bestätigt → upload form -->
+        <!-- MEMBER: Bestätigt → template-based upload list -->
         <template v-else-if="isMember && !member.isActive && !member.deactivatedAt && !member.hasPendingInvite">
-          <p class="text-sm text-gray-600">
-            Ihr Kind wurde erfolgreich registriert und wartet auf Freischaltung. Bitte laden Sie die erforderlichen Unterlagen hoch.
-          </p>
-
-          <div class="space-y-3">
-            <label class="label">Unterlagen hochladen</label>
-            <input
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-gray-200"
-              @change="onFilesSelected"
-            />
-            <div v-if="uploadError" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ uploadError }}</div>
-            <button
-              class="btn-primary text-sm"
-              :disabled="!selectedFiles.length || isUploading"
-              @click="onUpload"
-            >
-              {{ isUploading ? 'Wird hochgeladen…' : 'Unterlagen einreichen' }}
-            </button>
+          <div v-if="submitted" class="rounded-md bg-green-50 p-4 text-sm text-green-800">
+            Ihre Unterlagen wurden erfolgreich eingereicht.
           </div>
 
-          <div v-if="documents.length > 0" class="border-t pt-4">
-            <h3 class="mb-3 text-sm font-medium text-gray-900">Bereits eingereicht</h3>
-            <ul class="space-y-1">
+          <template v-else>
+            <p class="text-sm text-gray-600">
+              Ihr Kind wartet auf Freischaltung. Bitte laden Sie alle erforderlichen Unterlagen hoch.
+            </p>
+
+            <div v-if="isLoadingTemplates" class="text-sm text-gray-500">Wird geladen…</div>
+
+            <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
+              Noch keine Unterlagen konfiguriert.
+            </p>
+
+            <ul v-else class="divide-y divide-gray-100">
               <li
-                v-for="doc in documents"
-                :key="doc.id"
-                class="flex items-center gap-2 text-sm text-gray-700"
+                v-for="t in memberDocTemplates"
+                :key="t.id"
+                class="flex items-center gap-3 py-3"
               >
-                <span class="text-gray-400">📄</span>
-                {{ doc.name }}
+                <span class="min-w-0 flex-1 text-sm text-gray-900">{{ t.name }}</span>
+
+                <div class="flex shrink-0 items-center gap-2">
+                  <a
+                    v-if="t.hasFile"
+                    :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                    class="btn-secondary py-1 text-xs"
+                    download
+                  >
+                    Vorlage
+                  </a>
+
+                  <label
+                    class="btn-secondary cursor-pointer py-1 text-xs"
+                    :class="{ 'opacity-50': uploadingTemplateId === t.id }"
+                  >
+                    {{ uploadingTemplateId === t.id ? '…' : t.submission ? 'Ändern' : 'Hochladen' }}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      class="hidden"
+                      :disabled="uploadingTemplateId === t.id"
+                      @change="onUploadForTemplate(t.id, $event)"
+                    />
+                  </label>
+
+                  <span v-if="t.documentType === 'upload' && t.hasFile && t.submission" class="text-xs font-medium text-green-700">✓ OK</span>
+                  <span v-if="uploadErrors[t.id]" class="max-w-[120px] truncate text-xs text-red-600">
+                    {{ uploadErrors[t.id] }}
+                  </span>
+                </div>
               </li>
             </ul>
-          </div>
+
+            <div class="flex justify-end border-t pt-4">
+              <button
+                class="btn-primary text-sm"
+                :disabled="!allSubmitted"
+                @click="onSubmit"
+              >
+                Einreichen
+              </button>
+            </div>
+          </template>
         </template>
 
         <!-- TEAM or other: readonly data -->
@@ -381,6 +445,39 @@ async function onUpload() {
             <dd class="text-gray-900">{{ member.contractEnd }}</dd>
           </div>
         </dl>
+
+        <!-- SUPERUSER: document overview -->
+        <div v-if="isSuperUser && (memberDocTemplates.length > 0 || documents.length > 0 || isLoadingTemplates || isLoadingDocs)" class="border-t pt-4">
+          <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
+
+          <div v-if="isLoadingTemplates || isLoadingDocs" class="text-sm text-gray-500">Wird geladen…</div>
+
+          <!-- Bestätigt: template submission status -->
+          <ul v-else-if="memberDocTemplates.length > 0" class="divide-y divide-gray-100">
+            <li v-for="t in memberDocTemplates" :key="t.id" class="flex items-center gap-3 py-2 text-sm">
+              <span class="min-w-0 flex-1 text-gray-900">{{ t.name }}</span>
+              <span v-if="t.documentType === 'upload' && t.hasFile && t.submission" class="text-xs font-medium text-green-700">✓ Eingereicht</span>
+              <span v-else-if="t.documentType === 'upload' && t.hasFile" class="text-xs text-amber-600">Ausstehend</span>
+              <span v-else-if="t.documentType === 'read'" class="text-xs text-gray-400">Nur lesen</span>
+              <a
+                v-if="t.submission"
+                :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                class="btn-secondary py-0.5 text-xs"
+                download
+              >Herunterladen</a>
+            </li>
+          </ul>
+
+          <!-- Aktiv: uploaded documents -->
+          <ul v-else-if="documents.length > 0" class="space-y-1">
+            <li v-for="doc in documents" :key="doc.id" class="flex items-center gap-2 text-sm text-gray-700">
+              <span class="text-gray-400">📄</span>
+              {{ doc.name }}
+            </li>
+          </ul>
+
+          <p v-else class="text-sm text-gray-500">Keine Unterlagen vorhanden.</p>
+        </div>
 
         <div v-if="isSuperUser" class="space-y-2 border-t pt-4">
           <div class="flex justify-end gap-3">

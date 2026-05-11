@@ -61,6 +61,82 @@ export async function deleteMemberFolder(params: {
   await drive.files.delete({ fileId: params.folderId, supportsAllDrives: true })
 }
 
+async function getOrCreateFolder(params: {
+  drive: ReturnType<typeof getDriveClientFromTokens>
+  name: string
+  parentId: string
+}): Promise<string> {
+  const result = await params.drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `name = '${params.name}' and mimeType = 'application/vnd.google-apps.folder' and '${params.parentId}' in parents and trashed = false`,
+    fields: 'files(id)',
+  })
+  if (result.data.files?.[0]?.id) return result.data.files[0].id
+  const folder = await params.drive.files.create({
+    supportsAllDrives: true,
+    requestBody: { name: params.name, mimeType: 'application/vnd.google-apps.folder', parents: [params.parentId] },
+    fields: 'id',
+  })
+  const id = folder.data.id
+  if (!id) throw new Error(`Failed to create folder: ${params.name}`)
+  return id
+}
+
+export async function getOrCreateTemplateSubfolder(params: {
+  tokens: OAuthTokens
+  appFolderId: string
+  ref: string
+}): Promise<string> {
+  const drive = getDriveClientFromTokens(params.tokens)
+  const templatesFolderId = await getOrCreateFolder({ drive, name: 'document-templates', parentId: params.appFolderId })
+  return getOrCreateFolder({ drive, name: params.ref, parentId: templatesFolderId })
+}
+
+export async function uploadTemplateFile(params: {
+  tokens: OAuthTokens
+  appFolderId: string
+  ref: string
+  filename: string
+  mimeType: string
+  buffer: Buffer
+}): Promise<{ driveFileId: string }> {
+  const folderId = await getOrCreateTemplateSubfolder({
+    tokens: params.tokens,
+    appFolderId: params.appFolderId,
+    ref: params.ref,
+  })
+
+  const { Readable } = await import('node:stream')
+  const drive = getDriveClientFromTokens(params.tokens)
+  const result = await drive.files.create({
+    supportsAllDrives: true,
+    requestBody: { name: params.filename, parents: [folderId] },
+    media: { mimeType: params.mimeType, body: Readable.from(params.buffer) },
+    fields: 'id',
+  })
+  return { driveFileId: result.data.id ?? '' }
+}
+
+export async function downloadDriveFile(params: {
+  tokens: OAuthTokens
+  fileId: string
+}): Promise<{ buffer: Buffer; filename: string; mimeType: string }> {
+  const drive = getDriveClientFromTokens(params.tokens)
+
+  const meta = await drive.files.get({ fileId: params.fileId, supportsAllDrives: true, fields: 'name, mimeType' })
+  const response = await drive.files.get(
+    { fileId: params.fileId, alt: 'media', supportsAllDrives: true },
+    { responseType: 'arraybuffer' },
+  )
+
+  return {
+    buffer: Buffer.from(response.data as ArrayBuffer),
+    filename: meta.data.name ?? 'download',
+    mimeType: meta.data.mimeType ?? 'application/octet-stream',
+  }
+}
+
 async function findDocumentsFolderId(params: {
   tokens: OAuthTokens
   membersFolderId: string
