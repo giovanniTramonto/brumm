@@ -28,7 +28,7 @@ export const useMembersStore = defineStore('members', () => {
   async function deactivateMember(slug: string, memberId: string): Promise<void> {
     await $fetch(`/api/ini/${slug}/members/${memberId}/deactivate`, { method: 'POST' })
     const index = members.value.findIndex((m) => m.id === memberId)
-    if (index !== -1) members.value[index] = { ...members.value[index], isActive: false }
+    if (index !== -1) members.value[index] = { ...members.value[index], isActive: false, deactivatedAt: new Date().toISOString() }
   }
 
   return {

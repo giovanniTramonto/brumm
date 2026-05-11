@@ -156,18 +156,17 @@ async function onDelete(template: Template) {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center gap-4">
-      <NuxtLink :to="`/ini/${slug}/members`" class="text-sm text-gray-500 hover:text-gray-900">
+    <div class="mb-6">
+      <NuxtLink :to="`/ini/${slug}/members`" class="text-sm text-gray-500 hover:text-gray-900" aria-label="Zurück zur Kinderliste">
         ← Zurück
       </NuxtLink>
-      <h1 class="text-2xl font-bold text-gray-900">Unterlagen</h1>
     </div>
 
-    <div v-if="isLoading" class="py-12 text-center text-gray-500">Wird geladen…</div>
+    <div v-if="isLoading" role="status" aria-live="polite" class="py-12 text-gray-500">Wird geladen…</div>
 
     <template v-else>
       <div class="card space-y-4">
-        <h2 class="text-sm font-medium text-gray-900">Unterlagen-Vorlagen</h2>
+        <h1 class="text-2xl font-bold text-gray-900">Vorlagen</h1>
 
         <p v-if="templates.length === 0" class="text-sm text-gray-500">Noch keine Einträge.</p>
 
@@ -183,13 +182,14 @@ async function onDelete(template: Template) {
             @drop="onDrop(template.id)"
             @dragend="onDragEnd"
           >
-            <span class="cursor-grab text-gray-300 select-none active:cursor-grabbing">⠿</span>
+            <span aria-hidden="true" class="cursor-grab text-gray-300 select-none active:cursor-grabbing">⠿</span>
             <div class="min-w-0 flex-1">
               <div v-if="editingId === template.id" class="flex gap-2">
                 <input
                   v-model="editingName"
                   type="text"
                   class="input flex-1 text-sm"
+                  :aria-label="`Name für ${template.name}`"
                   @keyup.enter="saveEdit(template)"
                   @keyup.escape="editingId = null"
                 />
@@ -220,6 +220,7 @@ async function onDelete(template: Template) {
               <label
                 class="btn-secondary cursor-pointer py-1 text-xs"
                 :class="{ 'opacity-50': uploadingId === template.id }"
+                :aria-label="`${template.driveFileId ? 'Ersetzen' : 'Hochladen'}: ${template.name}`"
               >
                 {{ uploadingId === template.id ? '…' : template.driveFileId ? 'Ersetzen' : 'Hochladen' }}
                 <input
@@ -234,6 +235,7 @@ async function onDelete(template: Template) {
               <button
                 v-if="editingId !== template.id"
                 class="btn-secondary py-1 text-xs"
+                :aria-label="`'${template.name}' umbenennen`"
                 @click="startEdit(template)"
               >
                 Umbenennen
@@ -242,6 +244,7 @@ async function onDelete(template: Template) {
               <button
                 class="btn-danger py-1 text-xs"
                 :disabled="deletingId === template.id"
+                :aria-label="`'${template.name}' löschen`"
                 @click="onDelete(template)"
               >
                 {{ deletingId === template.id ? '…' : 'Löschen' }}
@@ -252,16 +255,17 @@ async function onDelete(template: Template) {
 
         <div class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">Neuer Eintrag</h3>
-          <div v-if="createError" class="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{{ createError }}</div>
+          <div v-if="createError" role="alert" class="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{{ createError }}</div>
           <div class="flex flex-col gap-3 sm:flex-row">
             <input
               v-model="newName"
               type="text"
               class="input flex-1 text-sm"
               placeholder="Name der Vorlage"
+              aria-label="Name der neuen Vorlage"
               @keyup.enter="onCreate"
             />
-            <label class="btn-secondary cursor-pointer text-sm">
+            <label class="btn-secondary cursor-pointer text-sm" aria-label="Datei auswählen (PDF oder DOCX)">
               {{ newFile ? newFile.name : 'PDF / DOCX' }}
               <input
                 id="new-file-input"
@@ -271,7 +275,7 @@ async function onDelete(template: Template) {
                 @change="onNewFileSelected"
               />
             </label>
-            <select v-model="newDocumentType" class="input w-36 shrink-0 text-sm">
+            <select v-model="newDocumentType" class="input w-36 shrink-0 text-sm" aria-label="Art der neuen Vorlage">
               <option value="" disabled>Art wählen …</option>
               <option value="read">Nur lesen</option>
               <option value="upload">Ausfüllen</option>

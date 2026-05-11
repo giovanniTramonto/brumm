@@ -130,6 +130,23 @@ export async function sendDeactivationConfirmation(params: {
   })
 }
 
+export async function sendReactivationEmail(params: {
+  to: string[]
+  clubName: string
+  childName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Abmeldung aufgehoben: ${params.childName} – ${params.clubName}`,
+    html: `
+      <h2>Abmeldung aufgehoben</h2>
+      <p>Die Abmeldung von <strong>${params.childName}</strong> bei <strong>${params.clubName}</strong> wurde aufgehoben.</p>
+      <p>Das Mitglied ist ab sofort wieder aktiv.</p>
+    `,
+  })
+}
+
 export async function sendImportSummary(params: {
   to: string[]
   clubName: string

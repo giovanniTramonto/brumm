@@ -19,6 +19,6 @@ export default defineEventHandler(async (event) => {
   const { buffer, filename, mimeType } = await downloadDriveFile({ tokens, fileId: template.driveFileId })
 
   setHeader(event, 'Content-Type', mimeType)
-  setHeader(event, 'Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`)
+  setHeader(event, 'Content-Disposition', `inline; filename="${encodeURIComponent(filename)}"`)
   return send(event, buffer)
 })

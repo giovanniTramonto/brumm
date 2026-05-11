@@ -120,12 +120,13 @@ model DocumentTemplate {
 }
 
 model MemberDocument {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   memberId    String
   templateId  String
-  driveFileId String
-  filename    String
-  uploadedAt  DateTime @default(now())
+  driveFileId String?
+  filename    String?
+  uploadedAt  DateTime  @default(now())
+  readAt      DateTime?
 
   member   User             @relation(fields: [memberId], references: [id])
   template DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)

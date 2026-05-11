@@ -37,6 +37,8 @@ function localDataToMemberData(userId: string, localData: unknown): MemberData |
     guardian2Name: (d.guardian2Name as string | null) ?? null,
     email1: (d.email1 as string) ?? '',
     email2: (d.email2 as string | null) ?? null,
+    phone1: (d.phone1 as string | null) ?? null,
+    phone2: (d.phone2 as string | null) ?? null,
     groupId: (d.groupId as string | null) ?? null,
     isActive: typeof d.isActive === 'boolean' ? d.isActive : false,
     deactivatedAt: (d.deactivatedAt as string | null) ?? null,

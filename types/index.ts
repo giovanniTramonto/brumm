@@ -64,6 +64,8 @@ export interface MemberData {
   guardian2Name: string | null
   email1: string
   email2: string | null
+  phone1: string | null
+  phone2: string | null
   groupId: string | null
   isActive: boolean
   deactivatedAt: string | null
@@ -79,6 +81,8 @@ export interface Member extends User {
   guardian2Name: string | null
   email1: string
   email2: string | null
+  phone1: string | null
+  phone2: string | null
   groupId: string | null
   storageRef: string
   deactivatedAt: string | null

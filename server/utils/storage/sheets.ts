@@ -16,6 +16,8 @@ const MASTER_SHEET_HEADERS = [
   'deactivatedAt',
   'deactivatedBy',
   'contractEnd',
+  'phone1',
+  'phone2',
 ]
 
 function rowToMemberData(row: string[]): MemberData {
@@ -34,6 +36,8 @@ function rowToMemberData(row: string[]): MemberData {
     deactivatedAt: row[11] || null,
     deactivatedBy: row[12] || null,
     contractEnd: row[13] || null,
+    phone1: row[14] || null,
+    phone2: row[15] || null,
   }
 }
 
@@ -132,6 +136,8 @@ export async function writeMemberToSheet(params: {
     data.deactivatedAt ?? '',
     data.deactivatedBy ?? '',
     data.contractEnd ?? '',
+    data.phone1 ?? '',
+    data.phone2 ?? '',
   ]
 
   await sheets.spreadsheets.values.append({
@@ -186,7 +192,7 @@ export async function getAllMembersFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:N',
+    range: 'A:P',
   })
 
   const rows = response.data.values ?? []
@@ -202,7 +208,7 @@ export async function getMemberFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:N',
+    range: 'A:P',
   })
 
   const rows = response.data.values ?? []
@@ -221,7 +227,7 @@ export async function findUserIdByEmail(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:N',
+    range: 'A:P',
   })
 
   const rows = response.data.values ?? []
@@ -246,7 +252,7 @@ export async function updateMemberInSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:N',
+    range: 'A:P',
   })
 
   const rows = response.data.values ?? []
@@ -271,6 +277,8 @@ export async function updateMemberInSheet(params: {
     merged.deactivatedAt ?? '',
     merged.deactivatedBy ?? '',
     merged.contractEnd ?? '',
+    merged.phone1 ?? '',
+    merged.phone2 ?? '',
   ]
 
   const sheetRow = rowIndex + 1

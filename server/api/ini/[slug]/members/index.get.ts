@@ -50,6 +50,8 @@ export default defineEventHandler(async (event) => {
         guardian2Name: md.guardian2Name,
         email1: md.email1,
         email2: md.email2,
+        phone1: md.phone1,
+        phone2: md.phone2,
         groupId: md.groupId,
         storageRef: md.storageRef,
         deactivatedAt: md.deactivatedAt,

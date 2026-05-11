@@ -13,9 +13,12 @@ export default defineEventHandler(async (event) => {
 
   const canViewAll = currentUser.role === 'SUPERUSER' || currentUser.role === 'TEAM'
 
-  const [user, pendingInvite] = await Promise.all([
+  const [user, pendingInvite, currentUserEmails] = await Promise.all([
     prisma.user.findFirst({ where: { id: memberId, clubId: club.id } }),
     prisma.invite.findFirst({ where: { userId: memberId, isUsed: false } }),
+    currentUser.role === 'SUPERUSER'
+      ? prisma.userEmail.findMany({ where: { userId: currentUser.id }, select: { email: true } })
+      : Promise.resolve([] as { email: string }[]),
   ])
 
   if (!user) {
@@ -39,6 +42,11 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  const superUserEmailSet = new Set(currentUserEmails.map((e) => e.email.toLowerCase()))
+  const isOwnChild =
+    superUserEmailSet.has(md.email1.toLowerCase()) ||
+    (!!md.email2 && superUserEmailSet.has(md.email2.toLowerCase()))
+
   const member: Member = {
     id: user.id,
     clubId: user.clubId,
@@ -60,5 +68,5 @@ export default defineEventHandler(async (event) => {
     hasPendingInvite: !!pendingInvite,
   }
 
-  return { member }
+  return { member, isOwnChild }
 })

@@ -18,6 +18,8 @@ const form = reactive({
   guardian2Name: '',
   email1: '',
   email2: '',
+  phone1: '',
+  phone2: '',
   groupId: '',
   contractEnd: '',
 })
@@ -39,6 +41,8 @@ async function onSubmit() {
       guardian2Name: form.guardian2Name.trim() || undefined,
       email1: form.email1.trim(),
       email2: form.email2.trim() || undefined,
+      phone1: form.phone1.trim() || undefined,
+      phone2: form.phone2.trim() || undefined,
       groupId: form.groupId || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
     }
@@ -58,14 +62,14 @@ async function onSubmit() {
 
 <template>
   <div class="max-w-2xl">
-    <div class="mb-6 flex items-center gap-4">
+    <div class="mb-6">
       <NuxtLink :to="`/ini/${slug}/members`" class="text-sm text-gray-500 hover:text-gray-900">
         ← Zurück
       </NuxtLink>
-      <h1 class="text-2xl font-bold text-gray-900">Kind anlegen</h1>
     </div>
 
     <form class="card space-y-4" @submit.prevent="onSubmit">
+      <h1 class="text-2xl font-bold text-gray-900">Kind anlegen</h1>
       <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
 
       <div class="grid grid-cols-2 gap-4">
@@ -85,7 +89,7 @@ async function onSubmit() {
       </div>
 
       <div>
-        <label class="label">Gruppe (optional)</label>
+        <label class="label">Gruppe</label>
         <select v-model="form.groupId" class="input mt-1">
           <option value="">Keine Gruppe</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">
@@ -94,30 +98,38 @@ async function onSubmit() {
         </select>
       </div>
 
+      <div>
+        <label class="label">Vertragsende</label>
+        <input v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
+      </div>
+
+      <div>
+        <label class="label">Erziehungsber. 1 *</label>
+        <input v-model="form.guardian1Name" type="text" class="input mt-1" required />
+      </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="label">Erziehungsber. 1 *</label>
-          <input v-model="form.guardian1Name" type="text" class="input mt-1" />
+          <label class="label">E-Mail 1 *</label>
+          <input v-model="form.email1" type="email" class="input mt-1" required />
         </div>
         <div>
-          <label class="label">E-Mail *</label>
-          <input v-model="form.email1" type="email" class="input mt-1" required />
+          <label class="label">Telefon 1</label>
+          <input v-model="form.phone1" type="tel" class="input mt-1" />
         </div>
       </div>
 
       <div>
-        <label class="label">Vertragsende (optional)</label>
-        <input v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
+        <label class="label">Erziehungsber. 2</label>
+        <input v-model="form.guardian2Name" type="text" class="input mt-1" />
       </div>
-
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="label">Erziehungsber. 2 (optional)</label>
-          <input v-model="form.guardian2Name" type="text" class="input mt-1" />
+          <label class="label">E-Mail 2</label>
+          <input v-model="form.email2" type="email" class="input mt-1" />
         </div>
         <div>
-          <label class="label">E-Mail (optional)</label>
-          <input v-model="form.email2" type="email" class="input mt-1" />
+          <label class="label">Telefon 2</label>
+          <input v-model="form.phone2" type="tel" class="input mt-1" />
         </div>
       </div>
 

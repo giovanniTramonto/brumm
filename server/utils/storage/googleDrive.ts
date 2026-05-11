@@ -26,31 +26,18 @@ export async function createMemberFolder(params: {
 export async function createUploadSubfolders(params: {
   tokens: OAuthTokens
   memberFolderId: string
-}): Promise<{ documentsId: string; imagesId: string; miscId: string }> {
+}): Promise<void> {
   const drive = getDriveClientFromTokens(params.tokens)
 
-  const createFolder = async (name: string): Promise<string> => {
-    const result = await drive.files.create({
-      supportsAllDrives: true,
-      requestBody: {
-        name,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [params.memberFolderId],
-      },
-      fields: 'id',
-    })
-    const id = result.data.id
-    if (!id) throw new Error(`Failed to create subfolder: ${name}`)
-    return id
-  }
-
-  const [documentsId, imagesId, miscId] = await Promise.all([
-    createFolder('documents'),
-    createFolder('images'),
-    createFolder('misc'),
-  ])
-
-  return { documentsId, imagesId, miscId }
+  await drive.files.create({
+    supportsAllDrives: true,
+    requestBody: {
+      name: 'documents',
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [params.memberFolderId],
+    },
+    fields: 'id',
+  })
 }
 
 export async function deleteMemberFolder(params: {
@@ -59,6 +46,57 @@ export async function deleteMemberFolder(params: {
 }): Promise<void> {
   const drive = getDriveClientFromTokens(params.tokens)
   await drive.files.delete({ fileId: params.folderId, supportsAllDrives: true })
+}
+
+export async function copyFileToMemberDocuments(params: {
+  tokens: OAuthTokens
+  membersFolderId: string
+  storageRef: string
+  sourceFileId: string
+  filename: string
+}): Promise<string | null> {
+  const drive = getDriveClientFromTokens(params.tokens)
+
+  const memberResult = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+  })
+  const memberFolderId = memberResult.data.files?.[0]?.id
+  if (!memberFolderId) return null
+
+  const docsResult = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `name = 'documents' and mimeType = 'application/vnd.google-apps.folder' and '${memberFolderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+  })
+  const docsFolderId = docsResult.data.files?.[0]?.id
+  if (!docsFolderId) return null
+
+  const copy = await drive.files.copy({
+    fileId: params.sourceFileId,
+    supportsAllDrives: true,
+    requestBody: { name: params.filename, parents: [docsFolderId] },
+    fields: 'id',
+  })
+  return copy.data.id ?? null
+}
+
+export async function findMemberFolderId(params: {
+  tokens: OAuthTokens
+  membersFolderId: string
+  storageRef: string
+}): Promise<string | null> {
+  const drive = getDriveClientFromTokens(params.tokens)
+  const result = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+  })
+  return result.data.files?.[0]?.id ?? null
 }
 
 async function getOrCreateFolder(params: {

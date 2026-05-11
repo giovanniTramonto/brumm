@@ -24,6 +24,8 @@ export const createMemberSchema = z.object({
   guardian2Name: z.string().optional(),
   email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
   email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
+  phone1: z.string().optional().or(z.literal('')),
+  phone2: z.string().optional().or(z.literal('')),
   groupId: z.string().optional(),
   contractEnd: contractEndField,
 })
@@ -36,6 +38,8 @@ export const updateMemberSchema = z.object({
   guardian2Name: z.string().optional(),
   email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
   email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
+  phone1: z.string().optional().or(z.literal('')),
+  phone2: z.string().optional().or(z.literal('')),
   groupId: z.string().optional(),
   contractEnd: contractEndField,
 })

@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
   }
 
-  const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, groupId, contractEnd } =
+  const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, phone1, phone2, groupId, contractEnd } =
     parsed.data
 
   await updateMemberData(
@@ -46,6 +46,8 @@ export default defineEventHandler(async (event) => {
       guardian2Name: guardian2Name || null,
       email1: email1.toLowerCase(),
       email2: email2 ? email2.toLowerCase() : null,
+      phone1: phone1 || null,
+      phone2: phone2 || null,
       groupId: groupId || null,
       contractEnd: contractEnd || null,
     },

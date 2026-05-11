@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     }),
     prisma.memberDocument.findMany({
       where: { memberId, template: { clubId: club.id } },
-      select: { id: true, templateId: true, filename: true, uploadedAt: true },
+      select: { id: true, templateId: true, filename: true, uploadedAt: true, readAt: true, driveFileId: true },
     }),
   ])
 

@@ -11,7 +11,7 @@
 
 ## Projektsprache
 - UI / Texte / Fehlermeldungen: **Deutsch**
-- Code (Identifier, Kommentare, Variablen, Funktionen): **Englisch**
+- Code (Identifier, Kommentare, Variablen, Funktionen): **Englisch** — keine deutschen Wörter in Variablen-, Funktions- oder Typnamen (z.B. `isConfirmed` statt `isBestätigt`)
 
 ## Code Style
 - Formatter & Linter: Biome (`npm run lint`, `npm run lint:fix`)
