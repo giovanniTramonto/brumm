@@ -19,6 +19,7 @@ const form = reactive({
   email1: '',
   email2: '',
   groupId: '',
+  contractEnd: '',
 })
 
 onMounted(async () => {
@@ -39,6 +40,7 @@ async function onSubmit() {
       email1: form.email1.trim(),
       email2: form.email2.trim() || undefined,
       groupId: form.groupId || undefined,
+      contractEnd: form.contractEnd.trim() || undefined,
     }
     const { user } = await $fetch<{ user: { id: string } }>(`/api/ini/${slug}/members/create`, {
       method: 'POST',
@@ -101,6 +103,11 @@ async function onSubmit() {
           <label class="label">E-Mail *</label>
           <input v-model="form.email1" type="email" class="input mt-1" required />
         </div>
+      </div>
+
+      <div>
+        <label class="label">Vertragsende (optional)</label>
+        <input v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">

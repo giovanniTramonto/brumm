@@ -10,6 +10,12 @@ export const magicLinkSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
 })
 
+const contractEndField = z
+  .string()
+  .regex(/^\d{4}$/, 'Vertragsende muss ein Jahr sein (YYYY)')
+  .optional()
+  .or(z.literal(''))
+
 export const createMemberSchema = z.object({
   firstName: z.string().min(1, 'Vorname fehlt'),
   lastName: z.string().min(1, 'Nachname fehlt'),
@@ -19,6 +25,7 @@ export const createMemberSchema = z.object({
   email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
   email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
   groupId: z.string().optional(),
+  contractEnd: contractEndField,
 })
 
 export const updateMemberSchema = z.object({
@@ -30,6 +37,7 @@ export const updateMemberSchema = z.object({
   email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
   email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
   groupId: z.string().optional(),
+  contractEnd: contractEndField,
 })
 
 export const createGroupSchema = z.object({

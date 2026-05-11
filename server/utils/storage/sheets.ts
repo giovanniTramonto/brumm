@@ -15,6 +15,7 @@ const MASTER_SHEET_HEADERS = [
   'isActive',
   'deactivatedAt',
   'deactivatedBy',
+  'contractEnd',
 ]
 
 function rowToMemberData(row: string[]): MemberData {
@@ -32,6 +33,7 @@ function rowToMemberData(row: string[]): MemberData {
     isActive: row[10] === 'true',
     deactivatedAt: row[11] || null,
     deactivatedBy: row[12] || null,
+    contractEnd: row[13] || null,
   }
 }
 
@@ -129,6 +131,7 @@ export async function writeMemberToSheet(params: {
     String(data.isActive),
     data.deactivatedAt ?? '',
     data.deactivatedBy ?? '',
+    data.contractEnd ?? '',
   ]
 
   await sheets.spreadsheets.values.append({
@@ -183,7 +186,7 @@ export async function getAllMembersFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:M',
+    range: 'A:N',
   })
 
   const rows = response.data.values ?? []
@@ -199,7 +202,7 @@ export async function getMemberFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:M',
+    range: 'A:N',
   })
 
   const rows = response.data.values ?? []
@@ -218,7 +221,7 @@ export async function findUserIdByEmail(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:M',
+    range: 'A:N',
   })
 
   const rows = response.data.values ?? []
@@ -243,7 +246,7 @@ export async function updateMemberInSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:M',
+    range: 'A:N',
   })
 
   const rows = response.data.values ?? []
@@ -267,6 +270,7 @@ export async function updateMemberInSheet(params: {
     String(merged.isActive),
     merged.deactivatedAt ?? '',
     merged.deactivatedBy ?? '',
+    merged.contractEnd ?? '',
   ]
 
   const sheetRow = rowIndex + 1

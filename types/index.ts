@@ -68,6 +68,7 @@ export interface MemberData {
   isActive: boolean
   deactivatedAt: string | null
   deactivatedBy: string | null
+  contractEnd: string | null
 }
 
 export interface Member extends User {
@@ -81,6 +82,7 @@ export interface Member extends User {
   groupId: string | null
   storageRef: string
   deactivatedAt: string | null
+  contractEnd: string | null
   hasPendingInvite: boolean
   group?: Group | null
 }

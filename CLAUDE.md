@@ -31,7 +31,6 @@
 /ini/{slug}/members/create
 /ini/{slug}/members/import
 /ini/{slug}/members/{id}
-/ini/{slug}/members/{id}/edit
 /ini/{slug}/members/deactivate
 /ini/{slug}/groups
 /ini/{slug}/settings

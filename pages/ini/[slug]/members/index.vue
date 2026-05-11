@@ -110,7 +110,7 @@ async function onActivate(member: Member) {
                   Freischalten
                 </button>
                 <NuxtLink
-                  :to="`/ini/${slug}/members/${member.id}/edit`"
+                  :to="`/ini/${slug}/members/${member.id}`"
                   class="btn-secondary py-1 text-xs"
                 >
                   Bearbeiten

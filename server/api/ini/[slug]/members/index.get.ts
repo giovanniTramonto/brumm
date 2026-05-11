@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
         groupId: md.groupId,
         storageRef: md.storageRef,
         deactivatedAt: md.deactivatedAt,
+        contractEnd: md.contractEnd,
         hasPendingInvite: pendingInviteUserIds.has(u.id),
       } satisfies Member
     })

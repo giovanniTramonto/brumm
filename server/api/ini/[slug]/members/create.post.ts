@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, groupId } =
+  const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, groupId, contractEnd } =
     parsed.data
 
   const storageId = generateStorageId()
@@ -54,6 +54,7 @@ export default defineEventHandler(async (event) => {
     isActive: false,
     deactivatedAt: null,
     deactivatedBy: null,
+    contractEnd: contractEnd || null,
   }
 
   await saveMemberData(memberData, club)
