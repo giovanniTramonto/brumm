@@ -13,6 +13,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        admin: '#d5e4eb',
+        ini: '#dde2b0',
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

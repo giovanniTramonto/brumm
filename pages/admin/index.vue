@@ -92,12 +92,13 @@ async function onDeleteClub(clubId: string) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 px-4 py-12">
+  <div class="min-h-screen bg-admin px-4 py-12">
     <div class="mx-auto max-w-4xl">
       <h1 class="mb-8 text-2xl font-bold text-gray-900">Jita Admin</h1>
 
       <!-- Login -->
-      <div v-if="!isAuthenticated" class="card max-w-sm">
+      <div v-if="!isAuthenticated" class="flex justify-center">
+      <div class="card w-full max-w-sm">
         <h2 class="mb-4 font-semibold text-gray-900">Anmelden</h2>
         <form class="space-y-4" @submit.prevent="onLogin">
           <input type="text" name="username" autocomplete="username" value="admin" class="hidden" />
@@ -110,6 +111,7 @@ async function onDeleteClub(clubId: string) {
             {{ isLoading ? "Wird geladen…" : "Anmelden" }}
           </button>
         </form>
+      </div>
       </div>
 
       <!-- Vereinsliste -->
