@@ -3,7 +3,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 import type { Member } from '~/types'
 
-definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'TEAM' })
+definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string

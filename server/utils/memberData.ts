@@ -41,6 +41,7 @@ function localDataToMemberData(userId: string, localData: unknown): MemberData |
     isActive: typeof d.isActive === 'boolean' ? d.isActive : false,
     deactivatedAt: (d.deactivatedAt as string | null) ?? null,
     deactivatedBy: (d.deactivatedBy as string | null) ?? null,
+    contractEnd: (d.contractEnd as string | null) ?? null,
   }
 }
 

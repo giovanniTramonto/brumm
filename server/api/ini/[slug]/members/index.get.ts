@@ -4,11 +4,7 @@ import type { Member } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
-  const user = event.context.user
-
-  if (user.role === 'MEMBER') {
-    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
-  }
+  const currentUser = event.context.user
 
   const users = await prisma.user.findMany({
     where: { clubId: club.id },
@@ -23,10 +19,23 @@ export default defineEventHandler(async (event) => {
 
   const memberDataMap = new Map(memberDataList.map((md) => [md.userId, md]))
 
+  let guardianEmails: Set<string> | null = null
+  if (currentUser.role === 'MEMBER') {
+    const ownMd = memberDataMap.get(currentUser.id)
+    const emails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    guardianEmails = new Set(emails)
+  }
+
   const members: Member[] = users
     .map((u) => {
       const md = memberDataMap.get(u.id)
       if (!md) return null
+      if (guardianEmails) {
+        const match =
+          guardianEmails.has(md.email1.toLowerCase()) ||
+          (md.email2 && guardianEmails.has(md.email2.toLowerCase()))
+        if (!match) return null
+      }
       return {
         id: u.id,
         clubId: u.clubId,

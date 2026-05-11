@@ -61,6 +61,82 @@ export async function deleteMemberFolder(params: {
   await drive.files.delete({ fileId: params.folderId, supportsAllDrives: true })
 }
 
+async function findDocumentsFolderId(params: {
+  tokens: OAuthTokens
+  membersFolderId: string
+  storageRef: string
+}): Promise<string | null> {
+  const drive = getDriveClientFromTokens(params.tokens)
+
+  const memberResult = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+  })
+  const memberFolderId = memberResult.data.files?.[0]?.id
+  if (!memberFolderId) return null
+
+  const docsResult = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `name = 'documents' and mimeType = 'application/vnd.google-apps.folder' and '${memberFolderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+  })
+  return docsResult.data.files?.[0]?.id ?? null
+}
+
+export async function listMemberDocuments(params: {
+  tokens: OAuthTokens
+  membersFolderId: string
+  storageRef: string
+}): Promise<Array<{ id: string; name: string; createdTime: string | null }>> {
+  const folderId = await findDocumentsFolderId(params)
+  if (!folderId) return []
+
+  const drive = getDriveClientFromTokens(params.tokens)
+  const result = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `'${folderId}' in parents and trashed = false`,
+    fields: 'files(id, name, createdTime)',
+    orderBy: 'createdTime desc',
+  })
+
+  return (result.data.files ?? []).map((f) => ({
+    id: f.id ?? '',
+    name: f.name ?? '',
+    createdTime: f.createdTime ?? null,
+  }))
+}
+
+export async function uploadMemberDocument(params: {
+  tokens: OAuthTokens
+  membersFolderId: string
+  storageRef: string
+  filename: string
+  mimeType: string
+  buffer: Buffer
+}): Promise<{ id: string; name: string }> {
+  const folderId = await findDocumentsFolderId({
+    tokens: params.tokens,
+    membersFolderId: params.membersFolderId,
+    storageRef: params.storageRef,
+  })
+  if (!folderId) throw new Error('Documents folder not found')
+
+  const { Readable } = await import('node:stream')
+  const drive = getDriveClientFromTokens(params.tokens)
+  const result = await drive.files.create({
+    supportsAllDrives: true,
+    requestBody: { name: params.filename, parents: [folderId] },
+    media: { mimeType: params.mimeType, body: Readable.from(params.buffer) },
+    fields: 'id, name',
+  })
+
+  return { id: result.data.id ?? '', name: result.data.name ?? '' }
+}
+
 export async function createRootFolderStructure(params: {
   tokens: OAuthTokens
   clubName: string

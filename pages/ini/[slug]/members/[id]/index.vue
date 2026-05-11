@@ -22,7 +22,15 @@ const isResendingInvite = ref(false)
 const isCancellingInvite = ref(false)
 const inviteActionError = ref<string | null>(null)
 
+type DocumentEntry = { id: string; name: string; createdTime: string | null }
+const documents = ref<DocumentEntry[]>([])
+const isLoadingDocs = ref(false)
+const selectedFiles = ref<File[]>([])
+const isUploading = ref(false)
+const uploadError = ref<string | null>(null)
+
 const isSuperUser = computed(() => authStore.currentUser?.role === 'SUPERUSER')
+const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
 
 const form = reactive({
   firstName: '',
@@ -36,14 +44,26 @@ const form = reactive({
   contractEnd: '',
 })
 
+async function loadDocuments() {
+  isLoadingDocs.value = true
+  try {
+    const data = await $fetch<{ documents: DocumentEntry[] }>(`/api/ini/${slug}/members/${memberId}/documents`)
+    documents.value = data.documents
+  } catch {
+    // ignore
+  } finally {
+    isLoadingDocs.value = false
+  }
+}
+
 onMounted(async () => {
   try {
     const [memberData, groupsData] = await Promise.all([
       $fetch<{ member: Member }>(`/api/ini/${slug}/members/${memberId}`),
-      $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`),
+      isSuperUser.value ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`) : Promise.resolve(null),
     ])
     member.value = memberData.member
-    groups.value = groupsData.groups
+    if (groupsData) groups.value = groupsData.groups
     const m = memberData.member
     form.firstName = m.firstName
     form.lastName = m.lastName
@@ -54,6 +74,10 @@ onMounted(async () => {
     form.email2 = m.email2 ?? ''
     form.groupId = m.groupId ?? ''
     form.contractEnd = m.contractEnd ?? ''
+
+    if (isMember.value) {
+      await loadDocuments()
+    }
   } catch {
     error.value = 'Kind nicht gefunden'
   } finally {
@@ -143,6 +167,31 @@ async function onCancelInvite() {
     isCancellingInvite.value = false
   }
 }
+
+function onFilesSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  selectedFiles.value = input.files ? Array.from(input.files) : []
+}
+
+async function onUpload() {
+  if (!selectedFiles.value.length) return
+  uploadError.value = null
+  isUploading.value = true
+  try {
+    for (const file of selectedFiles.value) {
+      const body = new FormData()
+      body.append('file', file, file.name)
+      await $fetch(`/api/ini/${slug}/members/${memberId}/documents`, { method: 'POST', body })
+    }
+    selectedFiles.value = []
+    await loadDocuments()
+  } catch (err: unknown) {
+    uploadError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Hochladen'
+  } finally {
+    isUploading.value = false
+  }
+}
 </script>
 
 <template>
@@ -171,6 +220,7 @@ async function onCancelInvite() {
           </span>
         </div>
 
+        <!-- SUPERUSER: editable form -->
         <form v-if="isSuperUser" class="space-y-4" @submit.prevent="onSave">
           <div v-if="saveError" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ saveError }}</div>
 
@@ -234,7 +284,86 @@ async function onCancelInvite() {
           </div>
         </form>
 
-        <dl v-else class="space-y-2 text-sm">
+        <!-- MEMBER: Aktiv → readonly data + documents -->
+        <template v-else-if="isMember && member.isActive">
+          <dl class="space-y-2 text-sm">
+            <div class="flex gap-2">
+              <dt class="w-40 text-gray-500">Geburtsdatum</dt>
+              <dd class="text-gray-900">{{ new Date(member.birthDate).toLocaleDateString('de-DE') }}</dd>
+            </div>
+            <div v-if="member.guardian1Name" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Erziehungsber. 1</dt>
+              <dd class="text-gray-900">{{ member.guardian1Name }}</dd>
+            </div>
+            <div v-if="member.guardian2Name" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Erziehungsber. 2</dt>
+              <dd class="text-gray-900">{{ member.guardian2Name }}</dd>
+            </div>
+            <div v-if="member.contractEnd" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Vertragsende</dt>
+              <dd class="text-gray-900">{{ member.contractEnd }}</dd>
+            </div>
+          </dl>
+
+          <div class="border-t pt-4">
+            <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
+            <div v-if="isLoadingDocs" class="text-sm text-gray-500">Wird geladen…</div>
+            <p v-else-if="documents.length === 0" class="text-sm text-gray-500">Keine Unterlagen hochgeladen.</p>
+            <ul v-else class="space-y-1">
+              <li
+                v-for="doc in documents"
+                :key="doc.id"
+                class="flex items-center gap-2 text-sm text-gray-700"
+              >
+                <span class="text-gray-400">📄</span>
+                {{ doc.name }}
+              </li>
+            </ul>
+          </div>
+        </template>
+
+        <!-- MEMBER: Bestätigt → upload form -->
+        <template v-else-if="isMember && !member.isActive && !member.deactivatedAt && !member.hasPendingInvite">
+          <p class="text-sm text-gray-600">
+            Ihr Kind wurde erfolgreich registriert und wartet auf Freischaltung. Bitte laden Sie die erforderlichen Unterlagen hoch.
+          </p>
+
+          <div class="space-y-3">
+            <label class="label">Unterlagen hochladen</label>
+            <input
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              class="block w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-gray-200"
+              @change="onFilesSelected"
+            />
+            <div v-if="uploadError" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ uploadError }}</div>
+            <button
+              class="btn-primary text-sm"
+              :disabled="!selectedFiles.length || isUploading"
+              @click="onUpload"
+            >
+              {{ isUploading ? 'Wird hochgeladen…' : 'Unterlagen einreichen' }}
+            </button>
+          </div>
+
+          <div v-if="documents.length > 0" class="border-t pt-4">
+            <h3 class="mb-3 text-sm font-medium text-gray-900">Bereits eingereicht</h3>
+            <ul class="space-y-1">
+              <li
+                v-for="doc in documents"
+                :key="doc.id"
+                class="flex items-center gap-2 text-sm text-gray-700"
+              >
+                <span class="text-gray-400">📄</span>
+                {{ doc.name }}
+              </li>
+            </ul>
+          </div>
+        </template>
+
+        <!-- TEAM or other: readonly data -->
+        <dl v-else-if="!isMember" class="space-y-2 text-sm">
           <div class="flex gap-2">
             <dt class="w-40 text-gray-500">Geburtsdatum</dt>
             <dd class="text-gray-900">{{ new Date(member.birthDate).toLocaleDateString('de-DE') }}</dd>

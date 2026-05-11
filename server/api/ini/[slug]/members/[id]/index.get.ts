@@ -12,9 +12,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const canViewAll = currentUser.role === 'SUPERUSER' || currentUser.role === 'TEAM'
-  if (!canViewAll && currentUser.id !== memberId) {
-    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
-  }
 
   const [user, pendingInvite] = await Promise.all([
     prisma.user.findFirst({ where: { id: memberId, clubId: club.id } }),
@@ -29,6 +26,17 @@ export default defineEventHandler(async (event) => {
 
   if (!md) {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
+  }
+
+  if (!canViewAll && currentUser.id !== memberId) {
+    const ownMd = await getMemberData(currentUser.id, club)
+    const ownEmails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    const isGuardian =
+      ownEmails.includes(md.email1.toLowerCase()) ||
+      (md.email2 && ownEmails.includes(md.email2.toLowerCase()))
+    if (!isGuardian) {
+      throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
+    }
   }
 
   const member: Member = {
