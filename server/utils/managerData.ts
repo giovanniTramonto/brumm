@@ -56,7 +56,10 @@ async function ensureManagementStorage(club: ClubForData): Promise<GoogleDriveCo
   return updated
 }
 
-export async function getManagerData(managerId: string, club: ClubForData): Promise<ManagerData | null> {
+export async function getManagerData(
+  managerId: string,
+  club: ClubForData,
+): Promise<ManagerData | null> {
   if (!club.isSetupDone) {
     const manager = await prisma.manager.findUnique({ where: { id: managerId } })
     if (!manager?.localData) return null
@@ -121,10 +124,19 @@ export async function updateManagerData(
   if (!config.managersSheetId) return
 
   const tokens = getTokens(club.oauthToken)
-  await updateManagerInSheet({ tokens, managersSheetId: config.managersSheetId, managerId, updates })
+  await updateManagerInSheet({
+    tokens,
+    managersSheetId: config.managersSheetId,
+    managerId,
+    updates,
+  })
 }
 
-export async function deleteManagerData(managerId: string, storageId: string, club: ClubForData): Promise<void> {
+export async function deleteManagerData(
+  managerId: string,
+  storageId: string,
+  club: ClubForData,
+): Promise<void> {
   if (!club.isSetupDone) {
     await prisma.manager.update({
       where: { id: managerId },
@@ -138,10 +150,14 @@ export async function deleteManagerData(managerId: string, storageId: string, cl
 
   const tasks: Promise<unknown>[] = []
   if (config.managersSheetId) {
-    tasks.push(removeManagerFromSheet({ tokens, managersSheetId: config.managersSheetId, managerId }))
+    tasks.push(
+      removeManagerFromSheet({ tokens, managersSheetId: config.managersSheetId, managerId }),
+    )
   }
   if (config.managementFolderId) {
-    tasks.push(deleteManagerFolder({ tokens, managementFolderId: config.managementFolderId, storageId }))
+    tasks.push(
+      deleteManagerFolder({ tokens, managementFolderId: config.managementFolderId, storageId }),
+    )
   }
   await Promise.all(tasks)
 }

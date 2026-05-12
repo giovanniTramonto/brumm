@@ -98,10 +98,7 @@ export async function saveMemberData(data: MemberData, club: ClubForData): Promi
   await writeMemberToSheet({ tokens, masterSheetId, data })
 }
 
-export async function deleteMemberData(
-  userId: string,
-  club: ClubForData,
-): Promise<void> {
+export async function deleteMemberData(userId: string, club: ClubForData): Promise<void> {
   if (!club.isSetupDone) {
     await prisma.user.update({
       where: { id: userId },

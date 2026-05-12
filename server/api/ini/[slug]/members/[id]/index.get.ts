@@ -33,7 +33,9 @@ export default defineEventHandler(async (event) => {
 
   if (!canViewAll && currentUser.id !== memberId) {
     const ownMd = await getMemberData(currentUser.id, club)
-    const ownEmails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    const ownEmails = [ownMd?.email1, ownMd?.email2]
+      .filter((e): e is string => !!e)
+      .map((e) => e.toLowerCase())
     const isGuardian =
       ownEmails.includes(md.email1.toLowerCase()) ||
       (md.email2 && ownEmails.includes(md.email2.toLowerCase()))

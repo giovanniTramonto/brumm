@@ -2,7 +2,6 @@
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 
-
 definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
@@ -30,7 +29,6 @@ const filteredMembers = computed(() => {
     (m) => m.firstName.toLowerCase().includes(q) || m.lastName.toLowerCase().includes(q),
   )
 })
-
 </script>
 
 <template>

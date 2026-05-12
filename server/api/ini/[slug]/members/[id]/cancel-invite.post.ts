@@ -10,7 +10,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  const canManageMembers = currentUser.role === 'SUPERUSER' || (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  const canManageMembers =
+    currentUser.role === 'SUPERUSER' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
   if (!canManageMembers) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
@@ -24,7 +26,10 @@ export default defineEventHandler(async (event) => {
   }
 
   if (user.isActive) {
-    throw createError({ statusCode: 409, statusMessage: 'Aktive Mitglieder können nicht so abgemeldet werden' })
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Aktive Mitglieder können nicht so abgemeldet werden',
+    })
   }
 
   await deleteMemberData(memberId, club)

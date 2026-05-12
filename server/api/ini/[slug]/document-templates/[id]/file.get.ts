@@ -6,7 +6,9 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
   const templateId = getRouterParam(event, 'id')
 
-  const template = await prisma.documentTemplate.findFirst({ where: { id: templateId, clubId: club.id } })
+  const template = await prisma.documentTemplate.findFirst({
+    where: { id: templateId, clubId: club.id },
+  })
   if (!template?.driveFileId) {
     throw createError({ statusCode: 404, statusMessage: 'Keine Vorlage hochgeladen' })
   }
@@ -16,7 +18,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const tokens = club.oauthToken as OAuthTokens
-  const { buffer, filename, mimeType } = await downloadDriveFile({ tokens, fileId: template.driveFileId })
+  const { buffer, filename, mimeType } = await downloadDriveFile({
+    tokens,
+    fileId: template.driveFileId,
+  })
 
   setHeader(event, 'Content-Type', mimeType)
   setHeader(event, 'Content-Disposition', `inline; filename="${encodeURIComponent(filename)}"`)

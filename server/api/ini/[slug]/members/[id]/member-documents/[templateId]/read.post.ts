@@ -18,7 +18,9 @@ export default defineEventHandler(async (event) => {
   if (!canActForAll) {
     const md = await getMemberData(memberId, club)
     const ownMd = await getMemberData(currentUser.id, club)
-    const ownEmails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    const ownEmails = [ownMd?.email1, ownMd?.email2]
+      .filter((e): e is string => !!e)
+      .map((e) => e.toLowerCase())
     const isGuardian =
       currentUser.id === memberId ||
       (md?.email1 && ownEmails.includes(md.email1.toLowerCase())) ||
@@ -28,9 +30,14 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const template = await prisma.documentTemplate.findFirst({ where: { id: templateId, clubId: club.id } })
+  const template = await prisma.documentTemplate.findFirst({
+    where: { id: templateId, clubId: club.id },
+  })
   if (!template || template.documentType !== 'read') {
-    throw createError({ statusCode: 400, statusMessage: 'Vorlage nicht gefunden oder falscher Typ' })
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Vorlage nicht gefunden oder falscher Typ',
+    })
   }
 
   const existing = await prisma.memberDocument.findUnique({
@@ -60,7 +67,13 @@ export default defineEventHandler(async (event) => {
 
   const submission = await prisma.memberDocument.upsert({
     where: { memberId_templateId: { memberId, templateId } },
-    create: { memberId, templateId, readAt: new Date(), driveFileId, filename: template.driveFileName },
+    create: {
+      memberId,
+      templateId,
+      readAt: new Date(),
+      driveFileId,
+      filename: template.driveFileName,
+    },
     update: { readAt: new Date(), driveFileId, filename: template.driveFileName },
   })
 

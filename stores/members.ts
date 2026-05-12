@@ -12,7 +12,11 @@ export const useMembersStore = defineStore('members', () => {
     isLoading.value = true
     error.value = null
     try {
-      const data = await $fetch<{ members: Member[]; hasAnyMemberManager: boolean; memberManagerNames: string[] }>(`/api/ini/${slug}/members`)
+      const data = await $fetch<{
+        members: Member[]
+        hasAnyMemberManager: boolean
+        memberManagerNames: string[]
+      }>(`/api/ini/${slug}/members`)
       members.value = data.members
       hasAnyMemberManager.value = data.hasAnyMemberManager
       memberManagerNames.value = data.memberManagerNames
@@ -32,7 +36,12 @@ export const useMembersStore = defineStore('members', () => {
   async function deactivateMember(slug: string, memberId: string): Promise<void> {
     await $fetch(`/api/ini/${slug}/members/${memberId}/deactivate`, { method: 'POST' })
     const index = members.value.findIndex((m) => m.id === memberId)
-    if (index !== -1) members.value[index] = { ...members.value[index], isActive: false, deactivatedAt: new Date().toISOString() }
+    if (index !== -1)
+      members.value[index] = {
+        ...members.value[index],
+        isActive: false,
+        deactivatedAt: new Date().toISOString(),
+      }
   }
 
   return {

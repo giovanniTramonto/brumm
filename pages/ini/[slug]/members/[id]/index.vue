@@ -31,7 +31,13 @@ type TemplateEntry = {
   name: string
   documentType: string | null
   hasFile: boolean
-  submission: { id: string; filename: string | null; uploadedAt: string; readAt: string | null; driveFileId: string | null } | null
+  submission: {
+    id: string
+    filename: string | null
+    uploadedAt: string
+    readAt: string | null
+    driveFileId: string | null
+  } | null
 }
 const memberDocTemplates = ref<TemplateEntry[]>([])
 const allSubmitted = ref(false)
@@ -98,7 +104,9 @@ const form = reactive({
 async function loadDocuments() {
   isLoadingDocs.value = true
   try {
-    const data = await $fetch<{ documents: DocumentEntry[] }>(`/api/ini/${slug}/members/${memberId}/documents`)
+    const data = await $fetch<{ documents: DocumentEntry[] }>(
+      `/api/ini/${slug}/members/${memberId}/documents`,
+    )
     documents.value = data.documents
   } catch {
     // ignore
@@ -131,9 +139,13 @@ onMounted(async () => {
   try {
     const [memberData, groupsData, templatesData] = await Promise.all([
       $fetch<{ member: Member; isOwnChild: boolean }>(`/api/ini/${slug}/members/${memberId}`),
-      canManageMembers.value ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`) : Promise.resolve(null),
-      (isMember.value || canManageMembers.value)
-        ? $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(`/api/ini/${slug}/members/${memberId}/member-documents`).catch(() => null)
+      canManageMembers.value
+        ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`)
+        : Promise.resolve(null),
+      isMember.value || canManageMembers.value
+        ? $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
+            `/api/ini/${slug}/members/${memberId}/member-documents`,
+          ).catch(() => null)
         : Promise.resolve(null),
     ])
 
@@ -196,7 +208,11 @@ async function onSave() {
       },
     })
     if (member.value) {
-      member.value = { ...member.value, firstName: form.firstName.trim(), lastName: form.lastName.trim() }
+      member.value = {
+        ...member.value,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+      }
     }
   } catch (err: unknown) {
     saveError.value =
@@ -228,11 +244,7 @@ async function onReactivate() {
 }
 
 async function onDeactivate() {
-  if (
-    !member.value ||
-    !confirm('Vertrag abmelden? Automatische Löschung nach einem Jahr.')
-  )
-    return
+  if (!member.value || !confirm('Vertrag abmelden? Automatische Löschung nach einem Jahr.')) return
   isDeactivating.value = true
   try {
     await membersStore.deactivateMember(slug, member.value.id)
@@ -257,11 +269,7 @@ async function onResendInvite() {
 }
 
 async function onDeleteMember() {
-  if (
-    !member.value ||
-    !confirm('Kind entfernen? Alle Daten werden gelöscht.')
-  )
-    return
+  if (!member.value || !confirm('Kind entfernen? Alle Daten werden gelöscht.')) return
   inviteActionError.value = null
   isCancellingInvite.value = true
   try {
@@ -284,7 +292,10 @@ async function onUploadForTemplate(templateId: string, event: Event) {
   try {
     const body = new FormData()
     body.append('file', file, file.name)
-    await $fetch(`/api/ini/${slug}/members/${memberId}/member-documents/${templateId}`, { method: 'POST', body })
+    await $fetch(`/api/ini/${slug}/members/${memberId}/member-documents/${templateId}`, {
+      method: 'POST',
+      body,
+    })
     await loadMemberDocTemplates()
   } catch (err: unknown) {
     uploadErrors.value = {

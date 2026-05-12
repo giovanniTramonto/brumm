@@ -10,7 +10,9 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
 
-  const canManageMembers = currentUser.role === 'SUPERUSER' || (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  const canManageMembers =
+    currentUser.role === 'SUPERUSER' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
   if (!canManageMembers) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
@@ -20,8 +22,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, phone1, phone2, groupId, contractEnd } =
-    parsed.data
+  const {
+    firstName,
+    lastName,
+    birthDate,
+    guardian1Name,
+    guardian2Name,
+    email1,
+    email2,
+    phone1,
+    phone2,
+    groupId,
+    contractEnd,
+  } = parsed.data
 
   const storageId = generateStorageId()
   const storageRef = buildStorageRef(new Date(birthDate), firstName, lastName, storageId)
@@ -90,9 +103,21 @@ export default defineEventHandler(async (event) => {
     })
 
     const childName = `${firstName} ${lastName}`
-    await sendInviteEmail({ to: email1, clubName: club.name, clubSlug: club.slug, token: invite.token, childName })
+    await sendInviteEmail({
+      to: email1,
+      clubName: club.name,
+      clubSlug: club.slug,
+      token: invite.token,
+      childName,
+    })
     if (email2) {
-      await sendInviteEmail({ to: email2, clubName: club.name, clubSlug: club.slug, token: invite.token, childName })
+      await sendInviteEmail({
+        to: email2,
+        clubName: club.name,
+        clubSlug: club.slug,
+        token: invite.token,
+        childName,
+      })
     }
   }
 

@@ -1,6 +1,6 @@
+import { sendManagerRemovedEmail } from '~/server/utils/email'
 import { deleteManagerData, getManagerData } from '~/server/utils/managerData'
 import { prisma } from '~/server/utils/prisma'
-import { sendManagerRemovedEmail } from '~/server/utils/email'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -26,7 +26,9 @@ export default defineEventHandler(async (event) => {
   await prisma.manager.delete({ where: { id: managerId } })
 
   if (data) {
-    await sendManagerRemovedEmail({ to: data.email, name: data.name, clubName: club.name }).catch(() => {})
+    await sendManagerRemovedEmail({ to: data.email, name: data.name, clubName: club.name }).catch(
+      () => {},
+    )
   }
 
   return { ok: true }

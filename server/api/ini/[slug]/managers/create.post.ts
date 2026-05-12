@@ -1,8 +1,8 @@
+import { sendManagerAddedEmail } from '~/server/utils/email'
 import { saveManagerData } from '~/server/utils/managerData'
 import { prisma } from '~/server/utils/prisma'
-import { formatZodError, createManagerSchema } from '~/server/utils/schemas'
+import { createManagerSchema, formatZodError } from '~/server/utils/schemas'
 import { generateStorageId } from '~/server/utils/storageRef'
-import { sendManagerAddedEmail } from '~/server/utils/email'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -28,5 +28,14 @@ export default defineEventHandler(async (event) => {
 
   await sendManagerAddedEmail({ to: email, name, clubName: club.name }).catch(() => {})
 
-  return { manager: { id: manager.id, storageId, isMemberManager: manager.isMemberManager, name, email, createdAt: manager.createdAt.toISOString() } }
+  return {
+    manager: {
+      id: manager.id,
+      storageId,
+      isMemberManager: manager.isMemberManager,
+      name,
+      email,
+      createdAt: manager.createdAt.toISOString(),
+    },
+  }
 })

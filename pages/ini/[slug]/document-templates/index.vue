@@ -52,7 +52,10 @@ async function onCreate() {
     body.append('name', newName.value.trim())
     body.append('documentType', newDocumentType.value)
     if (newFile.value) body.append('file', newFile.value, newFile.value.name)
-    const data = await $fetch<{ template: Template }>(`/api/ini/${slug}/document-templates`, { method: 'POST', body })
+    const data = await $fetch<{ template: Template }>(`/api/ini/${slug}/document-templates`, {
+      method: 'POST',
+      body,
+    })
     templates.value.push(data.template)
     newName.value = ''
     newDocumentType.value = ''
@@ -60,7 +63,8 @@ async function onCreate() {
     const input = document.getElementById('new-file-input') as HTMLInputElement | null
     if (input) input.value = ''
   } catch (err: unknown) {
-    createError.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Anlegen'
+    createError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Anlegen'
   } finally {
     isCreating.value = false
   }
@@ -83,10 +87,13 @@ async function saveEdit(template: Template) {
 }
 
 async function setDocumentType(template: Template, documentType: string) {
-  const updated = await $fetch<{ template: Template }>(`/api/ini/${slug}/document-templates/${template.id}`, {
-    method: 'PATCH',
-    body: { documentType },
-  })
+  const updated = await $fetch<{ template: Template }>(
+    `/api/ini/${slug}/document-templates/${template.id}`,
+    {
+      method: 'PATCH',
+      body: { documentType },
+    },
+  )
   const idx = templates.value.findIndex((t) => t.id === template.id)
   if (idx !== -1) templates.value[idx] = updated.template
 }
@@ -99,10 +106,13 @@ async function onUploadFile(template: Template, event: Event) {
   try {
     const body = new FormData()
     body.append('file', file, file.name)
-    const data = await $fetch<{ template: Template }>(`/api/ini/${slug}/document-templates/${template.id}/file`, {
-      method: 'POST',
-      body,
-    })
+    const data = await $fetch<{ template: Template }>(
+      `/api/ini/${slug}/document-templates/${template.id}/file`,
+      {
+        method: 'POST',
+        body,
+      },
+    )
     const idx = templates.value.findIndex((t) => t.id === template.id)
     if (idx !== -1) templates.value[idx] = data.template
   } finally {

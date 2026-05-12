@@ -23,7 +23,9 @@ export default defineEventHandler(async (event) => {
     const member = await prisma.user.findFirst({ where: { id: memberId, clubId: club.id } })
     const md = await getMemberData(memberId, club)
     const ownMd = await getMemberData(currentUser.id, club)
-    const ownEmails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    const ownEmails = [ownMd?.email1, ownMd?.email2]
+      .filter((e): e is string => !!e)
+      .map((e) => e.toLowerCase())
     const isGuardian =
       currentUser.id === memberId ||
       (md?.email1 && ownEmails.includes(md.email1.toLowerCase())) ||
@@ -32,11 +34,16 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
     }
     if (member?.isActive || md?.deactivatedAt) {
-      throw createError({ statusCode: 403, statusMessage: 'Upload nur für Kinder mit Status Bestätigt möglich' })
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Upload nur für Kinder mit Status Bestätigt möglich',
+      })
     }
   }
 
-  const template = await prisma.documentTemplate.findFirst({ where: { id: templateId, clubId: club.id } })
+  const template = await prisma.documentTemplate.findFirst({
+    where: { id: templateId, clubId: club.id },
+  })
   if (!template) {
     throw createError({ statusCode: 404, statusMessage: 'Vorlage nicht gefunden' })
   }
@@ -55,11 +62,16 @@ export default defineEventHandler(async (event) => {
   const tokens = club.oauthToken as OAuthTokens
   const storageConfig = club.storageConfig as GoogleDriveConfig
 
-  const existing = await prisma.memberDocument.findUnique({ where: { memberId_templateId: { memberId, templateId } } })
+  const existing = await prisma.memberDocument.findUnique({
+    where: { memberId_templateId: { memberId, templateId } },
+  })
   if (existing) {
     try {
       const drive = (await import('~/server/utils/googleAuth')).getDriveClientFromTokens(tokens)
-      await drive.files.delete({ fileId: existing.driveFileId ?? undefined, supportsAllDrives: true })
+      await drive.files.delete({
+        fileId: existing.driveFileId ?? undefined,
+        supportsAllDrives: true,
+      })
     } catch {
       // ignore if already deleted
     }

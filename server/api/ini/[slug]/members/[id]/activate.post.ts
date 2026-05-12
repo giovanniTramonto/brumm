@@ -7,7 +7,9 @@ export default defineEventHandler(async (event) => {
   const currentUser = event.context.user
   const memberId = getRouterParam(event, 'id')
 
-  const canManageMembers = currentUser.role === 'SUPERUSER' || (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  const canManageMembers =
+    currentUser.role === 'SUPERUSER' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
   if (!canManageMembers) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }

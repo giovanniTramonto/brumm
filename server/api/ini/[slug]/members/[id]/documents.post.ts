@@ -39,7 +39,10 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
     }
     if (member.isActive || md.deactivatedAt) {
-      throw createError({ statusCode: 403, statusMessage: 'Upload nur für Kinder mit Status Bestätigt möglich' })
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Upload nur für Kinder mit Status Bestätigt möglich',
+      })
     }
   }
 

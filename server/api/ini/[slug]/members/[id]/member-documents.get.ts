@@ -15,7 +15,9 @@ export default defineEventHandler(async (event) => {
   if (!canViewAll) {
     const ownMd = await getMemberData(currentUser.id, club)
     const md = await getMemberData(memberId, club)
-    const ownEmails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    const ownEmails = [ownMd?.email1, ownMd?.email2]
+      .filter((e): e is string => !!e)
+      .map((e) => e.toLowerCase())
     const isGuardian =
       currentUser.id === memberId ||
       (md?.email1 && ownEmails.includes(md.email1.toLowerCase())) ||
@@ -33,7 +35,14 @@ export default defineEventHandler(async (event) => {
     }),
     prisma.memberDocument.findMany({
       where: { memberId, template: { clubId: club.id } },
-      select: { id: true, templateId: true, filename: true, uploadedAt: true, readAt: true, driveFileId: true },
+      select: {
+        id: true,
+        templateId: true,
+        filename: true,
+        uploadedAt: true,
+        readAt: true,
+        driveFileId: true,
+      },
     }),
   ])
 

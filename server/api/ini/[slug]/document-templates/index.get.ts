@@ -6,7 +6,15 @@ export default defineEventHandler(async (event) => {
   const templates = await prisma.documentTemplate.findMany({
     where: { clubId: club.id },
     orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-    select: { id: true, name: true, ref: true, documentType: true, driveFileId: true, driveFileName: true, createdAt: true },
+    select: {
+      id: true,
+      name: true,
+      ref: true,
+      documentType: true,
+      driveFileId: true,
+      driveFileName: true,
+      createdAt: true,
+    },
   })
 
   return { templates }

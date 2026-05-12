@@ -43,7 +43,11 @@ export default defineEventHandler(async (event) => {
     })
     if (user?.role === 'MEMBER') {
       const memberData = await getMemberData(user.id, club)
-      if (memberData) return { user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName }, club }
+      if (memberData)
+        return {
+          user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName },
+          club,
+        }
     }
     return { user, club }
   }
@@ -81,7 +85,11 @@ export default defineEventHandler(async (event) => {
   })
   if (user?.role === 'MEMBER') {
     const memberData = await getMemberData(user.id, club)
-    if (memberData) return { user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName }, club }
+    if (memberData)
+      return {
+        user: { ...user, firstName: memberData.firstName, lastName: memberData.lastName },
+        club,
+      }
   }
   return { user, club }
 })

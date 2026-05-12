@@ -11,7 +11,9 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<{ name?: string; documentType?: string }>(event)
 
-  const template = await prisma.documentTemplate.findFirst({ where: { id: templateId, clubId: club.id } })
+  const template = await prisma.documentTemplate.findFirst({
+    where: { id: templateId, clubId: club.id },
+  })
   if (!template) {
     throw createError({ statusCode: 404, statusMessage: 'Vorlage nicht gefunden' })
   }

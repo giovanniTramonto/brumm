@@ -113,7 +113,11 @@ async function getOrCreateFolder(params: {
   if (result.data.files?.[0]?.id) return result.data.files[0].id
   const folder = await params.drive.files.create({
     supportsAllDrives: true,
-    requestBody: { name: params.name, mimeType: 'application/vnd.google-apps.folder', parents: [params.parentId] },
+    requestBody: {
+      name: params.name,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [params.parentId],
+    },
     fields: 'id',
   })
   const id = folder.data.id
@@ -127,7 +131,11 @@ export async function getOrCreateTemplateSubfolder(params: {
   ref: string
 }): Promise<string> {
   const drive = getDriveClientFromTokens(params.tokens)
-  const templatesFolderId = await getOrCreateFolder({ drive, name: 'document-templates', parentId: params.appFolderId })
+  const templatesFolderId = await getOrCreateFolder({
+    drive,
+    name: 'document-templates',
+    parentId: params.appFolderId,
+  })
   return getOrCreateFolder({ drive, name: params.ref, parentId: templatesFolderId })
 }
 
@@ -162,7 +170,11 @@ export async function downloadDriveFile(params: {
 }): Promise<{ buffer: Buffer; filename: string; mimeType: string }> {
   const drive = getDriveClientFromTokens(params.tokens)
 
-  const meta = await drive.files.get({ fileId: params.fileId, supportsAllDrives: true, fields: 'name, mimeType' })
+  const meta = await drive.files.get({
+    fileId: params.fileId,
+    supportsAllDrives: true,
+    fields: 'name, mimeType',
+  })
   const response = await drive.files.get(
     { fileId: params.fileId, alt: 'media', supportsAllDrives: true },
     { responseType: 'arraybuffer' },
@@ -262,7 +274,6 @@ export async function createManagementStructure(params: {
   })
   return { managementFolderId }
 }
-
 
 export async function createRootFolderStructure(params: {
   tokens: OAuthTokens

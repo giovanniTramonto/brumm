@@ -11,7 +11,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  const template = await prisma.documentTemplate.findFirst({ where: { id: templateId, clubId: club.id } })
+  const template = await prisma.documentTemplate.findFirst({
+    where: { id: templateId, clubId: club.id },
+  })
   if (!template) {
     throw createError({ statusCode: 404, statusMessage: 'Vorlage nicht gefunden' })
   }

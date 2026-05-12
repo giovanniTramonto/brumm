@@ -11,7 +11,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  const canManageMembers = currentUser.role === 'SUPERUSER' || (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  const canManageMembers =
+    currentUser.role === 'SUPERUSER' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
   if (!canManageMembers) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
@@ -34,8 +36,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
   }
 
-  const { firstName, lastName, birthDate, guardian1Name, guardian2Name, email1, email2, phone1, phone2, groupId, contractEnd } =
-    parsed.data
+  const {
+    firstName,
+    lastName,
+    birthDate,
+    guardian1Name,
+    guardian2Name,
+    email1,
+    email2,
+    phone1,
+    phone2,
+    groupId,
+    contractEnd,
+  } = parsed.data
 
   await updateMemberData(
     memberId,

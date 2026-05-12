@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
   const userIds = users.map((u) => u.id)
   const [memberDataList, pendingInvites] = await Promise.all([
     getAllMemberData(userIds, club),
-    prisma.invite.findMany({ where: { userId: { in: userIds }, isUsed: false }, select: { userId: true } }),
+    prisma.invite.findMany({
+      where: { userId: { in: userIds }, isUsed: false },
+      select: { userId: true },
+    }),
   ])
   const pendingInviteUserIds = new Set(pendingInvites.map((i) => i.userId))
 
@@ -23,7 +26,9 @@ export default defineEventHandler(async (event) => {
   let guardianEmails: Set<string> | null = null
   if (currentUser.role === 'MEMBER') {
     const ownMd = memberDataMap.get(currentUser.id)
-    const emails = [ownMd?.email1, ownMd?.email2].filter((e): e is string => !!e).map((e) => e.toLowerCase())
+    const emails = [ownMd?.email1, ownMd?.email2]
+      .filter((e): e is string => !!e)
+      .map((e) => e.toLowerCase())
     guardianEmails = new Set(emails)
   }
 
@@ -68,7 +73,10 @@ export default defineEventHandler(async (event) => {
     })
 
   const [memberManagerRecords, allManagerData] = await Promise.all([
-    prisma.manager.findMany({ where: { clubId: club.id, isMemberManager: true }, select: { id: true } }),
+    prisma.manager.findMany({
+      where: { clubId: club.id, isMemberManager: true },
+      select: { id: true },
+    }),
     getAllManagerData(club),
   ])
 
