@@ -22,7 +22,7 @@ onMounted(async () => {
     </div>
 
     <div v-if="managersStore.isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
-      Wird geladen …
+      Brumm, brumm …
     </div>
 
     <div v-else class="card">

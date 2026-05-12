@@ -89,7 +89,7 @@ async function onSaveEdit() {
       </div>
     </div>
 
-    <div v-if="groupsStore.isLoading" class="py-12 text-center text-gray-500">Wird geladen…</div>
+    <div v-if="groupsStore.isLoading" class="py-12 text-center text-gray-500">Brumm, brumm …</div>
 
     <div v-else-if="groupsStore.groups.length === 0" class="py-12 text-center text-gray-500">
       Noch keine Gruppen vorhanden.

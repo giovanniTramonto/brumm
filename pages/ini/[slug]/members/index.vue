@@ -87,7 +87,7 @@ const filteredMembers = computed(() => {
       />
     </div>
 
-    <div v-if="membersStore.isLoading" class="py-12 text-gray-500">Wird geladen…</div>
+    <div v-if="membersStore.isLoading" class="py-12 text-gray-500">Brumm, brumm …</div>
 
     <div v-else-if="filteredMembers.length === 0" class="py-12 text-gray-500">
       Keine Kinder gefunden.

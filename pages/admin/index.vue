@@ -108,7 +108,7 @@ async function onDeleteClub(clubId: string) {
           </div>
           <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
           <button type="submit" class="btn-primary w-full" :disabled="isLoading">
-            {{ isLoading ? "Wird geladen…" : "Anmelden" }}
+            {{ isLoading ? "Brumm, brumm …" : "Anmelden" }}
           </button>
         </form>
       </div>

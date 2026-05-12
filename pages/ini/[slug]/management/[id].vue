@@ -64,7 +64,7 @@ async function onDelete() {
     </div>
 
     <div v-if="isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
-      Wird geladen …
+      Brumm, brumm …
     </div>
 
     <form v-else class="card max-w-lg" @submit.prevent="onSubmit">

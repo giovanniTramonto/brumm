@@ -321,7 +321,7 @@ function onSubmit() {
       </NuxtLink>
     </div>
 
-    <div v-if="isLoading" role="status" aria-live="polite" class="py-12 text-gray-500">Wird geladen…</div>
+    <div v-if="isLoading" role="status" aria-live="polite" class="py-12 text-gray-500">Brumm, brumm …</div>
     <div v-else-if="error" class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ error }}</div>
 
     <template v-else-if="member">
@@ -432,7 +432,7 @@ function onSubmit() {
 
           <div class="border-t pt-4">
             <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
-            <div v-if="isLoadingDocs" class="text-sm text-gray-500">Wird geladen…</div>
+            <div v-if="isLoadingDocs" class="text-sm text-gray-500">Brumm, brumm …</div>
             <p v-else-if="documents.length === 0" class="text-sm text-gray-500">Keine Unterlagen hochgeladen.</p>
             <ul v-else class="space-y-1">
               <li
@@ -458,7 +458,7 @@ function onSubmit() {
               Ihr Kind wartet auf Freischaltung. Bitte laden Sie alle erforderlichen Unterlagen hoch.
             </p>
 
-            <div v-if="isLoadingTemplates" role="status" aria-live="polite" class="text-sm text-gray-500">Wird geladen…</div>
+            <div v-if="isLoadingTemplates" role="status" aria-live="polite" class="text-sm text-gray-500">Brumm, brumm …</div>
 
             <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
               Noch keine Unterlagen konfiguriert.
@@ -538,7 +538,7 @@ function onSubmit() {
         <div v-if="canManageMembers" class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
 
-          <div v-if="isLoadingTemplates || isLoadingDocs" role="status" aria-live="polite" class="text-sm text-gray-500">Wird geladen…</div>
+          <div v-if="isLoadingTemplates || isLoadingDocs" role="status" aria-live="polite" class="text-sm text-gray-500">Brumm, brumm …</div>
 
           <!-- template submission status -->
           <template v-else-if="memberDocTemplates.length > 0">

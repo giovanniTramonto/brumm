@@ -22,7 +22,7 @@ const activeMembers = computed(() => membersStore.members.filter((m) => m.isActi
     </div>
 
     <div v-if="membersStore.isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
-      Wird geladen …
+      Brumm, brumm …
     </div>
 
     <div v-else class="card overflow-x-auto">
