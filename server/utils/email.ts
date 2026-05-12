@@ -12,7 +12,7 @@ async function send(...args: Parameters<Resend['emails']['send']>): Promise<void
   if (error) throw new Error(`Resend error: ${error.message}`)
 }
 
-const FROM_ADDRESS = process.env.EMAIL_FROM ?? 'Jita Vereinsverwaltung <onboarding@resend.dev>'
+const FROM_ADDRESS = process.env.EMAIL_FROM ?? 'Brumm Vereinsverwaltung <onboarding@resend.dev>'
 
 export async function sendMagicLink(params: {
   to: string
@@ -44,9 +44,9 @@ export async function sendWelcomeEmail(params: {
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `Willkommen bei Jita – ${params.clubName} einrichten`,
+    subject: `Willkommen bei Brumm – ${params.clubName} einrichten`,
     html: `
-      <h2>Willkommen bei Jita!</h2>
+      <h2>Willkommen bei Brumm!</h2>
       <p>Dein Verein <strong>${params.clubName}</strong> wurde registriert.</p>
       <p>Klicke auf den folgenden Link, um die Einrichtung abzuschließen. Der Link ist 24 Stunden gültig.</p>
       <p><a href="${link}">Einrichtung starten</a></p>

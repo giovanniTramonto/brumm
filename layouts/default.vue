@@ -34,7 +34,7 @@ async function onLogout() {
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center gap-8">
             <span class="text-lg font-semibold text-primary-700" aria-hidden="true">
-              {{ authStore.currentClub?.name ?? "Jita" }}
+              {{ authStore.currentClub?.name ?? "Brumm" }}
             </span>
             <ul class="hidden list-none gap-1 sm:flex" role="list">
               <li v-for="item in navItems" :key="item.to">

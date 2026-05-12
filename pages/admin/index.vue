@@ -94,7 +94,7 @@ async function onDeleteClub(clubId: string) {
 <template>
   <div class="min-h-screen bg-admin px-4 py-12">
     <div class="mx-auto max-w-4xl">
-      <h1 class="mb-8 text-2xl font-bold text-gray-900">Jita Admin</h1>
+      <h1 class="mb-8 text-2xl font-bold text-gray-900">Brumm Admin</h1>
 
       <!-- Login -->
       <div v-if="!isAuthenticated" class="flex justify-center">

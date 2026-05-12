@@ -1,4 +1,4 @@
-# Jita
+# Brumm
 
 Multi-Tenant SPA für Kindergarten-Vereinsverwaltung. Jeder Verein ist komplett isoliert und hat einen eigenen Slug.
 
@@ -30,7 +30,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 
 ```
 /register                          → Verein registrieren
-/admin                             → Jita Admin (ADMIN_SECRET)
+/admin                             → Brumm Admin (ADMIN_SECRET)
 /ini/{slug}/login                  → Anmeldung per Magic Link
 /ini/{slug}/onboarding             → Google Drive einrichten
 /ini/{slug}/dashboard

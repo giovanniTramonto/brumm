@@ -60,7 +60,7 @@ async function onSubmit() {
   <div class="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-gray-900">Jita</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Brumm</h1>
         <p class="mt-2 text-gray-600">Kindergarten-Vereinsverwaltung</p>
       </div>
 
@@ -96,7 +96,7 @@ async function onSubmit() {
             <div>
               <label for="slug" class="label">URL-Kürzel</label>
               <div class="mt-1 flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-primary-600">
-                <span class="flex select-none items-center pl-3 text-gray-500 sm:text-sm">jita.app/ini/</span>
+                <span class="flex select-none items-center pl-3 text-gray-500 sm:text-sm">brumm.app/ini/</span>
                 <input
                   id="slug"
                   :value="slug"

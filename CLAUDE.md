@@ -1,4 +1,4 @@
-# Jita – CLAUDE.md
+# Brumm – CLAUDE.md
 
 ## Stack
 - Nuxt 3 (Hybrid: SSG/SPA), Vue 3 + Composition API
@@ -65,8 +65,8 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 DATABASE_URL          # Neon Pooled Connection
 DIRECT_URL            # Neon Direct Connection (für Migrationen)
 RESEND_API_KEY        # Resend (plattformweiter E-Mail-Dienst)
-EMAIL_FROM            # Absender-Adresse (z.B. "Jita <noreply@example.com>")
-ADMIN_SECRET          # Jita Admin-Bereich (/admin)
+EMAIL_FROM            # Absender-Adresse (z.B. "Brumm <noreply@example.com>")
+ADMIN_SECRET          # Brumm Admin-Bereich (/admin)
 APP_URL               # Basis-URL der App (z.B. http://localhost:3001)
 GOOGLE_CLIENT_ID      # Google OAuth 2.0 Client ID
 GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
