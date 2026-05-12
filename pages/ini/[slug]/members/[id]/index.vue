@@ -118,9 +118,10 @@ async function loadDocuments() {
 async function loadMemberDocTemplates() {
   isLoadingTemplates.value = true
   try {
-    const data = await $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
-      `/api/ini/${slug}/members/${memberId}/member-documents`,
-    )
+    const data = await $fetch<{
+      templates: TemplateEntry[]
+      allSubmitted: boolean
+    }>(`/api/ini/${slug}/members/${memberId}/member-documents`)
     memberDocTemplates.value = data.templates
     allSubmitted.value = data.allSubmitted
     for (const t of data.templates) {
@@ -235,7 +236,9 @@ async function onReactivate() {
   if (!member.value) return
   isReactivating.value = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${member.value.id}/reactivate`, { method: 'POST' })
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/reactivate`, {
+      method: 'POST',
+    })
     member.value = { ...member.value, isActive: true, deactivatedAt: null }
     await loadDocuments()
   } finally {
@@ -259,7 +262,9 @@ async function onResendInvite() {
   inviteActionError.value = null
   isResendingInvite.value = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${member.value.id}/resend-invite`, { method: 'POST' })
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/resend-invite`, {
+      method: 'POST',
+    })
   } catch (err: unknown) {
     inviteActionError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
@@ -273,7 +278,9 @@ async function onDeleteMember() {
   inviteActionError.value = null
   isCancellingInvite.value = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${member.value.id}/delete`, { method: 'POST' })
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/delete`, {
+      method: 'POST',
+    })
     await navigateTo(`/ini/${slug}/members`)
   } catch (err: unknown) {
     inviteActionError.value =
@@ -316,50 +323,119 @@ function onSubmit() {
 <template>
   <div class="max-w-2xl">
     <div class="mb-6">
-      <NuxtLink :to="`/ini/${slug}/members`" class="text-sm text-gray-500 hover:text-gray-900" aria-label="Zurück zur Kinderliste">
+      <NuxtLink
+        :to="`/ini/${slug}/members`"
+        class="text-sm text-gray-500 hover:text-gray-900"
+        aria-label="Zurück zur Kinderliste"
+      >
         ← Zurück
       </NuxtLink>
     </div>
 
-    <div v-if="isLoading" role="status" aria-live="polite" class="py-12 text-gray-500">Brumm, brumm …</div>
-    <div v-else-if="error" class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ error }}</div>
+    <div
+      v-if="isLoading"
+      role="status"
+      aria-live="polite"
+      class="py-12 text-gray-500"
+    >
+      Brumm, brumm …
+    </div>
+    <div
+      v-else-if="error"
+      class="rounded-md bg-red-50 p-4 text-sm text-red-700"
+    >
+      {{ error }}
+    </div>
 
     <template v-else-if="member">
       <div class="card space-y-4">
         <div class="flex items-center justify-between">
-          <h1 class="text-xl font-semibold text-gray-900">{{ member.firstName }} {{ member.lastName }}</h1>
+          <h1 class="text-xl font-semibold text-gray-900">
+            {{ member.firstName }} {{ member.lastName }}
+          </h1>
           <span
             role="status"
             class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="member.isActive ? 'bg-green-100 text-green-800' : member.deactivatedAt ? 'bg-gray-100 text-gray-600' : member.hasPendingInvite ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
+            :class="
+              member.isActive
+                ? 'bg-green-100 text-green-800'
+                : member.deactivatedAt
+                  ? 'bg-gray-100 text-gray-600'
+                  : member.hasPendingInvite
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-blue-100 text-blue-800'
+            "
           >
-            {{ member.isActive ? 'Aktiv' : member.deactivatedAt ? 'Abgemeldet' : member.hasPendingInvite ? 'Ausstehend' : 'Bestätigt' }}
+            {{
+              member.isActive
+                ? "Aktiv"
+                : member.deactivatedAt
+                  ? "Abgemeldet"
+                  : member.hasPendingInvite
+                    ? "Ausstehend"
+                    : "Bestätigt"
+            }}
           </span>
         </div>
 
         <!-- canManageMembers: editable form -->
-        <form v-if="canManageMembers" class="space-y-4" @submit.prevent="onSave">
-          <div v-if="saveError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ saveError }}</div>
+        <form
+          v-if="canManageMembers"
+          class="space-y-4"
+          @submit.prevent="onSave"
+        >
+          <div
+            v-if="saveError"
+            role="alert"
+            class="rounded-md bg-red-50 p-3 text-sm text-red-700"
+          >
+            {{ saveError }}
+          </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="field-firstName" class="label">Vorname *</label>
-              <input id="field-firstName" v-model="form.firstName" type="text" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" :required="!member.isActive" />
+              <input
+                id="field-firstName"
+                v-model="form.firstName"
+                type="text"
+                class="input mt-1"
+                :readonly="member.isActive || !!member.deactivatedAt"
+                :required="!member.isActive"
+              />
             </div>
             <div>
               <label for="field-lastName" class="label">Nachname *</label>
-              <input id="field-lastName" v-model="form.lastName" type="text" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" :required="!member.isActive" />
+              <input
+                id="field-lastName"
+                v-model="form.lastName"
+                type="text"
+                class="input mt-1"
+                :readonly="member.isActive || !!member.deactivatedAt"
+                :required="!member.isActive"
+              />
             </div>
           </div>
 
           <div>
             <label for="field-birthDate" class="label">Geburtsdatum *</label>
-            <input id="field-birthDate" v-model="form.birthDate" type="date" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" :required="!member.isActive" />
+            <input
+              id="field-birthDate"
+              v-model="form.birthDate"
+              type="date"
+              class="input mt-1"
+              :readonly="member.isActive || !!member.deactivatedAt"
+              :required="!member.isActive"
+            />
           </div>
 
           <div>
             <label for="field-groupId" class="label">Gruppe</label>
-            <select id="field-groupId" v-model="form.groupId" class="input mt-1">
+            <select
+              id="field-groupId"
+              v-model="form.groupId"
+              class="input mt-1"
+            >
               <option value="">Keine Gruppe</option>
               <option v-for="group in groups" :key="group.id" :value="group.id">
                 {{ group.name }}
@@ -369,42 +445,95 @@ function onSubmit() {
 
           <div>
             <label for="field-contractEnd" class="label">Vertragsende</label>
-            <input id="field-contractEnd" v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
+            <input
+              id="field-contractEnd"
+              v-model="form.contractEnd"
+              type="text"
+              class="input mt-1"
+              placeholder="YYYY"
+              maxlength="4"
+            />
           </div>
 
           <div>
-            <label for="field-guardian1Name" class="label">Erziehungsber. 1 *</label>
-            <input id="field-guardian1Name" v-model="form.guardian1Name" type="text" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" :required="!member.isActive" />
+            <label for="field-guardian1Name" class="label"
+              >Erziehungsber. 1 *</label
+            >
+            <input
+              id="field-guardian1Name"
+              v-model="form.guardian1Name"
+              type="text"
+              class="input mt-1"
+              :readonly="member.isActive || !!member.deactivatedAt"
+              :required="!member.isActive"
+            />
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="field-email1" class="label">E-Mail 1 *</label>
-              <input id="field-email1" v-model="form.email1" type="email" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" :required="!member.isActive" />
+              <input
+                id="field-email1"
+                v-model="form.email1"
+                type="email"
+                class="input mt-1"
+                :readonly="member.isActive || !!member.deactivatedAt"
+                :required="!member.isActive"
+              />
             </div>
             <div>
               <label for="field-phone1" class="label">Telefon 1</label>
-              <input id="field-phone1" v-model="form.phone1" type="tel" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" />
+              <input
+                id="field-phone1"
+                v-model="form.phone1"
+                type="tel"
+                class="input mt-1"
+                :readonly="member.isActive || !!member.deactivatedAt"
+              />
             </div>
           </div>
 
           <div>
-            <label for="field-guardian2Name" class="label">Erziehungsber. 2</label>
-            <input id="field-guardian2Name" v-model="form.guardian2Name" type="text" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" />
+            <label for="field-guardian2Name" class="label"
+              >Erziehungsber. 2</label
+            >
+            <input
+              id="field-guardian2Name"
+              v-model="form.guardian2Name"
+              type="text"
+              class="input mt-1"
+              :readonly="member.isActive || !!member.deactivatedAt"
+            />
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="field-email2" class="label">E-Mail 2</label>
-              <input id="field-email2" v-model="form.email2" type="email" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" />
+              <input
+                id="field-email2"
+                v-model="form.email2"
+                type="email"
+                class="input mt-1"
+                :readonly="member.isActive || !!member.deactivatedAt"
+              />
             </div>
             <div>
               <label for="field-phone2" class="label">Telefon 2</label>
-              <input id="field-phone2" v-model="form.phone2" type="tel" class="input mt-1" :readonly="member.isActive || !!member.deactivatedAt" />
+              <input
+                id="field-phone2"
+                v-model="form.phone2"
+                type="tel"
+                class="input mt-1"
+                :readonly="member.isActive || !!member.deactivatedAt"
+              />
             </div>
           </div>
 
           <div class="flex gap-2">
-            <button type="submit" class="btn-primary text-sm" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Wird gespeichert…' : 'Speichern' }}
+            <button
+              type="submit"
+              class="btn-primary text-sm"
+              :disabled="isSubmitting"
+            >
+              {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
             </button>
           </div>
         </form>
@@ -414,7 +543,9 @@ function onSubmit() {
           <dl class="space-y-2 text-sm">
             <div class="flex gap-2">
               <dt class="w-40 text-gray-500">Geburtsdatum</dt>
-              <dd class="text-gray-900">{{ new Date(member.birthDate).toLocaleDateString('de-DE') }}</dd>
+              <dd class="text-gray-900">
+                {{ new Date(member.birthDate).toLocaleDateString("de-DE") }}
+              </dd>
             </div>
             <div v-if="member.guardian1Name" class="flex gap-2">
               <dt class="w-40 text-gray-500">Erziehungsber. 1</dt>
@@ -432,8 +563,12 @@ function onSubmit() {
 
           <div class="border-t pt-4">
             <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
-            <div v-if="isLoadingDocs" class="text-sm text-gray-500">Brumm, brumm …</div>
-            <p v-else-if="documents.length === 0" class="text-sm text-gray-500">Keine Unterlagen hochgeladen.</p>
+            <div v-if="isLoadingDocs" class="text-sm text-gray-500">
+              Brumm, brumm …
+            </div>
+            <p v-else-if="documents.length === 0" class="text-sm text-gray-500">
+              Keine Unterlagen hochgeladen.
+            </p>
             <ul v-else class="space-y-1">
               <li
                 v-for="doc in documents"
@@ -448,32 +583,64 @@ function onSubmit() {
         </template>
 
         <!-- MEMBER: Bestätigt → template-based upload list -->
-        <template v-else-if="isMember && !member.isActive && !member.deactivatedAt && !member.hasPendingInvite">
-          <div v-if="submitted" class="rounded-md bg-green-50 p-4 text-sm text-green-800">
+        <template
+          v-else-if="
+            isMember &&
+            !member.isActive &&
+            !member.deactivatedAt &&
+            !member.hasPendingInvite
+          "
+        >
+          <div
+            v-if="submitted"
+            class="rounded-md bg-green-50 p-4 text-sm text-green-800"
+          >
             Ihre Unterlagen wurden erfolgreich eingereicht.
           </div>
 
           <template v-else>
             <p class="text-sm text-gray-600">
-              Ihr Kind wartet auf Freischaltung. Bitte laden Sie alle erforderlichen Unterlagen hoch.
+              Ihr Kind wartet auf Freischaltung. Bitte laden Sie alle
+              erforderlichen Unterlagen hoch.
             </p>
 
-            <div v-if="isLoadingTemplates" role="status" aria-live="polite" class="text-sm text-gray-500">Brumm, brumm …</div>
+            <div
+              v-if="isLoadingTemplates"
+              role="status"
+              aria-live="polite"
+              class="text-sm text-gray-500"
+            >
+              Brumm, brumm …
+            </div>
 
-            <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
+            <p
+              v-else-if="memberDocTemplates.length === 0"
+              class="text-sm text-gray-500"
+            >
               Noch keine Unterlagen konfiguriert.
             </p>
 
             <ul v-else class="divide-y divide-gray-100">
-              <li v-for="t in visibleTemplates" :key="t.id" class="flex items-center gap-3 py-3">
+              <li
+                v-for="t in visibleTemplates"
+                :key="t.id"
+                class="flex items-center gap-3 py-3"
+              >
                 <span
                   class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1"
-                  :class="isDone(t) ? 'bg-green-100 text-green-600 ring-green-400' : 'bg-gray-50 text-gray-300 ring-gray-200'"
+                  :class="
+                    isDone(t)
+                      ? 'bg-green-100 text-green-600 ring-green-400'
+                      : 'bg-gray-50 text-gray-300 ring-gray-200'
+                  "
                   :aria-label="isDone(t) ? 'Erledigt' : 'Ausstehend'"
                   aria-hidden="false"
-                ><span aria-hidden="true">✓</span></span>
+                  ><span aria-hidden="true">✓</span></span
+                >
 
-                <span class="min-w-0 flex-1 text-sm text-gray-900">{{ t.name }}</span>
+                <span class="min-w-0 flex-1 text-sm text-gray-900">{{
+                  t.name
+                }}</span>
 
                 <div class="flex shrink-0 items-center gap-2">
                   <template v-if="t.documentType === 'read'">
@@ -482,15 +649,44 @@ function onSubmit() {
                       type="button"
                       class="btn-secondary py-1 text-xs"
                       @click="onMarkRead(t.id)"
-                    >Gelesen markieren</button>
-                    <span v-else class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none">✓ Gelesen</span>
-                    <a v-if="t.submission?.driveFileId" :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`" class="btn-secondary py-1 text-xs" target="_blank" rel="noopener noreferrer">Ansehen ↗</a>
-                    <a v-else-if="t.hasFile" :href="`/api/ini/${slug}/document-templates/${t.id}/file`" class="btn-secondary py-1 text-xs" target="_blank" rel="noopener noreferrer">Ansehen ↗</a>
+                    >
+                      Gelesen markieren
+                    </button>
+                    <span
+                      v-else
+                      class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
+                      >✓ Gelesen</span
+                    >
+                    <a
+                      v-if="t.submission?.driveFileId"
+                      :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
+                    <a
+                      v-else-if="t.hasFile"
+                      :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
                   </template>
 
                   <template v-else-if="t.documentType === 'upload'">
-                    <label class="btn-secondary cursor-pointer py-1 text-xs" :class="{ 'opacity-50': uploadingTemplateId === t.id }">
-                      {{ uploadingTemplateId === t.id ? '…' : t.submission ? 'Ändern' : 'Hochladen' }}
+                    <label
+                      class="btn-secondary cursor-pointer py-1 text-xs"
+                      :class="{ 'opacity-50': uploadingTemplateId === t.id }"
+                    >
+                      {{
+                        uploadingTemplateId === t.id
+                          ? "…"
+                          : t.submission
+                            ? "Ändern"
+                            : "Hochladen"
+                      }}
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -499,15 +695,31 @@ function onSubmit() {
                         @change="onUploadForTemplate(t.id, $event)"
                       />
                     </label>
-                    <span v-if="uploadErrors[t.id]" role="alert" class="max-w-[120px] truncate text-xs text-red-600">{{ uploadErrors[t.id] }}</span>
-                    <a v-if="t.hasFile" :href="`/api/ini/${slug}/document-templates/${t.id}/file`" class="btn-secondary py-1 text-xs" target="_blank" rel="noopener noreferrer">Ansehen ↗</a>
+                    <span
+                      v-if="uploadErrors[t.id]"
+                      role="alert"
+                      class="max-w-[120px] truncate text-xs text-red-600"
+                      >{{ uploadErrors[t.id] }}</span
+                    >
+                    <a
+                      v-if="t.hasFile"
+                      :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
                   </template>
                 </div>
               </li>
             </ul>
 
             <div class="flex justify-end border-t pt-4">
-              <button class="btn-primary text-sm" :disabled="!localAllSubmitted" @click="onSubmit">
+              <button
+                class="btn-primary text-sm"
+                :disabled="!localAllSubmitted"
+                @click="onSubmit"
+              >
                 Einreichen
               </button>
             </div>
@@ -518,7 +730,9 @@ function onSubmit() {
         <dl v-else-if="!isMember" class="space-y-2 text-sm">
           <div class="flex gap-2">
             <dt class="w-40 text-gray-500">Geburtsdatum</dt>
-            <dd class="text-gray-900">{{ new Date(member.birthDate).toLocaleDateString('de-DE') }}</dd>
+            <dd class="text-gray-900">
+              {{ new Date(member.birthDate).toLocaleDateString("de-DE") }}
+            </dd>
           </div>
           <div v-if="member.guardian1Name" class="flex gap-2">
             <dt class="w-40 text-gray-500">Erziehungsber. 1</dt>
@@ -536,38 +750,101 @@ function onSubmit() {
 
         <!-- canManageMembers: document overview -->
         <div v-if="canManageMembers" class="border-t pt-4">
-          <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
+          <h3 class="mb-3 text-sm font-medium text-gray-900">
+            Unterlagen der Anmeldung
+          </h3>
 
-          <div v-if="isLoadingTemplates || isLoadingDocs" role="status" aria-live="polite" class="text-sm text-gray-500">Brumm, brumm …</div>
+          <div
+            v-if="isLoadingTemplates || isLoadingDocs"
+            role="status"
+            aria-live="polite"
+            class="text-sm text-gray-500"
+          >
+            Brumm, brumm …
+          </div>
 
           <!-- template submission status -->
           <template v-else-if="memberDocTemplates.length > 0">
             <ul class="divide-y divide-gray-100">
-              <li v-for="t in visibleTemplates" :key="t.id" class="flex items-center gap-3 py-3">
+              <li
+                v-for="t in visibleTemplates"
+                :key="t.id"
+                class="flex items-center gap-3 py-3"
+              >
                 <span
                   class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1"
-                  :class="isDone(t) ? 'bg-green-100 text-green-600 ring-green-400' : 'bg-gray-50 text-gray-300 ring-gray-200'"
+                  :class="
+                    isDone(t)
+                      ? 'bg-green-100 text-green-600 ring-green-400'
+                      : 'bg-gray-50 text-gray-300 ring-gray-200'
+                  "
                   :aria-label="isDone(t) ? 'Erledigt' : 'Ausstehend'"
                   aria-hidden="false"
-                ><span aria-hidden="true">✓</span></span>
-                <span class="min-w-0 flex-1 text-sm text-gray-900">{{ t.name }}</span>
+                  ><span aria-hidden="true">✓</span></span
+                >
+                <span class="min-w-0 flex-1 text-sm text-gray-900">{{
+                  t.name
+                }}</span>
                 <div class="flex shrink-0 items-center gap-2">
                   <template v-if="t.documentType === 'read'">
                     <button
-                      v-if="isOwnChild && !member.isActive && !member.deactivatedAt && !readMap[t.id]"
+                      v-if="
+                        isOwnChild &&
+                        !member.isActive &&
+                        !member.deactivatedAt &&
+                        !readMap[t.id]
+                      "
                       type="button"
                       class="btn-secondary py-1 text-xs"
                       @click="onMarkRead(t.id)"
-                    >Gelesen markieren</button>
-                    <span v-else-if="readMap[t.id]" class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none">✓ Gelesen</span>
-                    <span v-else role="button" aria-disabled="true" class="btn-secondary py-1 text-xs opacity-50 pointer-events-none">Gelesen markieren</span>
-                    <a v-if="t.submission?.driveFileId" :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`" class="btn-secondary py-1 text-xs" target="_blank" rel="noopener noreferrer">Ansehen ↗</a>
-                    <a v-else-if="t.hasFile" :href="`/api/ini/${slug}/document-templates/${t.id}/file`" class="btn-secondary py-1 text-xs" target="_blank" rel="noopener noreferrer">Ansehen ↗</a>
+                    >
+                      Gelesen markieren
+                    </button>
+                    <span
+                      v-else-if="readMap[t.id]"
+                      class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
+                      >✓ Gelesen</span
+                    >
+                    <span
+                      v-else
+                      role="button"
+                      aria-disabled="true"
+                      class="btn-secondary py-1 text-xs opacity-50 pointer-events-none"
+                      >Gelesen markieren</span
+                    >
+                    <a
+                      v-if="t.submission?.driveFileId"
+                      :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
+                    <a
+                      v-else-if="t.hasFile"
+                      :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
                   </template>
 
                   <template v-if="t.documentType === 'upload'">
-                    <label v-if="isOwnChild && !member.isActive && !member.deactivatedAt" class="btn-secondary cursor-pointer py-1 text-xs" :class="{ 'opacity-50': uploadingTemplateId === t.id }">
-                      {{ uploadingTemplateId === t.id ? '…' : t.submission ? 'Ersetzen' : 'Hochladen' }}
+                    <label
+                      v-if="
+                        isOwnChild && !member.isActive && !member.deactivatedAt
+                      "
+                      class="btn-secondary cursor-pointer py-1 text-xs"
+                      :class="{ 'opacity-50': uploadingTemplateId === t.id }"
+                    >
+                      {{
+                        uploadingTemplateId === t.id
+                          ? "…"
+                          : t.submission
+                            ? "Ersetzen"
+                            : "Hochladen"
+                      }}
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -576,8 +853,21 @@ function onSubmit() {
                         @change="onUploadForTemplate(t.id, $event)"
                       />
                     </label>
-                    <a v-if="t.submission" :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`" class="btn-secondary py-1 text-xs" target="_blank" rel="noopener noreferrer">Ansehen ↗</a>
-                    <span v-else role="link" aria-disabled="true" class="btn-secondary py-1 text-xs opacity-40 pointer-events-none">Ansehen ↗</span>
+                    <a
+                      v-if="t.submission"
+                      :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
+                    <span
+                      v-else
+                      role="link"
+                      aria-disabled="true"
+                      class="btn-secondary py-1 text-xs opacity-40 pointer-events-none"
+                      >Ansehen ↗</span
+                    >
                   </template>
                 </div>
               </li>
@@ -586,13 +876,19 @@ function onSubmit() {
 
           <!-- Aktiv: uploaded documents -->
           <ul v-else-if="documents.length > 0" class="space-y-1">
-            <li v-for="doc in documents" :key="doc.id" class="flex items-center gap-2 text-sm text-gray-700">
+            <li
+              v-for="doc in documents"
+              :key="doc.id"
+              class="flex items-center gap-2 text-sm text-gray-700"
+            >
               <span aria-hidden="true" class="text-gray-400">📄</span>
               {{ doc.name }}
             </li>
           </ul>
 
-          <p v-else class="text-sm text-gray-500">Keine Unterlagen konfiguriert.</p>
+          <p v-else class="text-sm text-gray-500">
+            Keine Unterlagen konfiguriert.
+          </p>
         </div>
 
         <div v-if="!isMember" class="space-y-2 border-t pt-4">
@@ -606,12 +902,18 @@ function onSubmit() {
               Freischalten
             </button>
             <button
-              v-if="!member.isActive && !member.deactivatedAt && member.hasPendingInvite"
+              v-if="
+                !member.isActive &&
+                !member.deactivatedAt &&
+                member.hasPendingInvite
+              "
               class="btn-secondary text-sm"
               :disabled="isResendingInvite || !canManageMembers"
               @click="onResendInvite"
             >
-              {{ isResendingInvite ? 'Wird gesendet…' : 'Einladung erneut senden' }}
+              {{
+                isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden"
+              }}
             </button>
             <button
               v-if="member.isActive"
@@ -619,7 +921,7 @@ function onSubmit() {
               :disabled="isDeactivating || !canManageMembers"
               @click="onDeactivate"
             >
-              {{ isDeactivating ? 'Wird abgemeldet…' : 'Vertrag abmelden' }}
+              {{ isDeactivating ? "Wird abgemeldet…" : "Vertrag abmelden" }}
             </button>
             <button
               v-if="member.deactivatedAt"
@@ -627,7 +929,7 @@ function onSubmit() {
               :disabled="isReactivating || !canManageMembers"
               @click="onReactivate"
             >
-              {{ isReactivating ? 'Wird reaktiviert…' : 'Abmeldung aufheben' }}
+              {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung aufheben" }}
             </button>
             <button
               class="btn-danger text-sm"
@@ -637,7 +939,9 @@ function onSubmit() {
               Kind entfernen
             </button>
           </div>
-          <p v-if="inviteActionError" class="text-sm text-red-700">{{ inviteActionError }}</p>
+          <p v-if="inviteActionError" class="text-sm text-red-700">
+            {{ inviteActionError }}
+          </p>
         </div>
       </div>
     </template>

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth";
+import { useAuthStore } from '~/stores/auth'
 
-definePageMeta({ layout: false, middleware: ["auth"] });
+definePageMeta({ layout: false, middleware: ['auth'] })
 
-const route = useRoute();
-const slug = route.params.slug as string;
-const authStore = useAuthStore();
+const route = useRoute()
+const slug = route.params.slug as string
+const authStore = useAuthStore()
 
-const successParam = route.query.success === "1";
-const errorParam = route.query.error as string | undefined;
+const successParam = route.query.success === '1'
+const errorParam = route.query.error as string | undefined
 </script>
 
 <template>
