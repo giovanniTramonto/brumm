@@ -1,3 +1,4 @@
+import { getAllManagerData } from '~/server/utils/managerData'
 import { getAllMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import type { Member } from '~/types'
@@ -42,6 +43,7 @@ export default defineEventHandler(async (event) => {
         role: u.role,
         isActive: u.isActive,
         storageId: u.storageId,
+        isMemberManager: u.isMemberManager,
         createdAt: u.createdAt.toISOString(),
         firstName: md.firstName,
         lastName: md.lastName,
@@ -65,5 +67,15 @@ export default defineEventHandler(async (event) => {
       return lastCmp !== 0 ? lastCmp : a.firstName.localeCompare(b.firstName, 'de')
     })
 
-  return { members }
+  const [memberManagerRecords, allManagerData] = await Promise.all([
+    prisma.manager.findMany({ where: { clubId: club.id, isMemberManager: true }, select: { id: true } }),
+    getAllManagerData(club),
+  ])
+
+  const memberManagerIds = new Set(memberManagerRecords.map((m) => m.id))
+  const memberManagerNames = allManagerData
+    .filter((md) => memberManagerIds.has(md.managerId))
+    .map((md) => md.name)
+
+  return { members, hasAnyMemberManager: memberManagerNames.length > 0, memberManagerNames }
 })

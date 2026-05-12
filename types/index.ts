@@ -1,4 +1,4 @@
-export type Role = 'SUPERUSER' | 'TEAM' | 'MEMBER'
+export type Role = 'SUPERUSER' | 'TEAM' | 'MEMBER' | 'MANAGER'
 export type Storage = 'GOOGLE_DRIVE' | 'S3' | 'R2'
 
 export interface GoogleDriveConfig {
@@ -6,6 +6,8 @@ export interface GoogleDriveConfig {
   appFolderId: string
   membersFolderId: string
   masterSheetId: string
+  managementFolderId?: string
+  managersSheetId?: string
 }
 
 export interface OAuthTokens {
@@ -48,6 +50,7 @@ export interface User {
   clubId: string
   role: Role
   isActive: boolean
+  isMemberManager: boolean
   storageId: string | null
   localData?: Record<string, unknown> | null
   createdAt: string
@@ -89,6 +92,23 @@ export interface Member extends User {
   contractEnd: string | null
   hasPendingInvite: boolean
   group?: Group | null
+}
+
+export interface ManagerData {
+  managerId: string
+  storageId: string
+  name: string
+  email: string
+}
+
+export interface Manager {
+  id: string
+  clubId: string
+  storageId: string
+  isMemberManager: boolean
+  name: string
+  email: string
+  createdAt: string
 }
 
 export interface AuthUser extends User {

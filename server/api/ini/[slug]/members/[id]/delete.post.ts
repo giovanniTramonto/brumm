@@ -12,7 +12,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  if (currentUser.role !== 'SUPERUSER') {
+  const canManageMembers = currentUser.role === 'SUPERUSER' || (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  if (!canManageMembers) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 

@@ -251,6 +251,19 @@ export async function uploadMemberDocument(params: {
   return { id: result.data.id ?? '', name: result.data.name ?? '' }
 }
 
+export async function createManagementStructure(params: {
+  tokens: OAuthTokens
+  appFolderId: string
+}): Promise<{ managementFolderId: string }> {
+  const managementFolderId = await getOrCreateFolder({
+    drive: getDriveClientFromTokens(params.tokens),
+    name: 'management',
+    parentId: params.appFolderId,
+  })
+  return { managementFolderId }
+}
+
+
 export async function createRootFolderStructure(params: {
   tokens: OAuthTokens
   clubName: string

@@ -2,7 +2,7 @@
 
 Multi-Tenant SPA für Kindergarten-Vereinsverwaltung. Jeder Verein ist komplett isoliert und hat einen eigenen Slug.
 
-**Datentrennung**: Neon speichert ausschließlich technische Auth-Daten. Alle persönlichen Mitgliederdaten (Name, Geburtsdatum, E-Mails, Telefonnummern) leben pro Verein in Google Sheets – kein globaler Service Account, keine persönlichen Daten in der zentralen Datenbank.
+**Datentrennung**: Neon speichert ausschließlich technische Auth-Daten. Alle persönlichen Mitgliederdaten (Name, Geburtsdatum, E-Mails, Telefonnummern) sowie Vorstandsdaten leben pro Verein in Google Sheets – kein globaler Service Account, keine persönlichen Daten in der zentralen Datenbank.
 
 ## Stack
 
@@ -42,6 +42,9 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/members/deactivate     → Selbst abmelden
 /ini/{slug}/document-templates     → Unterlagen-Vorlagen verwalten
 /ini/{slug}/groups
+/ini/{slug}/management             → Vorstand verwalten (SUPERUSER)
+/ini/{slug}/management/create      → Vorstand hinzufügen
+/ini/{slug}/management/{id}        → Vorstand bearbeiten
 /ini/{slug}/settings
 /ini/{slug}/settings/delete        → Verein löschen
 ```
@@ -50,9 +53,12 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 
 | Rolle | Rechte |
 |---|---|
-| `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Unterlagen, Settings, Google Drive verbinden |
+| `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Unterlagen, Vorstand, Settings, Google Drive verbinden |
+| `MANAGER` | Vorstandsmitglied. Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden |
 | `TEAM` | Alle Daten lesen |
 | `MEMBER` | Elternteil eines Kindes – eigene Kinder und Unterlagen |
+
+`canManageMembers` = `SUPERUSER` oder `MANAGER` mit `isMemberManager`
 
 ## Lizenz
 

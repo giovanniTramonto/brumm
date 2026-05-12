@@ -14,6 +14,7 @@ const navItems = computed(() => {
     items.push({ label: 'Gruppen', to: `${base}/groups`, disabled: true })
   }
   if (authStore.currentUser.role === 'SUPERUSER') {
+    items.push({ label: 'Vorstand', to: `${base}/management` })
     items.push({ label: 'Einstellungen', to: `${base}/settings` })
   }
   return items

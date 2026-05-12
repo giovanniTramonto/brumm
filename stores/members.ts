@@ -3,6 +3,8 @@ import type { Member } from '~/types'
 
 export const useMembersStore = defineStore('members', () => {
   const members = ref<Member[]>([])
+  const hasAnyMemberManager = ref(false)
+  const memberManagerNames = ref<string[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -10,8 +12,10 @@ export const useMembersStore = defineStore('members', () => {
     isLoading.value = true
     error.value = null
     try {
-      const data = await $fetch<{ members: Member[] }>(`/api/ini/${slug}/members`)
+      const data = await $fetch<{ members: Member[]; hasAnyMemberManager: boolean; memberManagerNames: string[] }>(`/api/ini/${slug}/members`)
       members.value = data.members
+      hasAnyMemberManager.value = data.hasAnyMemberManager
+      memberManagerNames.value = data.memberManagerNames
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Fehler beim Laden'
     } finally {
@@ -33,6 +37,8 @@ export const useMembersStore = defineStore('members', () => {
 
   return {
     members,
+    hasAnyMemberManager,
+    memberManagerNames,
     isLoading,
     error,
     fetchMembers,

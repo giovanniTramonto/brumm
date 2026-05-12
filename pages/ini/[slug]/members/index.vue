@@ -12,6 +12,16 @@ const membersStore = useMembersStore()
 
 const search = ref('')
 
+const canManageMembers = computed(() => {
+  const user = authStore.currentUser
+  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
+})
+
+const showNoMemberManagerHint = computed(() => {
+  const user = authStore.currentUser
+  return user?.role === 'MANAGER' && !user?.isMemberManager
+})
+
 onMounted(() => membersStore.fetchMembers(slug))
 
 const filteredMembers = computed(() => {
@@ -27,7 +37,7 @@ const filteredMembers = computed(() => {
   <div>
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-900">Kinder</h1>
-      <div class="flex gap-3">
+      <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="flex gap-3">
         <NuxtLink
           v-if="authStore.currentUser?.role === 'SUPERUSER'"
           :to="`/ini/${slug}/document-templates`"
@@ -44,13 +54,30 @@ const filteredMembers = computed(() => {
           CSV importieren
         </span>
         <NuxtLink
-          v-if="authStore.currentUser?.role === 'SUPERUSER'"
+          v-if="canManageMembers"
           :to="`/ini/${slug}/members/create`"
           class="btn-primary"
         >
           Kind anlegen
         </NuxtLink>
+        <span
+          v-else
+          class="btn-primary cursor-not-allowed opacity-50"
+          aria-disabled="true"
+          role="link"
+        >
+          Kind anlegen
+        </span>
       </div>
+    </div>
+
+    <div v-if="true" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <template v-if="membersStore.hasAnyMemberManager">
+        Kinder können nur von <span class="font-semibold">{{ membersStore.memberManagerNames.join(', ') }}</span> verwaltet werden.
+      </template>
+      <template v-else>
+        Es gibt noch keinen Vorstand, der Zugriff auf die Kinderverwaltung hat. Frage beim Admin nach.
+      </template>
     </div>
 
     <div class="mb-4">
@@ -96,11 +123,10 @@ const filteredMembers = computed(() => {
             </td>
             <td class="px-4 py-3 text-right">
               <NuxtLink
-                v-if="authStore.currentUser?.role === 'SUPERUSER'"
                 :to="`/ini/${slug}/members/${member.id}`"
                 class="btn-secondary py-1 text-xs"
               >
-                Bearbeiten
+                Ansehen
               </NuxtLink>
             </td>
           </tr>

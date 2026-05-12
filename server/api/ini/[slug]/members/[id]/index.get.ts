@@ -53,6 +53,7 @@ export default defineEventHandler(async (event) => {
     role: user.role,
     isActive: user.isActive,
     storageId: user.storageId,
+    isMemberManager: user.isMemberManager,
     createdAt: user.createdAt.toISOString(),
     firstName: md.firstName,
     lastName: md.lastName,

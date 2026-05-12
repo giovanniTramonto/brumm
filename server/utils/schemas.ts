@@ -54,6 +54,18 @@ export const updateGroupSchema = z.object({
   email: z.string().email().optional().nullable().or(z.literal('')),
 })
 
+export const createManagerSchema = z.object({
+  name: z.string().min(1, 'Name fehlt'),
+  email: z.string().email('Ungültige E-Mail-Adresse'),
+  isMemberManager: z.boolean().optional().default(false),
+})
+
+export const updateManagerSchema = z.object({
+  name: z.string().min(1, 'Name fehlt').optional(),
+  email: z.string().email('Ungültige E-Mail-Adresse').optional(),
+  isMemberManager: z.boolean().optional(),
+})
+
 export const importPreviewSchema = z.object({
   csvContent: z.string().min(1, 'CSV-Inhalt fehlt'),
 })

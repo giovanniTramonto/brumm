@@ -3,6 +3,7 @@ import type { Role } from '~/types'
 
 const ROLE_HIERARCHY: Record<Role, number> = {
   SUPERUSER: 3,
+  MANAGER: 2,
   TEAM: 2,
   MEMBER: 1,
 }

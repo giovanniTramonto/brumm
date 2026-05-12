@@ -23,6 +23,7 @@ model Club {
   invites           Invite[]
   groups            Group[]
   documentTemplates DocumentTemplate[]
+  managers          Manager[]
 }
 
 model Group {
@@ -42,7 +43,8 @@ model User {
   isActive  Boolean @default(false)
   storageId String?
 
-  localData Json?
+  localData       Json?
+  isMemberManager Boolean  @default(false)
 
   createdAt DateTime @default(now())
 
@@ -119,6 +121,19 @@ model DocumentTemplate {
   @@unique([clubId, ref])
 }
 
+model Manager {
+  id              String   @id @default(cuid())
+  clubId          String
+  storageId       String
+  isMemberManager Boolean  @default(false)
+  localData       Json?
+  createdAt       DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id])
+
+  @@unique([storageId, clubId])
+}
+
 model MemberDocument {
   id          String    @id @default(cuid())
   memberId    String
@@ -138,6 +153,7 @@ enum Role {
   SUPERUSER
   TEAM
   MEMBER
+  MANAGER
 }
 
 enum Storage {

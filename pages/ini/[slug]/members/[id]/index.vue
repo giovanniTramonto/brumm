@@ -41,8 +41,11 @@ const uploadErrors = ref<Record<string, string>>({})
 const submitted = ref(false)
 const readMap = reactive<Record<string, boolean>>({})
 
-const isSuperUser = computed(() => authStore.currentUser?.role === 'SUPERUSER')
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
+const canManageMembers = computed(() => {
+  const user = authStore.currentUser
+  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
+})
 const isOwnChild = ref(false)
 
 const localAllSubmitted = computed(() =>
@@ -128,8 +131,8 @@ onMounted(async () => {
   try {
     const [memberData, groupsData, templatesData] = await Promise.all([
       $fetch<{ member: Member; isOwnChild: boolean }>(`/api/ini/${slug}/members/${memberId}`),
-      isSuperUser.value ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`) : Promise.resolve(null),
-      (isMember.value || isSuperUser.value)
+      canManageMembers.value ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`) : Promise.resolve(null),
+      (isMember.value || canManageMembers.value)
         ? $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(`/api/ini/${slug}/members/${memberId}/member-documents`).catch(() => null)
         : Promise.resolve(null),
     ])
@@ -153,7 +156,7 @@ onMounted(async () => {
 
     const isConfirmed = !m.isActive && !m.deactivatedAt && !m.hasPendingInvite
 
-    if (templatesData && (isSuperUser.value || isConfirmed)) {
+    if (templatesData && (canManageMembers.value || isConfirmed)) {
       memberDocTemplates.value = templatesData.templates
       allSubmitted.value = templatesData.allSubmitted
       for (const t of templatesData.templates) {
@@ -323,8 +326,8 @@ function onSubmit() {
           </span>
         </div>
 
-        <!-- SUPERUSER: editable form -->
-        <form v-if="isSuperUser" class="space-y-4" @submit.prevent="onSave">
+        <!-- canManageMembers: editable form -->
+        <form v-if="canManageMembers" class="space-y-4" @submit.prevent="onSave">
           <div v-if="saveError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ saveError }}</div>
 
           <div class="grid grid-cols-2 gap-4">
@@ -520,8 +523,8 @@ function onSubmit() {
           </div>
         </dl>
 
-        <!-- SUPERUSER: document overview -->
-        <div v-if="isSuperUser" class="border-t pt-4">
+        <!-- canManageMembers: document overview -->
+        <div v-if="canManageMembers" class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
 
           <div v-if="isLoadingTemplates || isLoadingDocs" role="status" aria-live="polite" class="text-sm text-gray-500">Wird geladen…</div>
@@ -581,12 +584,12 @@ function onSubmit() {
           <p v-else class="text-sm text-gray-500">Keine Unterlagen konfiguriert.</p>
         </div>
 
-        <div v-if="isSuperUser" class="space-y-2 border-t pt-4">
+        <div v-if="!isMember" class="space-y-2 border-t pt-4">
           <div class="flex justify-end gap-3">
             <button
               v-if="!member.isActive && !member.deactivatedAt"
               class="btn-primary text-sm"
-              :disabled="!localAllSubmitted"
+              :disabled="!localAllSubmitted || !canManageMembers"
               @click="onActivate"
             >
               Freischalten
@@ -594,7 +597,7 @@ function onSubmit() {
             <button
               v-if="!member.isActive && !member.deactivatedAt && member.hasPendingInvite"
               class="btn-secondary text-sm"
-              :disabled="isResendingInvite"
+              :disabled="isResendingInvite || !canManageMembers"
               @click="onResendInvite"
             >
               {{ isResendingInvite ? 'Wird gesendet…' : 'Einladung erneut senden' }}
@@ -602,7 +605,7 @@ function onSubmit() {
             <button
               v-if="member.isActive"
               class="btn-secondary text-sm"
-              :disabled="isDeactivating"
+              :disabled="isDeactivating || !canManageMembers"
               @click="onDeactivate"
             >
               {{ isDeactivating ? 'Wird abgemeldet…' : 'Vertrag abmelden' }}
@@ -610,14 +613,14 @@ function onSubmit() {
             <button
               v-if="member.deactivatedAt"
               class="btn-secondary text-sm"
-              :disabled="isReactivating"
+              :disabled="isReactivating || !canManageMembers"
               @click="onReactivate"
             >
               {{ isReactivating ? 'Wird reaktiviert…' : 'Abmeldung aufheben' }}
             </button>
             <button
               class="btn-danger text-sm"
-              :disabled="isCancellingInvite"
+              :disabled="isCancellingInvite || !canManageMembers"
               @click="onDeleteMember"
             >
               Kind entfernen

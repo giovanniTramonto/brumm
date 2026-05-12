@@ -147,6 +147,39 @@ export async function sendReactivationEmail(params: {
   })
 }
 
+export async function sendManagerAddedEmail(params: {
+  to: string
+  name: string
+  clubName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Willkommen im Vorstand – ${params.clubName}`,
+    html: `
+      <h2>Hallo ${params.name},</h2>
+      <p>Du wurdest als Vorstandsmitglied bei <strong>${params.clubName}</strong> eingetragen.</p>
+      <p>Bei Fragen wende dich an den Admin.</p>
+    `,
+  })
+}
+
+export async function sendManagerRemovedEmail(params: {
+  to: string
+  name: string
+  clubName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Vorstandsmitglied entfernt – ${params.clubName}`,
+    html: `
+      <h2>Hallo ${params.name},</h2>
+      <p>Du wurdest als Vorstandsmitglied bei <strong>${params.clubName}</strong> entfernt.</p>
+    `,
+  })
+}
+
 export async function sendImportSummary(params: {
   to: string[]
   clubName: string

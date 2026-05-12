@@ -35,6 +35,9 @@
 /ini/{slug}/members/deactivate
 /ini/{slug}/document-templates
 /ini/{slug}/groups
+/ini/{slug}/management
+/ini/{slug}/management/create
+/ini/{slug}/management/{id}
 /ini/{slug}/settings
 /ini/{slug}/settings/delete
 ```
@@ -54,6 +57,8 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 - **Kind-Status**: `Ausstehend` (offener Invite), `Bestätigt` (Invite geklickt oder Elternteil bereits registriert, wartet auf SUPERUSER-Freischaltung), `Aktiv` (freigeschaltet), `Abgemeldet` (deaktiviert)
 - **Magic-Link-Lookup**: 1. UserEmail in Neon (SUPERUSER), 2. Sheets `findUserIdByEmail` (wenn Setup fertig), 3. `localData`-Suche in Neon (Dev-Fallback)
 - **Verify-Endpoint**: `/api/ini/{slug}/auth/verify/{token}` prüft zuerst `MagicLink`, dann `Invite` – ein Token-Typ reicht für beide Auth-Flows
+- **MANAGER-Rolle**: Neon speichert für MANAGER nur technische Daten (`id`, `clubId`, `isMemberManager`). Persönliche Daten (Name, E-Mail) leben in Google Sheets unter `app/management/managers`. Dev-Fallback via `Manager.localData`. Lazy-Init: Ordner + Sheet werden beim ersten Manager automatisch angelegt, IDs in `Club.storageConfig` (`managementFolderId`, `managersSheetId`) gespeichert
+- **canManageMembers**: `SUPERUSER` oder `MANAGER` mit `isMemberManager = true`. Nur diese dürfen Kinder anlegen, bearbeiten, aktivieren, deaktivieren, löschen und Einladungen verwalten. Frontend-Buttons und alle Member-API-Endpoints prüfen diese Bedingung
 
 ## Environment Variables
 ```
@@ -75,6 +80,7 @@ GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
 | Google Auth (OAuth) | `server/utils/googleAuth.ts` |
 | Google OAuth Callback | `server/api/auth/google/callback.get.ts` |
 | Mitgliederdaten (Sheets/localData) | `server/utils/memberData.ts` |
+| Managerdaten (Sheets/localData) | `server/utils/managerData.ts` |
 | Storage Utils | `server/utils/storage/` |
 | E-Mail Utils | `server/utils/email.ts` |
 | Server Middleware | `server/middleware/` |
