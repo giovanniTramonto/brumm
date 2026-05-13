@@ -208,13 +208,11 @@ async function onSave() {
         contractEnd: form.contractEnd.trim() || undefined,
       },
     })
-    if (member.value) {
-      member.value = {
-        ...member.value,
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-      }
-    }
+    const refreshed = await $fetch<{ member: Member; isOwnChild: boolean }>(
+      `/api/ini/${slug}/members/${memberId}`,
+    )
+    member.value = refreshed.member
+    isOwnChild.value = refreshed.isOwnChild
   } catch (err: unknown) {
     saveError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
@@ -274,7 +272,7 @@ async function onResendInvite() {
 }
 
 async function onDeleteMember() {
-  if (!member.value || !confirm('Kind entfernen? Alle Daten werden gelöscht.')) return
+  if (!member.value || !confirm('Kind entfernen? Alle Daten werden gelöscht. Die Eltern erhalten eine Email.')) return
   inviteActionError.value = null
   isCancellingInvite.value = true
   try {
@@ -562,12 +560,12 @@ function onSubmit() {
           </dl>
 
           <div class="border-t pt-4">
-            <h3 class="mb-3 text-sm font-medium text-gray-900">Unterlagen</h3>
+            <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
             <div v-if="isLoadingDocs" class="text-sm text-gray-500">
               Brumm, brumm …
             </div>
             <p v-else-if="documents.length === 0" class="text-sm text-gray-500">
-              Keine Unterlagen hochgeladen.
+              Keine Vertragsunterlagen hochgeladen.
             </p>
             <ul v-else class="space-y-1">
               <li
@@ -595,13 +593,13 @@ function onSubmit() {
             v-if="submitted"
             class="rounded-md bg-green-50 p-4 text-sm text-green-800"
           >
-            Ihre Unterlagen wurden erfolgreich eingereicht.
+            Ihre Vertragsunterlagen wurden erfolgreich eingereicht.
           </div>
 
           <template v-else>
             <p class="text-sm text-gray-600">
               Ihr Kind wartet auf Freischaltung. Bitte laden Sie alle
-              erforderlichen Unterlagen hoch.
+              erforderlichen Vertragsunterlagen hoch.
             </p>
 
             <div
@@ -617,7 +615,7 @@ function onSubmit() {
               v-else-if="memberDocTemplates.length === 0"
               class="text-sm text-gray-500"
             >
-              Noch keine Unterlagen konfiguriert.
+              Noch keine Vertragsunterlagen konfiguriert.
             </p>
 
             <ul v-else class="divide-y divide-gray-100">
@@ -667,7 +665,7 @@ function onSubmit() {
                     >
                     <a
                       v-else-if="t.hasFile"
-                      :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
                       class="btn-secondary py-1 text-xs"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -703,7 +701,7 @@ function onSubmit() {
                     >
                     <a
                       v-if="t.hasFile"
-                      :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
                       class="btn-secondary py-1 text-xs"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -751,7 +749,7 @@ function onSubmit() {
         <!-- canManageMembers: document overview -->
         <div v-if="canManageMembers" class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">
-            Unterlagen der Anmeldung
+            Vertragsunterlagen
           </h3>
 
           <div
@@ -805,13 +803,6 @@ function onSubmit() {
                       class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
                       >✓ Gelesen</span
                     >
-                    <span
-                      v-else
-                      role="button"
-                      aria-disabled="true"
-                      class="btn-secondary py-1 text-xs opacity-50 pointer-events-none"
-                      >Gelesen markieren</span
-                    >
                     <a
                       v-if="t.submission?.driveFileId"
                       :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
@@ -822,7 +813,7 @@ function onSubmit() {
                     >
                     <a
                       v-else-if="t.hasFile"
-                      :href="`/api/ini/${slug}/document-templates/${t.id}/file`"
+                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
                       class="btn-secondary py-1 text-xs"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -887,7 +878,7 @@ function onSubmit() {
           </ul>
 
           <p v-else class="text-sm text-gray-500">
-            Keine Unterlagen konfiguriert.
+            Keine Vertragsunterlagen konfiguriert.
           </p>
         </div>
 

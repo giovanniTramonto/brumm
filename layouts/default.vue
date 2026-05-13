@@ -25,12 +25,12 @@ const navItems = computed(() => {
 async function onLogout() {
   if (!slug.value) return
   await authStore.logout(slug.value)
-  await navigateTo('/register')
+  await navigateTo(`/ini/${slug.value}/login`)
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-ini">
+  <div :class="authStore.currentUser?.role === 'MEMBER' ? 'bg-member' : 'bg-ini'" class="min-h-screen">
     <nav v-if="authStore.currentUser" aria-label="Hauptnavigation" class="border-b border-gray-200 bg-white shadow-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">

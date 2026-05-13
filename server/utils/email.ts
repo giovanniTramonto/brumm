@@ -70,7 +70,8 @@ export async function sendInviteEmail(params: {
     html: `
       <h2>Willkommen bei ${params.clubName}!</h2>
       <p>Ihr Kind <strong>${params.childName}</strong> wurde angemeldet.</p>
-      <p>Bitte klicken Sie auf den folgenden Link, um Ihr Profil einzurichten. Der Link ist 7 Tage gültig.</p>
+      <p>Bitte beachten Sie: Die Betreuung kann erst beginnen, wenn alle erforderlichen Vertragsunterlagen vollständig eingereicht wurden.</p>
+      <p>Bitte klicken Sie auf den folgenden Link, um Ihr Profil einzurichten und die Unterlagen hochzuladen. Der Link ist 7 Tage gültig.</p>
       <p><a href="${link}">Profil einrichten</a></p>
     `,
   })
@@ -176,6 +177,40 @@ export async function sendManagerRemovedEmail(params: {
     html: `
       <h2>Hallo ${params.name},</h2>
       <p>Du wurdest als Vorstandsmitglied bei <strong>${params.clubName}</strong> entfernt.</p>
+    `,
+  })
+}
+
+export async function sendMemberRemovedEmail(params: {
+  to: string[]
+  clubName: string
+  childName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `${params.childName} wurde entfernt – ${params.clubName}`,
+    html: `
+      <h2>Kind entfernt</h2>
+      <p><strong>${params.childName}</strong> wurde aus dem System von <strong>${params.clubName}</strong> entfernt.</p>
+      <p>Alle gespeicherten Daten wurden gelöscht.</p>
+    `,
+  })
+}
+
+export async function sendEmailRemovedNotification(params: {
+  to: string
+  clubName: string
+  childName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `E-Mail-Adresse geändert – ${params.childName}`,
+    html: `
+      <h2>Ihre E-Mail-Adresse wurde geändert</h2>
+      <p>Die E-Mail-Adresse, unter der Sie für <strong>${params.childName}</strong> bei <strong>${params.clubName}</strong> eingetragen waren, wurde entfernt.</p>
+      <p>Diese Adresse ist nicht mehr mit dem Kind verknüpft. Bei Fragen wenden Sie sich an den Admin.</p>
     `,
   })
 }

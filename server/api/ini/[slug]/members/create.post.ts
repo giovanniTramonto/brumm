@@ -47,14 +47,14 @@ export default defineEventHandler(async (event) => {
   ])
 
   const superUserEmailSet = new Set(superUserEmails.map((e) => e.email.toLowerCase()))
-  const isSuperUserChild = emails.some((e) => superUserEmailSet.has(e))
+  const inviteEmails = emails.filter((e) => !superUserEmailSet.has(e))
   const parentAlreadyRegistered = !!existingUserEmail
 
   const user = await prisma.user.create({
     data: {
       clubId: club.id,
       role: 'MEMBER',
-      isActive: isSuperUserChild,
+      isActive: false,
       storageId,
     },
   })
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
     phone1: phone1 || null,
     phone2: phone2 || null,
     groupId: groupId ?? null,
-    isActive: isSuperUserChild,
+    isActive: false,
     deactivatedAt: null,
     deactivatedBy: null,
     contractEnd: contractEnd || null,
@@ -93,7 +93,9 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (!isSuperUserChild && !parentAlreadyRegistered) {
+  let emailError: string | null = null
+
+  if (inviteEmails.length > 0 && !parentAlreadyRegistered) {
     const invite = await prisma.invite.create({
       data: {
         clubId: club.id,
@@ -103,23 +105,14 @@ export default defineEventHandler(async (event) => {
     })
 
     const childName = `${firstName} ${lastName}`
-    await sendInviteEmail({
-      to: email1,
-      clubName: club.name,
-      clubSlug: club.slug,
-      token: invite.token,
-      childName,
-    })
-    if (email2) {
-      await sendInviteEmail({
-        to: email2,
-        clubName: club.name,
-        clubSlug: club.slug,
-        token: invite.token,
-        childName,
-      })
+    try {
+      for (const to of inviteEmails) {
+        await sendInviteEmail({ to, clubName: club.name, clubSlug: club.slug, token: invite.token, childName })
+      }
+    } catch (err) {
+      emailError = err instanceof Error ? err.message : 'Unbekannter Fehler'
     }
   }
 
-  return { user }
+  return { user, emailError }
 })

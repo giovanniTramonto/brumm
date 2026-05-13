@@ -38,10 +38,10 @@ const filteredMembers = computed(() => {
       <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="flex gap-3">
         <NuxtLink
           v-if="authStore.currentUser?.role === 'SUPERUSER'"
-          :to="`/ini/${slug}/document-templates`"
+          :to="`/ini/${slug}/contract-templates`"
           class="btn-secondary"
         >
-          Vorlagen
+          Vertragsvorlagen
         </NuxtLink>
         <span
           v-if="authStore.currentUser?.role === 'SUPERUSER'"
@@ -69,7 +69,7 @@ const filteredMembers = computed(() => {
       </div>
     </div>
 
-    <div v-if="true" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    <div v-if="showNoMemberManagerHint" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
       <template v-if="membersStore.hasAnyMemberManager">
         Kinder können nur von <span class="font-semibold">{{ membersStore.memberManagerNames.join(', ') }}</span> verwaltet werden.
       </template>

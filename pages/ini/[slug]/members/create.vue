@@ -1,14 +1,30 @@
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth'
 import type { Group } from '~/types'
 
 definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string
+const authStore = useAuthStore()
 
 const groups = ref<Group[]>([])
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
+const created = ref<{ id: string; name: string } | null>(null)
+const emailError = ref<string | null>(null)
+
+const superUserEmails = computed(
+  () => new Set((authStore.currentUser?.emails ?? []).map((e) => e.email.toLowerCase())),
+)
+
+const isSuperUserGuardian = computed(() => {
+  const e1 = form.email1.trim().toLowerCase()
+  const e2 = form.email2.trim().toLowerCase()
+  const e1IsSuperUser = !!e1 && superUserEmails.value.has(e1)
+  const e2IsSuperUser = !e2 || superUserEmails.value.has(e2)
+  return e1IsSuperUser && e2IsSuperUser
+})
 
 const form = reactive({
   firstName: '',
@@ -46,11 +62,12 @@ async function onSubmit() {
       groupId: form.groupId || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
     }
-    const { user } = await $fetch<{ user: { id: string } }>(`/api/ini/${slug}/members/create`, {
-      method: 'POST',
-      body,
-    })
-    await navigateTo(`/ini/${slug}/members/${user.id}`)
+    const res = await $fetch<{ user: { id: string }; emailError: string | null }>(
+      `/api/ini/${slug}/members/create`,
+      { method: 'POST', body },
+    )
+    created.value = { id: res.user.id, name: `${form.firstName} ${form.lastName}` }
+    emailError.value = res.emailError
   } catch (err: unknown) {
     error.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Anlegen'
@@ -68,7 +85,25 @@ async function onSubmit() {
       </NuxtLink>
     </div>
 
-    <form class="card space-y-4" @submit.prevent="onSubmit">
+    <div v-if="created" class="card space-y-4">
+      <h1 class="text-2xl font-bold text-gray-900">Kind angelegt</h1>
+      <div class="rounded-md bg-green-50 p-3 text-sm text-green-700">
+        Kind <span class="font-semibold">{{ created.name }}</span> wurde angelegt.
+      </div>
+      <div v-if="emailError" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        Emails konnten nicht gesendet werden ({{ emailError }})
+      </div>
+      <div>
+        <NuxtLink :to="`/ini/${slug}/members/${created.id}`" class="btn-primary">
+          Kind ansehen
+        </NuxtLink>
+      </div>
+    </div>
+
+    <form v-else class="card space-y-4" @submit.prevent="onSubmit">
+      <div v-if="isSuperUserGuardian" class="rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+        Sie sind Erziehungsberechtigter dieses Kindes. Es wird keine Opt-In Email an Sie gesendet.
+      </div>
       <h1 class="text-2xl font-bold text-gray-900">Kind anlegen</h1>
       <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
 
@@ -135,7 +170,7 @@ async function onSubmit() {
 
       <div class="flex gap-3 pt-2">
         <button type="submit" class="btn-primary" :disabled="isSubmitting">
-          {{ isSubmitting ? 'Wird angelegt…' : 'Anlegen & Einladung senden' }}
+          {{ isSubmitting ? 'Wird angelegt…' : isSuperUserGuardian ? 'Anlegen' : 'Anlegen & Einladung senden' }}
         </button>
         <NuxtLink :to="`/ini/${slug}/members`" class="btn-secondary">Abbrechen</NuxtLink>
       </div>

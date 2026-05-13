@@ -40,7 +40,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/members/import         → CSV-Import
 /ini/{slug}/members/{id}           → Kind-Detailseite & Unterlagen
 /ini/{slug}/members/deactivate     → Selbst abmelden
-/ini/{slug}/document-templates     → Unterlagen-Vorlagen verwalten
+/ini/{slug}/contract-templates     → Unterlagen-Vorlagen verwalten
 /ini/{slug}/groups
 /ini/{slug}/management             → Vorstand verwalten (SUPERUSER)
 /ini/{slug}/management/create      → Vorstand hinzufügen

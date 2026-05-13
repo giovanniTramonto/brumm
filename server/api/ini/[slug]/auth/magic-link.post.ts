@@ -63,6 +63,11 @@ export default defineEventHandler(async (event) => {
   }
 
   if (userId) {
+    const userExists = await prisma.user.findFirst({ where: { id: userId, clubId: club.id } })
+    if (!userExists) {
+      return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
+    }
+
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
     const magicLink = await prisma.magicLink.create({
       data: { userId, expiresAt },

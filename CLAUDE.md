@@ -33,7 +33,7 @@
 /ini/{slug}/members/import
 /ini/{slug}/members/{id}
 /ini/{slug}/members/deactivate
-/ini/{slug}/document-templates
+/ini/{slug}/contract-templates
 /ini/{slug}/groups
 /ini/{slug}/management
 /ini/{slug}/management/create
@@ -48,7 +48,7 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 - **Storage pro Verein**: Beim Onboarding verbindet der SUPERUSER seinen Google-Account via OAuth 2.0. Das OAuth-Token wird in `Club.oauthToken` (Neon) gespeichert. Kein globaler Service Account, kein GCP-Setup durch den Verein nötig.
 - **Datentrennung**: Neon speichert ausschließlich technische/Auth-Daten (`id`, `clubId`, `role`, `isActive`, `storageId`). Alle persönlichen Mitgliederdaten (`firstName`, `lastName`, `birthDate`, `emails`, `phone1`, `phone2`, etc.) leben ausschließlich in Google Sheets
 - **AuthUser-Anreicherung**: `me.get.ts` und `verify/[token].get.ts` reichern den zurückgegebenen User für MEMBER-Nutzer mit `firstName`/`lastName` aus den Mitgliederdaten an, damit diese im Auth-Store verfügbar sind
-- **Unterlagen (DocumentTemplates)**: Typ `upload` (Eltern laden hoch) oder `read` (Eltern bestätigen gelesen). Aktive/abgemeldete Kinder sehen nur Vorlagen mit vorhandener Einreichung. „Gelesen markieren" ist einmalig und kopiert die Vorlagendatei in den Drive-Ordner des Kindes
+- **Vertragsunterlagen (DocumentTemplates)**: Typ `upload` (Eltern laden hoch) oder `read` (Eltern bestätigen gelesen). Aktive/abgemeldete Kinder sehen nur Vorlagen mit vorhandener Einreichung. „Gelesen markieren" ist einmalig und kopiert die Vorlagendatei in den Drive-Ordner des Kindes
 - **Kind-Aktionen**: „Vertrag abmelden" (setzt `deactivatedAt`, nur aktive Kinder), „Abmeldung aufheben" (reaktiviert + sendet E-Mail), „Kind entfernen" (löscht Neon-Eintrag, Drive-Ordner und Sheets-Zeile)
 - **storageId vs. storageRef**: In Neon wird nur die 8-stellige `storageId` (cuid2) gespeichert. Der vollständige `storageRef` (`YYYY-MM-DD-vorname-nachname_storageId`) existiert nur in Sheets und wird bei Bedarf daraus rekonstruiert
 - **Dev-Fallback**: Solange `isSetupDone = false` werden Mitgliederdaten in `User.localData` (Neon JSON) zwischengespeichert. Nach dem Storage-Onboarding werden sie nach Sheets migriert und aus Neon gelöscht

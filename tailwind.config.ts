@@ -15,6 +15,7 @@ export default {
       colors: {
         admin: '#d5e4eb',
         ini: '#dde2b0',
+        member: '#ffdd76',
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

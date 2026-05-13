@@ -1,3 +1,4 @@
+import { sendEmailRemovedNotification } from '~/server/utils/email'
 import { getMemberData, updateMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, updateMemberSchema } from '~/server/utils/schemas'
@@ -50,6 +51,9 @@ export default defineEventHandler(async (event) => {
     contractEnd,
   } = parsed.data
 
+  const newEmail1 = email1.toLowerCase()
+  const newEmail2 = email2 ? email2.toLowerCase() : null
+
   await updateMemberData(
     memberId,
     {
@@ -58,14 +62,25 @@ export default defineEventHandler(async (event) => {
       birthDate,
       guardian1Name,
       guardian2Name: guardian2Name || null,
-      email1: email1.toLowerCase(),
-      email2: email2 ? email2.toLowerCase() : null,
+      email1: newEmail1,
+      email2: newEmail2,
       phone1: phone1 || null,
       phone2: phone2 || null,
       groupId: groupId || null,
       contractEnd: contractEnd || null,
     },
     club,
+  )
+
+  const oldEmails = [existing.email1, existing.email2].filter(Boolean) as string[]
+  const newEmails = new Set([newEmail1, ...(newEmail2 ? [newEmail2] : [])])
+  const removedEmails = oldEmails.filter((e) => !newEmails.has(e))
+  const childName = `${existing.firstName} ${existing.lastName}`
+
+  await Promise.allSettled(
+    removedEmails.map((to) =>
+      sendEmailRemovedNotification({ to, clubName: club.name, childName }),
+    ),
   )
 
   return { ok: true }

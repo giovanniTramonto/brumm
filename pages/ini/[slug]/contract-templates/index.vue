@@ -27,7 +27,7 @@ const draggedId = ref<string | null>(null)
 const dragOverId = ref<string | null>(null)
 
 async function loadTemplates() {
-  const data = await $fetch<{ templates: Template[] }>(`/api/ini/${slug}/document-templates`)
+  const data = await $fetch<{ templates: Template[] }>(`/api/ini/${slug}/contract-templates`)
   templates.value = data.templates
 }
 
@@ -52,7 +52,7 @@ async function onCreate() {
     body.append('name', newName.value.trim())
     body.append('documentType', newDocumentType.value)
     if (newFile.value) body.append('file', newFile.value, newFile.value.name)
-    const data = await $fetch<{ template: Template }>(`/api/ini/${slug}/document-templates`, {
+    const data = await $fetch<{ template: Template }>(`/api/ini/${slug}/contract-templates`, {
       method: 'POST',
       body,
     })
@@ -77,7 +77,7 @@ function startEdit(template: Template) {
 
 async function saveEdit(template: Template) {
   if (!editingName.value.trim()) return
-  await $fetch(`/api/ini/${slug}/document-templates/${template.id}`, {
+  await $fetch(`/api/ini/${slug}/contract-templates/${template.id}`, {
     method: 'PATCH',
     body: { name: editingName.value.trim() },
   })
@@ -88,7 +88,7 @@ async function saveEdit(template: Template) {
 
 async function setDocumentType(template: Template, documentType: string) {
   const updated = await $fetch<{ template: Template }>(
-    `/api/ini/${slug}/document-templates/${template.id}`,
+    `/api/ini/${slug}/contract-templates/${template.id}`,
     {
       method: 'PATCH',
       body: { documentType },
@@ -107,7 +107,7 @@ async function onUploadFile(template: Template, event: Event) {
     const body = new FormData()
     body.append('file', file, file.name)
     const data = await $fetch<{ template: Template }>(
-      `/api/ini/${slug}/document-templates/${template.id}/file`,
+      `/api/ini/${slug}/contract-templates/${template.id}/file`,
       {
         method: 'POST',
         body,
@@ -141,7 +141,7 @@ function onDrop(targetId: string) {
   templates.value = updated
   draggedId.value = null
   dragOverId.value = null
-  $fetch(`/api/ini/${slug}/document-templates/reorder`, {
+  $fetch(`/api/ini/${slug}/contract-templates/reorder`, {
     method: 'PUT',
     body: { ids: templates.value.map((t) => t.id) },
   })
@@ -156,7 +156,7 @@ async function onDelete(template: Template) {
   if (!confirm(`"${template.name}" wirklich löschen?`)) return
   deletingId.value = template.id
   try {
-    await $fetch(`/api/ini/${slug}/document-templates/${template.id}`, { method: 'DELETE' })
+    await $fetch(`/api/ini/${slug}/contract-templates/${template.id}`, { method: 'DELETE' })
     templates.value = templates.value.filter((t) => t.id !== template.id)
   } finally {
     deletingId.value = null
@@ -176,7 +176,7 @@ async function onDelete(template: Template) {
 
     <template v-else>
       <div class="card space-y-4">
-        <h1 class="text-2xl font-bold text-gray-900">Vorlagen</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Vertragsvorlagen</h1>
 
         <p v-if="templates.length === 0" class="text-sm text-gray-500">Noch keine Einträge.</p>
 
