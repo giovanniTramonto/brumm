@@ -18,9 +18,12 @@ export default defineEventHandler(async (event) => {
     prisma.session.deleteMany({ where: { clubId } }),
     prisma.magicLink.deleteMany({ where: { userId: { in: userIds } } }),
     prisma.invite.deleteMany({ where: { clubId } }),
+    prisma.memberDocument.deleteMany({ where: { memberId: { in: userIds } } }),
     prisma.userEmail.deleteMany({ where: { userId: { in: userIds } } }),
     prisma.user.deleteMany({ where: { clubId } }),
+    prisma.documentTemplate.deleteMany({ where: { clubId } }),
     prisma.group.deleteMany({ where: { clubId } }),
+    prisma.manager.deleteMany({ where: { clubId } }),
     prisma.club.delete({ where: { id: clubId } }),
   ])
 

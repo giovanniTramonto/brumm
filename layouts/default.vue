@@ -11,8 +11,8 @@ const navItems = computed(() => {
   const items: { label: string; to: string; disabled?: boolean }[] = [
     { label: 'Dashboard', to: `${base}/dashboard` },
   ]
+  items.push({ label: 'Kinder', to: `${base}/members` })
   if (authStore.currentUser.role !== 'MEMBER') {
-    items.push({ label: 'Kinder', to: `${base}/members` })
     items.push({ label: 'Gruppen', to: `${base}/groups`, disabled: true })
   }
   if (authStore.currentUser.role === 'SUPERUSER') {

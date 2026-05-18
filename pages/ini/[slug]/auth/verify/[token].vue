@@ -17,7 +17,7 @@ onMounted(async () => {
     const user = authStore.currentUser
     let target: string
     if (user?.role === 'MEMBER') {
-      target = `/ini/${slug}/members`
+      target = `/ini/${slug}/dashboard`
     } else if (authStore.currentClub?.isSetupDone) {
       target = `/ini/${slug}/dashboard`
     } else {

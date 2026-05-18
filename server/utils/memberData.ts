@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
+import { withGoogleErrorHandling } from './googleAuth'
 import {
   getAllMembersFromSheet,
   getMemberFromSheet,
@@ -59,7 +60,7 @@ export async function getMemberData(
 
   const tokens = getTokens(club.oauthToken)
   const masterSheetId = getMasterSheetId(club.storageConfig)
-  return getMemberFromSheet({ tokens, masterSheetId, userId })
+  return withGoogleErrorHandling(() => getMemberFromSheet({ tokens, masterSheetId, userId }))
 }
 
 export async function getAllMemberData(
@@ -80,7 +81,9 @@ export async function getAllMemberData(
 
   const tokens = getTokens(club.oauthToken)
   const masterSheetId = getMasterSheetId(club.storageConfig)
-  const allMembers = await getAllMembersFromSheet({ tokens, masterSheetId })
+  const allMembers = await withGoogleErrorHandling(() =>
+    getAllMembersFromSheet({ tokens, masterSheetId }),
+  )
   return allMembers.filter((m) => userIds.includes(m.userId))
 }
 
@@ -95,7 +98,7 @@ export async function saveMemberData(data: MemberData, club: ClubForData): Promi
 
   const tokens = getTokens(club.oauthToken)
   const masterSheetId = getMasterSheetId(club.storageConfig)
-  await writeMemberToSheet({ tokens, masterSheetId, data })
+  await withGoogleErrorHandling(() => writeMemberToSheet({ tokens, masterSheetId, data }))
 }
 
 export async function deleteMemberData(userId: string, club: ClubForData): Promise<void> {
@@ -109,9 +112,13 @@ export async function deleteMemberData(userId: string, club: ClubForData): Promi
 
   const tokens = getTokens(club.oauthToken)
   const masterSheetId = getMasterSheetId(club.storageConfig)
-  const memberData = await getMemberFromSheet({ tokens, masterSheetId, userId })
+  const memberData = await withGoogleErrorHandling(() =>
+    getMemberFromSheet({ tokens, masterSheetId, userId }),
+  )
   if (memberData) {
-    await removeMemberFromMasterSheet({ tokens, masterSheetId, storageRef: memberData.storageRef })
+    await withGoogleErrorHandling(() =>
+      removeMemberFromMasterSheet({ tokens, masterSheetId, storageRef: memberData.storageRef }),
+    )
   }
 }
 
@@ -133,5 +140,7 @@ export async function updateMemberData(
 
   const tokens = getTokens(club.oauthToken)
   const masterSheetId = getMasterSheetId(club.storageConfig)
-  await updateMemberInSheet({ tokens, masterSheetId, userId, updates })
+  await withGoogleErrorHandling(() =>
+    updateMemberInSheet({ tokens, masterSheetId, userId, updates }),
+  )
 }

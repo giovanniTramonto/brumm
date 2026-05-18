@@ -32,7 +32,7 @@ async function onSubmit() {
   <div class="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
     <div class="w-full max-w-md">
       <div class="mb-8 text-center">
-        <h1 class="text-2xl font-bold text-gray-900">Anmelden</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Brumm Anmeldung</h1>
       </div>
 
       <div class="card">

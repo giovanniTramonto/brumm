@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
+import type { Member } from '~/types'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -8,9 +9,18 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
+const child = ref<Member | null>(null)
+const isLoadingChild = ref(true)
 
 onMounted(async () => {
-  if (authStore.currentUser?.role !== 'MEMBER') {
+  if (authStore.currentUser?.role === 'MEMBER') {
+    const id = authStore.currentUser.id
+    const data = await $fetch<{ member: Member }>(`/api/ini/${slug}/members/${id}`).catch(
+      () => null,
+    )
+    child.value = data?.member ?? null
+    isLoadingChild.value = false
+  } else {
     await membersStore.fetchMembers(slug)
   }
 })
@@ -25,7 +35,6 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       <h1 class="text-2xl font-bold text-gray-900">
         Willkommen, {{ authStore.currentUser?.firstName }}
       </h1>
-      <p class="mt-1 text-gray-600">{{ authStore.currentClub?.name }}</p>
     </div>
 
     <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="grid gap-6 sm:grid-cols-3">
@@ -43,25 +52,35 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       </div>
     </div>
 
-    <div v-else class="card mt-4">
-      <h2 class="font-semibold text-gray-900">Mein Profil</h2>
-      <dl class="mt-4 space-y-2 text-sm">
-        <div class="flex gap-2">
-          <dt class="w-32 text-gray-500">Name</dt>
-          <dd class="text-gray-900">
-            {{ authStore.currentUser?.firstName }} {{ authStore.currentUser?.lastName }}
-          </dd>
+    <div v-else-if="isLoadingChild || child" class="card mt-4">
+      <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
+      <p v-if="isLoadingChild" class="text-sm text-gray-500">Daten werden geladen…</p>
+      <template v-else-if="child">
+        <div v-if="child.isActive" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
+          <strong>{{ child.firstName }} {{ child.lastName }}</strong> ist aktiv und für die Betreuung freigeschaltet.
         </div>
-        <div class="flex gap-2">
-          <dt class="w-32 text-gray-500">Status</dt>
-          <dd :class="authStore.currentUser?.isActive ? 'text-green-700' : 'text-amber-600'">
-            {{ authStore.currentUser?.isActive ? "Aktiv" : "Ausstehend" }}
-          </dd>
+        <div v-else-if="child.deactivatedAt" class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+          <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde abgemeldet.
         </div>
-      </dl>
+        <div v-else class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+          <p>
+            <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde bestätigt und wartet auf Freischaltung.
+          </p>
+          <p class="mt-1">
+            Die Betreuung kann erst beginnen, wenn alle Vertragsunterlagen eingereicht wurden.
+            <NuxtLink
+              :to="`/ini/${slug}/members/${child.id}`"
+              class="font-medium underline hover:no-underline"
+            >
+              Hier können Sie die Unterlagen hochladen.
+            </NuxtLink>
+          </p>
+        </div>
+      </template>
+      <p v-else class="text-sm text-gray-500">Kein Kind angemeldet.</p>
     </div>
 
-    <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="card mt-6">
+    <div class="card mt-6">
       <h2 class="mb-3 text-sm font-medium text-gray-900">Aktuell</h2>
       <NuxtLink :to="`/ini/${slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
         Adressliste →
