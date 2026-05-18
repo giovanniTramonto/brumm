@@ -33,7 +33,7 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
   <div>
     <div class="mb-8">
       <h1 class="text-2xl font-bold text-gray-900">
-        Willkommen, {{ authStore.currentUser?.firstName }}
+        Willkommen{{ authStore.currentUser?.firstName ? `, ${authStore.currentUser.firstName}` : '' }}!
       </h1>
     </div>
 
