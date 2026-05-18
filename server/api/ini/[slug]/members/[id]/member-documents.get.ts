@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
   const [templates, submissions] = await Promise.all([
     prisma.documentTemplate.findMany({
       where: { clubId: club.id },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true, documentType: true, driveFileId: true, driveFileName: true },
     }),
     prisma.memberDocument.findMany({
