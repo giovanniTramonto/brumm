@@ -43,8 +43,9 @@ model User {
   isActive  Boolean @default(false)
   storageId String?
 
-  localData       Json?
-  isMemberManager Boolean  @default(false)
+  localData               Json?
+  isMemberManager         Boolean  @default(false)
+  hasSubmittedDocuments   Boolean  @default(false)
 
   createdAt DateTime @default(now())
 

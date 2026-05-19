@@ -215,6 +215,26 @@ export async function sendEmailRemovedNotification(params: {
   })
 }
 
+export async function sendDocumentsSubmittedNotification(params: {
+  to: string[]
+  clubName: string
+  childName: string
+  clubSlug: string
+  userId: string
+}): Promise<void> {
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/members/${params.userId}`
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Vertragsunterlagen eingereicht: ${params.childName}`,
+    html: `
+      <h2>Vertragsunterlagen eingereicht – ${params.clubName}</h2>
+      <p><strong>${params.childName}</strong> hat alle Vertragsunterlagen eingereicht und wartet auf Freischaltung.</p>
+      <p><a href="${link}">Kind freischalten</a></p>
+    `,
+  })
+}
+
 export async function sendImportSummary(params: {
   to: string[]
   clubName: string

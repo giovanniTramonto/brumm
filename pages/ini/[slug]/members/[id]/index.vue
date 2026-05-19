@@ -47,11 +47,22 @@ const uploadErrors = ref<Record<string, string>>({})
 const submitted = ref(false)
 const readMap = reactive<Record<string, boolean>>({})
 
+const otherDocuments = ref<DocumentEntry[]>([])
+const isLoadingOtherDocs = ref(false)
+const isUploadingOtherDoc = ref(false)
+const replacingOtherFileId = ref<string | null>(null)
+const otherUploadError = ref<string | null>(null)
+
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
 const canManageMembers = computed(() => {
   const user = authStore.currentUser
   return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
 })
+const isConfirmedMember = computed(() =>
+  member.value
+    ? !member.value.isActive && !member.value.deactivatedAt && !member.value.hasPendingInvite
+    : false,
+)
 const isOwnChild = ref(false)
 
 const localAllSubmitted = computed(() =>
@@ -115,6 +126,66 @@ async function loadDocuments() {
   }
 }
 
+async function loadOtherDocuments() {
+  isLoadingOtherDocs.value = true
+  try {
+    const data = await $fetch<{ documents: DocumentEntry[] }>(
+      `/api/ini/${slug}/members/${memberId}/documents/other`,
+    )
+    otherDocuments.value = data.documents
+  } catch {
+    // ignore
+  } finally {
+    isLoadingOtherDocs.value = false
+  }
+}
+
+async function onUploadOtherDocument(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  otherUploadError.value = null
+  isUploadingOtherDoc.value = true
+  try {
+    const body = new FormData()
+    body.append('file', file, file.name)
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/other`, {
+      method: 'POST',
+      body,
+    })
+    await loadOtherDocuments()
+  } catch (err: unknown) {
+    otherUploadError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    isUploadingOtherDoc.value = false
+    input.value = ''
+  }
+}
+
+async function onReplaceOtherDocument(fileId: string, event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  otherUploadError.value = null
+  replacingOtherFileId.value = fileId
+  try {
+    const body = new FormData()
+    body.append('file', file, file.name)
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/other/${fileId}`, {
+      method: 'PATCH',
+      body,
+    })
+    await loadOtherDocuments()
+  } catch (err: unknown) {
+    otherUploadError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    replacingOtherFileId.value = null
+    input.value = ''
+  }
+}
+
 async function loadMemberDocTemplates() {
   isLoadingTemplates.value = true
   try {
@@ -152,6 +223,7 @@ onMounted(async () => {
 
     member.value = memberData.member
     isOwnChild.value = memberData.isOwnChild
+    submitted.value = memberData.member.hasSubmittedDocuments
     if (groupsData) groups.value = groupsData.groups
 
     const m = memberData.member
@@ -180,7 +252,7 @@ onMounted(async () => {
       isLoadingTemplates.value = false
     }
 
-    if (m.isActive) await loadDocuments()
+    if (m.isActive) await Promise.all([loadDocuments(), loadOtherDocuments()])
   } catch {
     error.value = 'Kind nicht gefunden'
   } finally {
@@ -272,7 +344,11 @@ async function onResendInvite() {
 }
 
 async function onDeleteMember() {
-  if (!member.value || !confirm('Kind entfernen? Alle Daten werden gelöscht. Die Eltern erhalten eine Email.')) return
+  if (
+    !member.value ||
+    !confirm('Kind entfernen? Alle Daten werden gelöscht. Die Eltern erhalten eine Email.')
+  )
+    return
   inviteActionError.value = null
   isCancellingInvite.value = true
   try {
@@ -313,8 +389,13 @@ async function onUploadForTemplate(templateId: string, event: Event) {
   }
 }
 
-function onSubmit() {
-  submitted.value = true
+async function onSubmit() {
+  try {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/submit`, { method: 'POST' })
+    submitted.value = true
+  } catch {
+    // ignore
+  }
 }
 </script>
 
@@ -574,9 +655,71 @@ function onSubmit() {
                 class="flex items-center gap-2 text-sm text-gray-700"
               >
                 <span aria-hidden="true" class="text-gray-400">📄</span>
-                {{ doc.name }}
+                <span class="flex-1">{{ doc.name }}</span>
+                <a
+                  :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                  class="btn-secondary py-1 text-xs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Ansehen ↗</a
+                >
               </li>
             </ul>
+          </div>
+
+          <div class="border-t pt-4">
+            <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
+            <div v-if="isLoadingOtherDocs" class="text-sm text-gray-500">
+              Brumm, brumm …
+            </div>
+            <template v-else>
+              <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
+                <li
+                  v-for="doc in otherDocuments"
+                  :key="doc.id"
+                  class="flex items-center gap-2 text-sm text-gray-700"
+                >
+                  <span aria-hidden="true" class="text-gray-400">📄</span>
+                  <span class="flex-1">{{ doc.name }}</span>
+                  <label
+                    class="btn-secondary cursor-pointer py-1 text-xs"
+                    :class="{ 'opacity-50': replacingOtherFileId === doc.id }"
+                  >
+                    {{ replacingOtherFileId === doc.id ? "Loading …" : "Ändern" }}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      class="hidden"
+                      :disabled="replacingOtherFileId === doc.id"
+                      @change="onReplaceOtherDocument(doc.id, $event)"
+                    />
+                  </label>
+                  <a
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Ansehen ↗</a
+                  >
+                </li>
+              </ul>
+              <label
+                class="btn-secondary cursor-pointer text-sm"
+                :class="{ 'opacity-50': isUploadingOtherDoc }"
+              >
+                {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  class="hidden"
+                  :disabled="isUploadingOtherDoc"
+                  @change="onUploadOtherDocument"
+                />
+              </label>
+              <p v-if="otherUploadError" role="alert" class="mt-1 text-xs text-red-600">
+                {{ otherUploadError }}
+              </p>
+            </template>
           </div>
         </template>
 
@@ -589,139 +732,134 @@ function onSubmit() {
             !member.hasPendingInvite
           "
         >
+          <p class="text-sm text-gray-600">
+            Ihr Kind wartet auf Freischaltung. Bitte vervollständigen Sie alle
+            erforderlichen Vertragsunterlagen.
+          </p>
+
           <div
-            v-if="submitted"
-            class="rounded-md bg-green-50 p-4 text-sm text-green-800"
+            v-if="isLoadingTemplates"
+            role="status"
+            aria-live="polite"
+            class="text-sm text-gray-500"
           >
-            Ihre Vertragsunterlagen wurden erfolgreich eingereicht.
+            Brumm, brumm …
           </div>
 
-          <template v-else>
-            <p class="text-sm text-gray-600">
-              Ihr Kind wartet auf Freischaltung. Bitte laden Sie alle
-              erforderlichen Vertragsunterlagen hoch.
-            </p>
+          <p
+            v-else-if="memberDocTemplates.length === 0"
+            class="text-sm text-gray-500"
+          >
+            Noch keine Vertragsunterlagen konfiguriert.
+          </p>
 
-            <div
-              v-if="isLoadingTemplates"
-              role="status"
-              aria-live="polite"
-              class="text-sm text-gray-500"
+          <ul v-else class="divide-y divide-gray-100">
+            <li
+              v-for="t in visibleTemplates"
+              :key="t.id"
+              class="flex items-center gap-3 py-3"
             >
-              Brumm, brumm …
-            </div>
+              <span
+                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1"
+                :class="
+                  isDone(t)
+                    ? 'bg-green-100 text-green-600 ring-green-400'
+                    : 'bg-gray-50 text-gray-300 ring-gray-200'
+                "
+                :aria-label="isDone(t) ? 'Erledigt' : 'Ausstehend'"
+                aria-hidden="false"
+                ><span aria-hidden="true">✓</span></span
+              >
 
-            <p
-              v-else-if="memberDocTemplates.length === 0"
-              class="text-sm text-gray-500"
+              <span class="min-w-0 flex-1 text-sm text-gray-900">{{
+                t.name
+              }}</span>
+
+              <div class="flex shrink-0 items-center gap-2">
+                <template v-if="t.documentType === 'read'">
+                  <button
+                    v-if="!readMap[t.id]"
+                    type="button"
+                    class="btn-secondary py-1 text-xs"
+                    @click="onMarkRead(t.id)"
+                  >
+                    Als gelesen markieren
+                  </button>
+                  <span
+                    v-else
+                    class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
+                    >✓ Gelesen</span
+                  >
+                  <a
+                    v-if="t.submission?.driveFileId"
+                    :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Ansehen ↗</a
+                  >
+                  <a
+                    v-else-if="t.hasFile"
+                    :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Ansehen ↗</a
+                  >
+                </template>
+
+                <template v-else-if="t.documentType === 'upload'">
+                  <label
+                    class="btn-secondary cursor-pointer py-1 text-xs"
+                    :class="{ 'opacity-50': uploadingTemplateId === t.id }"
+                  >
+                    {{
+                      uploadingTemplateId === t.id
+                        ? "Loading …"
+                        : t.submission
+                          ? "Ändern"
+                          : "Hochladen"
+                    }}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      class="hidden"
+                      :disabled="uploadingTemplateId === t.id"
+                      @change="onUploadForTemplate(t.id, $event)"
+                    />
+                  </label>
+                  <span
+                    v-if="uploadErrors[t.id]"
+                    role="alert"
+                    class="max-w-[120px] truncate text-xs text-red-600"
+                    >{{ uploadErrors[t.id] }}</span
+                  >
+                  <a
+                    v-if="t.hasFile"
+                    :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Ansehen ↗</a
+                  >
+                </template>
+              </div>
+            </li>
+          </ul>
+
+          <div class="flex items-center justify-end gap-3 border-t pt-4">
+            <span
+              v-if="submitted"
+              class="text-sm text-green-700"
+            >Fertig! Ihre Unterlagen wurden eingereicht. Sie erhalten eine Email, sobald Ihr Kind freigeschaltet wurded.</span>
+            <button
+              class="btn-primary text-sm"
+              :disabled="!localAllSubmitted || submitted"
+              @click="onSubmit"
             >
-              Noch keine Vertragsunterlagen konfiguriert.
-            </p>
-
-            <ul v-else class="divide-y divide-gray-100">
-              <li
-                v-for="t in visibleTemplates"
-                :key="t.id"
-                class="flex items-center gap-3 py-3"
-              >
-                <span
-                  class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1"
-                  :class="
-                    isDone(t)
-                      ? 'bg-green-100 text-green-600 ring-green-400'
-                      : 'bg-gray-50 text-gray-300 ring-gray-200'
-                  "
-                  :aria-label="isDone(t) ? 'Erledigt' : 'Ausstehend'"
-                  aria-hidden="false"
-                  ><span aria-hidden="true">✓</span></span
-                >
-
-                <span class="min-w-0 flex-1 text-sm text-gray-900">{{
-                  t.name
-                }}</span>
-
-                <div class="flex shrink-0 items-center gap-2">
-                  <template v-if="t.documentType === 'read'">
-                    <button
-                      v-if="!readMap[t.id]"
-                      type="button"
-                      class="btn-secondary py-1 text-xs"
-                      @click="onMarkRead(t.id)"
-                    >
-                      Gelesen markieren
-                    </button>
-                    <span
-                      v-else
-                      class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
-                      >✓ Gelesen</span
-                    >
-                    <a
-                      v-if="t.submission?.driveFileId"
-                      :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
-                      class="btn-secondary py-1 text-xs"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Ansehen ↗</a
-                    >
-                    <a
-                      v-else-if="t.hasFile"
-                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
-                      class="btn-secondary py-1 text-xs"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Ansehen ↗</a
-                    >
-                  </template>
-
-                  <template v-else-if="t.documentType === 'upload'">
-                    <label
-                      class="btn-secondary cursor-pointer py-1 text-xs"
-                      :class="{ 'opacity-50': uploadingTemplateId === t.id }"
-                    >
-                      {{
-                        uploadingTemplateId === t.id
-                          ? "…"
-                          : t.submission
-                            ? "Ändern"
-                            : "Hochladen"
-                      }}
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        class="hidden"
-                        :disabled="uploadingTemplateId === t.id"
-                        @change="onUploadForTemplate(t.id, $event)"
-                      />
-                    </label>
-                    <span
-                      v-if="uploadErrors[t.id]"
-                      role="alert"
-                      class="max-w-[120px] truncate text-xs text-red-600"
-                      >{{ uploadErrors[t.id] }}</span
-                    >
-                    <a
-                      v-if="t.hasFile"
-                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
-                      class="btn-secondary py-1 text-xs"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Ansehen ↗</a
-                    >
-                  </template>
-                </div>
-              </li>
-            </ul>
-
-            <div class="flex justify-end border-t pt-4">
-              <button
-                class="btn-primary text-sm"
-                :disabled="!localAllSubmitted"
-                @click="onSubmit"
-              >
-                Einreichen
-              </button>
-            </div>
-          </template>
+              Einreichen
+            </button>
+          </div>
         </template>
 
         <!-- TEAM or other: readonly data -->
@@ -796,7 +934,7 @@ function onSubmit() {
                       class="btn-secondary py-1 text-xs"
                       @click="onMarkRead(t.id)"
                     >
-                      Gelesen markieren
+                      Als gelesen markieren
                     </button>
                     <span
                       v-else-if="readMap[t.id]"
@@ -812,7 +950,7 @@ function onSubmit() {
                       >Ansehen ↗</a
                     >
                     <a
-                      v-else-if="t.hasFile"
+                      v-else-if="t.hasFile && (!isConfirmedMember || readMap[t.id])"
                       :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
                       class="btn-secondary py-1 text-xs"
                       target="_blank"
@@ -831,7 +969,7 @@ function onSubmit() {
                     >
                       {{
                         uploadingTemplateId === t.id
-                          ? "…"
+                          ? "Loading …"
                           : t.submission
                             ? "Ersetzen"
                             : "Hochladen"
@@ -853,7 +991,7 @@ function onSubmit() {
                       >Ansehen ↗</a
                     >
                     <span
-                      v-else
+                      v-else-if="!isConfirmedMember"
                       role="link"
                       aria-disabled="true"
                       class="btn-secondary py-1 text-xs opacity-40 pointer-events-none"
@@ -880,6 +1018,61 @@ function onSubmit() {
           <p v-else class="text-sm text-gray-500">
             Keine Vertragsunterlagen konfiguriert.
           </p>
+        </div>
+
+        <div v-if="canManageMembers && member.isActive" class="border-t pt-4">
+          <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
+          <div v-if="isLoadingOtherDocs" class="text-sm text-gray-500">
+            Brumm, brumm …
+          </div>
+          <template v-else>
+            <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
+              <li
+                v-for="doc in otherDocuments"
+                :key="doc.id"
+                class="flex items-center gap-2 text-sm text-gray-700"
+              >
+                <span aria-hidden="true" class="text-gray-400">📄</span>
+                <span class="flex-1">{{ doc.name }}</span>
+                <label
+                  class="btn-secondary cursor-pointer py-1 text-xs"
+                  :class="{ 'opacity-50': replacingOtherFileId === doc.id }"
+                >
+                  {{ replacingOtherFileId === doc.id ? "Loading …" : "Ändern" }}
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    class="hidden"
+                    :disabled="replacingOtherFileId === doc.id"
+                    @change="onReplaceOtherDocument(doc.id, $event)"
+                  />
+                </label>
+                <a
+                  :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
+                  class="btn-secondary py-1 text-xs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >Ansehen ↗</a
+                >
+              </li>
+            </ul>
+            <label
+              class="btn-secondary cursor-pointer text-sm"
+              :class="{ 'opacity-50': isUploadingOtherDoc }"
+            >
+              {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                class="hidden"
+                :disabled="isUploadingOtherDoc"
+                @change="onUploadOtherDocument"
+              />
+            </label>
+            <p v-if="otherUploadError" role="alert" class="mt-1 text-xs text-red-600">
+              {{ otherUploadError }}
+            </p>
+          </template>
         </div>
 
         <div v-if="!isMember" class="space-y-2 border-t pt-4">

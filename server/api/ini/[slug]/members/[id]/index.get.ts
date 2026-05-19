@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
     deactivatedAt: md.deactivatedAt,
     contractEnd: md.contractEnd,
     hasPendingInvite: !!pendingInvite,
+    hasSubmittedDocuments: user.hasSubmittedDocuments,
   }
 
   return { member, isOwnChild }
