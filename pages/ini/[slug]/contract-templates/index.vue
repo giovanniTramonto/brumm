@@ -1,8 +1,16 @@
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'SUPERUSER' })
+import { useAuthStore } from '~/stores/auth'
+
+definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'MANAGER' })
 
 const route = useRoute()
 const slug = route.params.slug as string
+const authStore = useAuthStore()
+
+const canManage = computed(() => {
+  const user = authStore.currentUser
+  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
+})
 
 type Template = {
   id: string
@@ -32,6 +40,10 @@ async function loadTemplates() {
 }
 
 onMounted(async () => {
+  if (!canManage.value) {
+    await navigateTo(`/ini/${slug}/dashboard`)
+    return
+  }
   try {
     await loadTemplates()
   } finally {

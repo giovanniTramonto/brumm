@@ -7,7 +7,10 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
 
-  if (currentUser.role !== 'SUPERUSER') {
+  const canManage =
+    currentUser.role === 'SUPERUSER' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  if (!canManage) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 

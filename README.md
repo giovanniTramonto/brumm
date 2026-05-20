@@ -41,7 +41,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/members/import         → CSV-Import
 /ini/{slug}/members/{id}           → Kind-Detailseite & Vertragsunterlagen
 /ini/{slug}/members/deactivate     → Selbst abmelden
-/ini/{slug}/contract-templates     → Vertragsvorlagen verwalten (SUPERUSER)
+/ini/{slug}/contract-templates     → Vertragsvorlagen verwalten (SUPERUSER + isMemberManager)
 /ini/{slug}/groups
 /ini/{slug}/management             → Vorstand verwalten (SUPERUSER)
 /ini/{slug}/management/create      → Vorstand hinzufügen
@@ -55,7 +55,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 | Rolle | Rechte |
 |---|---|
 | `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen, Vorstand, Settings, Google Drive verbinden |
-| `MANAGER` | Vorstandsmitglied. Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden |
+| `MANAGER` | Vorstandsmitglied. Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen verwalten |
 | `TEAM` | Alle Daten lesen |
 | `MEMBER` | Elternteil eines Kindes – eigene Kinder und Vertragsunterlagen hochladen. Sieht alle Kinder in der Liste. |
 

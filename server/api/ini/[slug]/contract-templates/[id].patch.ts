@@ -5,7 +5,10 @@ export default defineEventHandler(async (event) => {
   const currentUser = event.context.user
   const templateId = getRouterParam(event, 'id')
 
-  if (currentUser.role !== 'SUPERUSER') {
+  const canManage =
+    currentUser.role === 'SUPERUSER' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+  if (!canManage) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
