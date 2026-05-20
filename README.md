@@ -33,6 +33,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /register                          → Verein registrieren
 /admin                             → Brumm Admin (ADMIN_SECRET)
 /ini/{slug}/login                  → Anmeldung per Magic Link
+/ini/{slug}/auth/verify/{token}    → Magic Link / Invite einlösen
 /ini/{slug}/onboarding             → Google Drive einrichten
 /ini/{slug}/dashboard
 /ini/{slug}/addresses              → Adressliste aller aktiven Kinder
