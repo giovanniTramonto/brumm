@@ -10,7 +10,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  const canViewAll = currentUser.role === 'SUPERUSER' || currentUser.role === 'TEAM'
+  const canViewAll =
+    currentUser.role === 'SUPERUSER' ||
+    currentUser.role === 'TEAM' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
 
   if (!canViewAll) {
     const ownMd = await getMemberData(currentUser.id, club)

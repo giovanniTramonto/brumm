@@ -24,9 +24,19 @@ export default defineEventHandler(async (event) => {
     data: { clubId: club.id, storageId, isMemberManager: isMemberManager ?? false },
   })
 
+  await prisma.user.create({
+    data: {
+      clubId: club.id,
+      storageId,
+      role: 'MANAGER',
+      isActive: true,
+      isMemberManager: isMemberManager ?? false,
+    },
+  })
+
   await saveManagerData({ managerId: manager.id, storageId, name, email }, club)
 
-  await sendManagerAddedEmail({ to: email, name, clubName: club.name }).catch(() => {})
+  await sendManagerAddedEmail({ to: email, name, clubName: club.name, clubSlug: club.slug }).catch(() => {})
 
   return {
     manager: {

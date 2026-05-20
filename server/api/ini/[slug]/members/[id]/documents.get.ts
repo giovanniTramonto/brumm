@@ -1,5 +1,4 @@
 import { getMemberData } from '~/server/utils/memberData'
-import { prisma } from '~/server/utils/prisma'
 import { listMemberDocuments } from '~/server/utils/storage/googleDrive'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
@@ -12,7 +11,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  const canViewAll = currentUser.role === 'SUPERUSER' || currentUser.role === 'TEAM'
+  const canViewAll =
+    currentUser.role === 'SUPERUSER' ||
+    currentUser.role === 'TEAM' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
 
   const md = await getMemberData(memberId, club)
   if (!md) {

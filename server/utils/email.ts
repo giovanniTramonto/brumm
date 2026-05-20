@@ -152,7 +152,9 @@ export async function sendManagerAddedEmail(params: {
   to: string
   name: string
   clubName: string
+  clubSlug: string
 }): Promise<void> {
+  const loginLink = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/login`
   await send({
     from: FROM_ADDRESS,
     to: params.to,
@@ -160,6 +162,7 @@ export async function sendManagerAddedEmail(params: {
     html: `
       <h2>Hallo ${params.name},</h2>
       <p>Du wurdest als Vorstandsmitglied bei <strong>${params.clubName}</strong> eingetragen.</p>
+      <p><a href="${loginLink}">Hier kannst du dich einloggen</a></p>
       <p>Bei Fragen wende dich an den Admin.</p>
     `,
   })

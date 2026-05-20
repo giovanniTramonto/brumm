@@ -2,8 +2,29 @@ import { Prisma } from '@prisma/client'
 import { sendMagicLink } from '~/server/utils/email'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
+import { findManagerIdByEmail } from '~/server/utils/storage/managersSheet'
 import { findUserIdByEmail } from '~/server/utils/storage/sheets'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
+
+async function findOrCreateManagerUser(managerId: string, clubId: string) {
+  const manager = await prisma.manager.findFirst({ where: { id: managerId, clubId } })
+  if (!manager) return null
+
+  const existing = await prisma.user.findFirst({
+    where: { storageId: manager.storageId, clubId, role: 'MANAGER' },
+  })
+  if (existing) return existing
+
+  return prisma.user.create({
+    data: {
+      clubId,
+      storageId: manager.storageId,
+      role: 'MANAGER',
+      isActive: true,
+      isMemberManager: manager.isMemberManager,
+    },
+  })
+}
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -16,7 +37,7 @@ export default defineEventHandler(async (event) => {
   const { email } = parsed.data
   const normalizedEmail = email.toLowerCase()
 
-  // First: check UserEmail in Neon (covers SUPERUSER role)
+  // First: check UserEmail in Neon (covers SUPERUSER and MANAGER roles)
   const userEmail = await prisma.userEmail.findUnique({
     where: { email: normalizedEmail },
     include: { user: true },
@@ -42,16 +63,24 @@ export default defineEventHandler(async (event) => {
   if (club.isSetupDone && club.storageConfig && club.oauthToken) {
     const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
     const tokens = club.oauthToken as unknown as OAuthTokens
-    userId = await findUserIdByEmail({
-      tokens,
-      masterSheetId: storageConfig.masterSheetId,
-      email: normalizedEmail,
-    })
+    const [memberId, managerId] = await Promise.all([
+      findUserIdByEmail({ tokens, masterSheetId: storageConfig.masterSheetId, email: normalizedEmail }),
+      storageConfig.managersSheetId
+        ? findManagerIdByEmail({ tokens, managersSheetId: storageConfig.managersSheetId, email: normalizedEmail })
+        : null,
+    ])
+
+    if (memberId) {
+      userId = memberId
+    } else if (managerId) {
+      const managerUser = await findOrCreateManagerUser(managerId, club.id)
+      if (managerUser) userId = managerUser.id
+    }
   } else {
     const usersWithLocalData = await prisma.user.findMany({
       where: { clubId: club.id, localData: { not: Prisma.DbNull } },
     })
-    const match = usersWithLocalData.find((u) => {
+    const memberMatch = usersWithLocalData.find((u) => {
       const d = u.localData as Record<string, unknown> | null
       if (!d) return false
       return (
@@ -59,7 +88,22 @@ export default defineEventHandler(async (event) => {
         (d.email2 as string)?.toLowerCase() === normalizedEmail
       )
     })
-    userId = match?.id ?? null
+
+    if (memberMatch) {
+      userId = memberMatch.id
+    } else {
+      const managers = await prisma.manager.findMany({
+        where: { clubId: club.id, localData: { not: Prisma.DbNull } },
+      })
+      const managerMatch = managers.find((m) => {
+        const d = m.localData as Record<string, unknown> | null
+        return d && (d.email as string)?.toLowerCase() === normalizedEmail
+      })
+      if (managerMatch) {
+        const managerUser = await findOrCreateManagerUser(managerMatch.id, normalizedEmail, club.id)
+        if (managerUser) userId = managerUser.id
+      }
+    }
   }
 
   if (userId) {

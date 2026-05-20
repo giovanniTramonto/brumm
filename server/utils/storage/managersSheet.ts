@@ -119,6 +119,21 @@ export async function updateManagerInSheet(params: {
   })
 }
 
+export async function findManagerIdByEmail(params: {
+  tokens: OAuthTokens
+  managersSheetId: string
+  email: string
+}): Promise<string | null> {
+  const sheets = getSheetsClientFromTokens(params.tokens)
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: params.managersSheetId,
+    range: 'A:D',
+  })
+  const rows = response.data.values ?? []
+  const match = rows.slice(1).find((row) => row[3]?.toLowerCase() === params.email.toLowerCase())
+  return match ? (match[0] as string) : null
+}
+
 export async function removeManagerFromSheet(params: {
   tokens: OAuthTokens
   managersSheetId: string

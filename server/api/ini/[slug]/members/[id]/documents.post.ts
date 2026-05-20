@@ -26,7 +26,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
   }
 
-  const canUploadAll = currentUser.role === 'SUPERUSER' || currentUser.role === 'TEAM'
+  const canUploadAll =
+    currentUser.role === 'SUPERUSER' ||
+    currentUser.role === 'TEAM' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
 
   if (!canUploadAll) {
     const ownMd = await getMemberData(currentUser.id, club)

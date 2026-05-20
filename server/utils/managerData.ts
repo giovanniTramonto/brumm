@@ -134,7 +134,6 @@ export async function updateManagerData(
 
 export async function deleteManagerData(
   managerId: string,
-  storageId: string,
   club: ClubForData,
 ): Promise<void> {
   if (!club.isSetupDone) {
@@ -148,16 +147,7 @@ export async function deleteManagerData(
   const config = getStorageConfig(club.storageConfig) as GoogleDriveConfig
   const tokens = getTokens(club.oauthToken)
 
-  const tasks: Promise<unknown>[] = []
   if (config.managersSheetId) {
-    tasks.push(
-      removeManagerFromSheet({ tokens, managersSheetId: config.managersSheetId, managerId }),
-    )
+    await removeManagerFromSheet({ tokens, managersSheetId: config.managersSheetId, managerId })
   }
-  if (config.managementFolderId) {
-    tasks.push(
-      deleteManagerFolder({ tokens, managementFolderId: config.managementFolderId, storageId }),
-    )
-  }
-  await Promise.all(tasks)
 }
