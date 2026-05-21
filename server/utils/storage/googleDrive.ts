@@ -242,7 +242,11 @@ async function getOrCreateOtherFolder(params: {
   const drive = getDriveClientFromTokens(params.tokens)
   const memberFolderId = await findMemberFolderId(params)
   if (!memberFolderId) return null
-  const documentsFolderId = await getOrCreateFolder({ drive, name: 'documents', parentId: memberFolderId })
+  const documentsFolderId = await getOrCreateFolder({
+    drive,
+    name: 'documents',
+    parentId: memberFolderId,
+  })
   return getOrCreateFolder({ drive, name: 'other', parentId: documentsFolderId })
 }
 

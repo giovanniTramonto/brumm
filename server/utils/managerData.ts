@@ -132,10 +132,7 @@ export async function updateManagerData(
   })
 }
 
-export async function deleteManagerData(
-  managerId: string,
-  club: ClubForData,
-): Promise<void> {
+export async function deleteManagerData(managerId: string, club: ClubForData): Promise<void> {
   if (!club.isSetupDone) {
     await prisma.manager.update({
       where: { id: managerId },

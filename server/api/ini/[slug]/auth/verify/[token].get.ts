@@ -45,7 +45,11 @@ export default defineEventHandler(async (event) => {
       const memberData = await getMemberData(user.id, club)
       if (memberData)
         return {
-          user: { ...user, firstName: memberData.guardian1Name ?? memberData.firstName, lastName: null },
+          user: {
+            ...user,
+            firstName: memberData.guardian1Name ?? memberData.firstName,
+            lastName: null,
+          },
           club,
         }
     }
@@ -87,7 +91,11 @@ export default defineEventHandler(async (event) => {
     const memberData = await getMemberData(user.id, club)
     if (memberData)
       return {
-        user: { ...user, firstName: memberData.guardian1Name ?? memberData.firstName, lastName: null },
+        user: {
+          ...user,
+          firstName: memberData.guardian1Name ?? memberData.firstName,
+          lastName: null,
+        },
         club,
       }
   }

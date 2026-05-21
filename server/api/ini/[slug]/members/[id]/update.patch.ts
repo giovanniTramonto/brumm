@@ -1,5 +1,5 @@
 import { sendEmailAddedNotification, sendEmailRemovedNotification } from '~/server/utils/email'
-import { getMemberData, updateMemberData } from '~/server/utils/memberData'
+import { getAllMemberData, getMemberData, updateMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, updateMemberSchema } from '~/server/utils/schemas'
 
@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
   const canManageMembers =
     currentUser.role === 'SUPERUSER' ||
     (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
-  if (!canManageMembers) {
+  const isSelfUpdate = currentUser.role === 'MEMBER' && currentUser.id === memberId
+  if (!canManageMembers && !isSelfUpdate) {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
@@ -71,6 +72,37 @@ export default defineEventHandler(async (event) => {
     },
     club,
   )
+
+  // Cascade email changes to sibling members (other children of the same guardian)
+  const email1Changed = existing.email1 !== newEmail1
+  const email2Changed = (existing.email2 ?? null) !== (newEmail2 ?? null)
+  if (email1Changed || email2Changed) {
+    const siblingUsers = await prisma.user.findMany({
+      where: { clubId: club.id, role: 'MEMBER', id: { not: memberId } },
+    })
+    if (siblingUsers.length > 0) {
+      const siblingDataList = await getAllMemberData(
+        siblingUsers.map((u) => u.id),
+        club,
+      )
+      await Promise.allSettled(
+        siblingDataList
+          .filter(
+            (md) =>
+              (email1Changed && md.email1 === existing.email1) ||
+              (email2Changed && existing.email2 && md.email2 === existing.email2),
+          )
+          .map((sibling) => {
+            const siblingUpdates: Record<string, string | null> = {}
+            if (email1Changed && sibling.email1 === existing.email1)
+              siblingUpdates.email1 = newEmail1
+            if (email2Changed && existing.email2 && sibling.email2 === existing.email2)
+              siblingUpdates.email2 = newEmail2
+            return updateMemberData(sibling.userId, siblingUpdates, club)
+          }),
+      )
+    }
+  }
 
   const oldEmailSet = new Set([existing.email1, existing.email2].filter(Boolean) as string[])
   const newEmails = [newEmail1, ...(newEmail2 ? [newEmail2] : [])]

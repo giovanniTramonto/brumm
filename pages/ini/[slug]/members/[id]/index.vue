@@ -457,9 +457,9 @@ async function onSubmit() {
           </span>
         </div>
 
-        <!-- canManageMembers: editable form -->
+        <!-- canManageMembers or own MEMBER: editable form -->
         <form
-          v-if="canManageMembers"
+          v-if="canManageMembers || isMember"
           class="space-y-4"
           @submit.prevent="onSave"
         >
@@ -543,7 +543,7 @@ async function onSubmit() {
               v-model="form.guardian1Name"
               type="text"
               class="input mt-1"
-              :readonly="member.isActive || !!member.deactivatedAt"
+              :readonly="!!member.deactivatedAt"
               :required="!member.isActive"
             />
           </div>
@@ -555,7 +555,7 @@ async function onSubmit() {
                 v-model="form.email1"
                 type="email"
                 class="input mt-1"
-                :readonly="member.isActive || !!member.deactivatedAt"
+                :readonly="!!member.deactivatedAt"
                 :required="!member.isActive"
               />
             </div>
@@ -566,7 +566,7 @@ async function onSubmit() {
                 v-model="form.phone1"
                 type="tel"
                 class="input mt-1"
-                :readonly="member.isActive || !!member.deactivatedAt"
+                :readonly="!!member.deactivatedAt"
               />
             </div>
           </div>
@@ -580,7 +580,7 @@ async function onSubmit() {
               v-model="form.guardian2Name"
               type="text"
               class="input mt-1"
-              :readonly="member.isActive || !!member.deactivatedAt"
+              :readonly="!!member.deactivatedAt"
             />
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -591,7 +591,7 @@ async function onSubmit() {
                 v-model="form.email2"
                 type="email"
                 class="input mt-1"
-                :readonly="member.isActive || !!member.deactivatedAt"
+                :readonly="!!member.deactivatedAt"
               />
             </div>
             <div>
@@ -601,7 +601,7 @@ async function onSubmit() {
                 v-model="form.phone2"
                 type="tel"
                 class="input mt-1"
-                :readonly="member.isActive || !!member.deactivatedAt"
+                :readonly="!!member.deactivatedAt"
               />
             </div>
           </div>
@@ -617,29 +617,8 @@ async function onSubmit() {
           </div>
         </form>
 
-        <!-- MEMBER: Aktiv → readonly data + documents -->
-        <template v-else-if="isMember && member.isActive">
-          <dl class="space-y-2 text-sm">
-            <div class="flex gap-2">
-              <dt class="w-40 text-gray-500">Geburtsdatum</dt>
-              <dd class="text-gray-900">
-                {{ new Date(member.birthDate).toLocaleDateString("de-DE") }}
-              </dd>
-            </div>
-            <div v-if="member.guardian1Name" class="flex gap-2">
-              <dt class="w-40 text-gray-500">Erziehungsber. 1</dt>
-              <dd class="text-gray-900">{{ member.guardian1Name }}</dd>
-            </div>
-            <div v-if="member.guardian2Name" class="flex gap-2">
-              <dt class="w-40 text-gray-500">Erziehungsber. 2</dt>
-              <dd class="text-gray-900">{{ member.guardian2Name }}</dd>
-            </div>
-            <div v-if="member.contractEnd" class="flex gap-2">
-              <dt class="w-40 text-gray-500">Vertragsende</dt>
-              <dd class="text-gray-900">{{ member.contractEnd }}</dd>
-            </div>
-          </dl>
-
+        <!-- MEMBER: Aktiv → documents -->
+        <template v-if="isMember && member.isActive">
           <div class="border-t pt-4">
             <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
             <div v-if="isLoadingDocs" class="text-sm text-gray-500">
@@ -863,7 +842,7 @@ async function onSubmit() {
         </template>
 
         <!-- TEAM or other: readonly data -->
-        <dl v-else-if="!isMember" class="space-y-2 text-sm">
+        <dl v-else-if="!isMember && !canManageMembers" class="space-y-2 text-sm">
           <div class="flex gap-2">
             <dt class="w-40 text-gray-500">Geburtsdatum</dt>
             <dd class="text-gray-900">
@@ -925,7 +904,6 @@ async function onSubmit() {
                   <template v-if="t.documentType === 'read'">
                     <button
                       v-if="
-                        isOwnChild &&
                         !member.isActive &&
                         !member.deactivatedAt &&
                         !readMap[t.id]
@@ -961,9 +939,7 @@ async function onSubmit() {
 
                   <template v-if="t.documentType === 'upload'">
                     <label
-                      v-if="
-                        isOwnChild && !member.isActive && !member.deactivatedAt
-                      "
+                      v-if="!member.isActive && !member.deactivatedAt"
                       class="btn-secondary cursor-pointer py-1 text-xs"
                       :class="{ 'opacity-50': uploadingTemplateId === t.id }"
                     >

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
-import type { Member } from '~/types'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -9,20 +8,9 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
-const child = ref<Member | null>(null)
-const isLoadingChild = ref(true)
 
 onMounted(async () => {
-  if (authStore.currentUser?.role === 'MEMBER') {
-    const id = authStore.currentUser.id
-    const data = await $fetch<{ member: Member }>(`/api/ini/${slug}/members/${id}`).catch(
-      () => null,
-    )
-    child.value = data?.member ?? null
-    isLoadingChild.value = false
-  } else {
-    await membersStore.fetchMembers(slug)
-  }
+  await membersStore.fetchMembers(slug)
 })
 
 const activeCount = computed(() => membersStore.members.filter((m) => m.isActive).length)
@@ -52,29 +40,35 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       </div>
     </div>
 
-    <div v-else-if="isLoadingChild || child" class="card mt-4">
+    <div v-else class="card mt-4">
       <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
-      <p v-if="isLoadingChild" class="text-sm text-gray-500">Daten werden geladen…</p>
-      <template v-else-if="child">
-        <div v-if="child.isActive" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
-          <strong>{{ child.firstName }} {{ child.lastName }}</strong> ist aktiv und für die Betreuung freigeschaltet.
-        </div>
-        <div v-else-if="child.deactivatedAt" class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
-          <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde abgemeldet.
-        </div>
-        <div v-else class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-          <p>
-            <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde bestätigt und wartet auf Freischaltung.
-          </p>
-          <p class="mt-1">
-            Die Betreuung kann erst beginnen, wenn alle Vertragsunterlagen eingereicht wurden.
-            <NuxtLink
-              :to="`/ini/${slug}/members/${child.id}`"
-              class="font-medium underline hover:no-underline"
-            >
-              Hier können Sie die Unterlagen hochladen.
-            </NuxtLink>
-          </p>
+      <p v-if="membersStore.isLoading" class="text-sm text-gray-500">Daten werden geladen…</p>
+      <template v-else-if="membersStore.members.length > 0">
+        <div
+          v-for="child in membersStore.members"
+          :key="child.id"
+          class="mb-2 last:mb-0"
+        >
+          <div v-if="child.isActive" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
+            <strong>{{ child.firstName }} {{ child.lastName }}</strong> ist aktiv und für die Betreuung freigeschaltet.
+          </div>
+          <div v-else-if="child.deactivatedAt" class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+            <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde abgemeldet.
+          </div>
+          <div v-else class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+            <p>
+              <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde bestätigt und wartet auf Freischaltung.
+            </p>
+            <p class="mt-1">
+              Die Betreuung kann erst beginnen, wenn alle Vertragsunterlagen eingereicht wurden.
+              <NuxtLink
+                :to="`/ini/${slug}/members/${child.id}`"
+                class="font-medium underline hover:no-underline"
+              >
+                Hier können Sie die Unterlagen hochladen.
+              </NuxtLink>
+            </p>
+          </div>
         </div>
       </template>
       <p v-else class="text-sm text-gray-500">Kein Kind angemeldet.</p>

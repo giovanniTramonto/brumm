@@ -64,9 +64,17 @@ export default defineEventHandler(async (event) => {
     const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
     const tokens = club.oauthToken as unknown as OAuthTokens
     const [memberId, managerId] = await Promise.all([
-      findUserIdByEmail({ tokens, masterSheetId: storageConfig.masterSheetId, email: normalizedEmail }),
+      findUserIdByEmail({
+        tokens,
+        masterSheetId: storageConfig.masterSheetId,
+        email: normalizedEmail,
+      }),
       storageConfig.managersSheetId
-        ? findManagerIdByEmail({ tokens, managersSheetId: storageConfig.managersSheetId, email: normalizedEmail })
+        ? findManagerIdByEmail({
+            tokens,
+            managersSheetId: storageConfig.managersSheetId,
+            email: normalizedEmail,
+          })
         : null,
     ])
 

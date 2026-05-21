@@ -55,7 +55,15 @@ async function onLogout() {
               </li>
             </ul>
           </div>
-          <button class="btn-secondary text-sm" @click="onLogout">Abmelden</button>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">{{
+              authStore.currentUser?.role === 'SUPERUSER' ? 'Admin'
+              : authStore.currentUser?.role === 'MANAGER' ? 'Vorstand'
+              : authStore.currentUser?.role === 'TEAM' ? 'Team'
+              : 'Mitglied'
+            }}</span>
+            <button class="btn-secondary text-sm" @click="onLogout">Abmelden</button>
+          </div>
         </div>
       </div>
     </nav>

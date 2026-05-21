@@ -36,7 +36,9 @@ export default defineEventHandler(async (event) => {
 
   await saveManagerData({ managerId: manager.id, storageId, name, email }, club)
 
-  await sendManagerAddedEmail({ to: email, name, clubName: club.name, clubSlug: club.slug }).catch(() => {})
+  await sendManagerAddedEmail({ to: email, name, clubName: club.name, clubSlug: club.slug }).catch(
+    () => {},
+  )
 
   return {
     manager: {

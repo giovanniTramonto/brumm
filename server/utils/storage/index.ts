@@ -1,7 +1,7 @@
 import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
 import { getDriveClientFromTokens } from '../googleAuth'
 import { createMemberFolder, createUploadSubfolders, deleteMemberFolder } from './googleDrive'
-import { createMemberSheet, removeMemberFromMasterSheet, writeMemberToSheet } from './sheets'
+import { createMemberSheet, removeMemberFromMasterSheet } from './sheets'
 
 export async function initUserStorage(params: {
   memberData: MemberData
@@ -19,11 +19,6 @@ export async function initUserStorage(params: {
   await Promise.all([
     createUploadSubfolders({ tokens, memberFolderId }),
     createMemberSheet({ tokens, memberFolderId, memberData }),
-    writeMemberToSheet({
-      tokens,
-      masterSheetId: storageConfig.masterSheetId,
-      data: memberData,
-    }),
   ])
 }
 

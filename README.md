@@ -58,7 +58,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 | `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen, Vorstand, Settings, Google Drive verbinden |
 | `MANAGER` | Vorstandsmitglied. Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen verwalten |
 | `TEAM` | Alle Daten lesen |
-| `MEMBER` | Elternteil eines Kindes – eigene Kinder und Vertragsunterlagen hochladen. Sieht alle Kinder in der Liste. |
+| `MEMBER` | Elternteil eines Kindes – sieht eigene Kinder in der Liste und auf dem Dashboard (ein Status-Block pro Kind). Kann Kontaktdaten (Guardian-Name, E-Mail, Telefon) auf der Kind-Detailseite selbst bearbeiten und Vertragsunterlagen hochladen. |
 
 `canManageMembers` = `SUPERUSER` oder `MANAGER` mit `isMemberManager`
 

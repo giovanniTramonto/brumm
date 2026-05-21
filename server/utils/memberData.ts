@@ -60,7 +60,15 @@ export async function getMemberData(
 
   const tokens = getTokens(club.oauthToken)
   const masterSheetId = getMasterSheetId(club.storageConfig)
-  return withGoogleErrorHandling(() => getMemberFromSheet({ tokens, masterSheetId, userId }))
+  const sheetData = await withGoogleErrorHandling(() =>
+    getMemberFromSheet({ tokens, masterSheetId, userId }),
+  )
+  if (sheetData) return sheetData
+
+  // Fallback: member was created before storage setup and still has localData
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+  if (!user?.localData) return null
+  return localDataToMemberData(userId, user.localData)
 }
 
 export async function getAllMemberData(
@@ -84,7 +92,22 @@ export async function getAllMemberData(
   const allMembers = await withGoogleErrorHandling(() =>
     getAllMembersFromSheet({ tokens, masterSheetId }),
   )
-  return allMembers.filter((m) => userIds.includes(m.userId))
+  const sheetMembers = allMembers.filter((m) => userIds.includes(m.userId))
+  const sheetUserIds = new Set(sheetMembers.map((m) => m.userId))
+
+  // Fallback: members created before storage setup still have localData instead of a sheet row
+  const localFallbackUsers = await prisma.user.findMany({
+    where: {
+      id: { in: userIds.filter((id) => !sheetUserIds.has(id)) },
+      localData: { not: Prisma.DbNull },
+    },
+  })
+  const localFallback = localFallbackUsers.flatMap((u) => {
+    const data = localDataToMemberData(u.id, u.localData)
+    return data ? [data] : []
+  })
+
+  return [...sheetMembers, ...localFallback]
 }
 
 export async function saveMemberData(data: MemberData, club: ClubForData): Promise<void> {

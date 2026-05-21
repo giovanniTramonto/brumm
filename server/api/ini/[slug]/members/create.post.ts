@@ -78,7 +78,15 @@ export default defineEventHandler(async (event) => {
     contractEnd: contractEnd || null,
   }
 
-  await saveMemberData(memberData, club)
+  try {
+    await saveMemberData(memberData, club)
+  } catch {
+    await prisma.user.delete({ where: { id: user.id } }).catch(() => {})
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Fehler beim Speichern der Mitgliedsdaten. Bitte versuche es erneut.',
+    })
+  }
 
   if (club.isSetupDone && club.storageConfig && club.oauthToken) {
     try {
@@ -107,7 +115,13 @@ export default defineEventHandler(async (event) => {
     const childName = `${firstName} ${lastName}`
     try {
       for (const to of inviteEmails) {
-        await sendInviteEmail({ to, clubName: club.name, clubSlug: club.slug, token: invite.token, childName })
+        await sendInviteEmail({
+          to,
+          clubName: club.name,
+          clubSlug: club.slug,
+          token: invite.token,
+          childName,
+        })
       }
     } catch (err) {
       emailError = err instanceof Error ? err.message : 'Unbekannter Fehler'
