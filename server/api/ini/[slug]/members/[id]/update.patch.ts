@@ -1,4 +1,4 @@
-import { sendEmailRemovedNotification } from '~/server/utils/email'
+import { sendEmailAddedNotification, sendEmailRemovedNotification } from '~/server/utils/email'
 import { getMemberData, updateMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, updateMemberSchema } from '~/server/utils/schemas'
@@ -72,16 +72,20 @@ export default defineEventHandler(async (event) => {
     club,
   )
 
-  const oldEmails = [existing.email1, existing.email2].filter(Boolean) as string[]
-  const newEmails = new Set([newEmail1, ...(newEmail2 ? [newEmail2] : [])])
-  const removedEmails = oldEmails.filter((e) => !newEmails.has(e))
+  const oldEmailSet = new Set([existing.email1, existing.email2].filter(Boolean) as string[])
+  const newEmails = [newEmail1, ...(newEmail2 ? [newEmail2] : [])]
+  const removedEmails = [...oldEmailSet].filter((e) => !newEmails.includes(e))
+  const addedEmails = newEmails.filter((e) => !oldEmailSet.has(e))
   const childName = `${existing.firstName} ${existing.lastName}`
 
-  await Promise.allSettled(
-    removedEmails.map((to) =>
+  await Promise.allSettled([
+    ...removedEmails.map((to) =>
       sendEmailRemovedNotification({ to, clubName: club.name, childName }),
     ),
-  )
+    ...addedEmails.map((to) =>
+      sendEmailAddedNotification({ to, clubName: club.name, childName, clubSlug: club.slug }),
+    ),
+  ])
 
   return { ok: true }
 })

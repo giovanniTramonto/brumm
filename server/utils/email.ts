@@ -218,6 +218,25 @@ export async function sendEmailRemovedNotification(params: {
   })
 }
 
+export async function sendEmailAddedNotification(params: {
+  to: string
+  clubName: string
+  childName: string
+  clubSlug: string
+}): Promise<void> {
+  const loginLink = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/login`
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `E-Mail-Adresse eingetragen – ${params.childName}`,
+    html: `
+      <h2>Ihre E-Mail-Adresse wurde eingetragen</h2>
+      <p>Diese E-Mail-Adresse wurde für <strong>${params.childName}</strong> bei <strong>${params.clubName}</strong> eingetragen.</p>
+      <p><a href="${loginLink}">Hier kannst du dich einloggen</a></p>
+    `,
+  })
+}
+
 export async function sendDocumentsSubmittedNotification(params: {
   to: string[]
   clubName: string
