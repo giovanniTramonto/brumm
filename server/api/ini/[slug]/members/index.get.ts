@@ -9,6 +9,16 @@ export default defineEventHandler(async (event) => {
 
   const users = await prisma.user.findMany({
     where: { clubId: club.id },
+    select: {
+      id: true,
+      clubId: true,
+      role: true,
+      isActive: true,
+      storageId: true,
+      isMemberManager: true,
+      createdAt: true,
+      hasSubmittedDocuments: true,
+    },
   })
 
   const userIds = users.map((u) => u.id)
@@ -62,20 +72,24 @@ export default defineEventHandler(async (event) => {
         phone1: md.phone1,
         phone2: md.phone2,
         groupId: md.groupId,
-        group: md.groupId ? (groupMap.get(md.groupId) ?? null) : null,
+        surcharges: md.surcharges,
+        group: (() => {
+          const g = md.groupId ? groupMap.get(md.groupId) : undefined
+          return g ? { id: g.id, clubId: g.clubId, name: g.name, email: g.email, createdAt: g.createdAt.toISOString() } : null
+        })(),
         storageRef: md.storageRef,
         deactivatedAt: md.deactivatedAt,
         contractEnd: md.contractEnd,
         hasPendingInvite: pendingInviteUserIds.has(u.id),
         hasInvite: false,
         hasSubmittedDocuments: u.hasSubmittedDocuments,
-      } satisfies Member
+      }
     })
-    .filter((m): m is Member => m !== null)
+    .filter((m) => m !== null)
     .sort((a, b) => {
       const lastCmp = a.lastName.localeCompare(b.lastName, 'de')
       return lastCmp !== 0 ? lastCmp : a.firstName.localeCompare(b.firstName, 'de')
-    })
+    }) as Member[]
 
   const [memberManagerRecords, allManagerData] = await Promise.all([
     prisma.manager.findMany({

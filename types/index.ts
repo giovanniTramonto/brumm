@@ -70,6 +70,7 @@ export interface MemberData {
   phone1: string | null
   phone2: string | null
   groupId: string | null
+  surcharges: string[]
   isActive: boolean
   deactivatedAt: string | null
   deactivatedBy: string | null
@@ -87,6 +88,7 @@ export interface Member extends User {
   phone1: string | null
   phone2: string | null
   groupId: string | null
+  surcharges: string[]
   storageRef: string
   deactivatedAt: string | null
   contractEnd: string | null

@@ -41,6 +41,7 @@ function localDataToMemberData(userId: string, localData: unknown): MemberData |
     phone1: (d.phone1 as string | null) ?? null,
     phone2: (d.phone2 as string | null) ?? null,
     groupId: (d.groupId as string | null) ?? null,
+    surcharges: Array.isArray(d.surcharges) ? (d.surcharges as string[]) : [],
     isActive: typeof d.isActive === 'boolean' ? d.isActive : false,
     deactivatedAt: (d.deactivatedAt as string | null) ?? null,
     deactivatedBy: (d.deactivatedBy as string | null) ?? null,

@@ -111,6 +111,8 @@ async function onMarkRead(templateId: string) {
   }
 }
 
+const SURCHARGE_OPTIONS = [{ key: 'ndhs', label: 'NdHS' }]
+
 const form = reactive({
   firstName: '',
   lastName: '',
@@ -122,6 +124,7 @@ const form = reactive({
   phone1: '',
   phone2: '',
   groupId: '',
+  surcharges: [] as string[],
   contractEnd: '',
 })
 
@@ -308,6 +311,7 @@ onMounted(async () => {
     form.phone1 = m.phone1 ?? ''
     form.phone2 = m.phone2 ?? ''
     form.groupId = m.groupId ?? ''
+    form.surcharges = m.surcharges ?? []
     form.contractEnd = m.contractEnd ?? ''
 
     const isConfirmed = !m.isActive && !m.deactivatedAt && !m.hasPendingInvite
@@ -354,6 +358,7 @@ async function onSave() {
         phone1: form.phone1.trim() || undefined,
         phone2: form.phone2.trim() || undefined,
         groupId: form.groupId || undefined,
+        surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
       },
     })
@@ -606,6 +611,25 @@ async function onSubmit() {
                 {{ group.name }}
               </option>
             </select>
+          </div>
+
+          <div v-if="canManageMembers">
+            <label class="label">Zuschläge</label>
+            <div class="mt-1 flex flex-wrap gap-4">
+              <label
+                v-for="opt in SURCHARGE_OPTIONS"
+                :key="opt.key"
+                class="flex items-center gap-2 text-sm text-gray-700"
+              >
+                <input
+                  v-model="form.surcharges"
+                  type="checkbox"
+                  :value="opt.key"
+                  class="h-4 w-4 rounded border-gray-300"
+                />
+                {{ opt.label }}
+              </label>
+            </div>
           </div>
 
           <div>

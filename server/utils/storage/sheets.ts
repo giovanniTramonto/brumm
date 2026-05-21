@@ -18,6 +18,7 @@ const MASTER_SHEET_HEADERS = [
   'contractEnd',
   'phone1',
   'phone2',
+  'surcharges',
 ]
 
 function rowToMemberData(row: string[]): MemberData {
@@ -38,6 +39,7 @@ function rowToMemberData(row: string[]): MemberData {
     contractEnd: row[13] || null,
     phone1: row[14] || null,
     phone2: row[15] || null,
+    surcharges: row[16] ? row[16].split(',').filter(Boolean) : [],
   }
 }
 
@@ -138,6 +140,7 @@ export async function writeMemberToSheet(params: {
     data.contractEnd ?? '',
     data.phone1 ?? '',
     data.phone2 ?? '',
+    data.surcharges.join(','),
   ]
 
   await sheets.spreadsheets.values.append({
@@ -192,7 +195,7 @@ export async function getAllMembersFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:P',
+    range: 'A:Q',
   })
 
   const rows = response.data.values ?? []
@@ -208,7 +211,7 @@ export async function getMemberFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:P',
+    range: 'A:Q',
   })
 
   const rows = response.data.values ?? []
@@ -227,7 +230,7 @@ export async function findUserIdByEmail(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:P',
+    range: 'A:Q',
   })
 
   const rows = response.data.values ?? []
@@ -252,7 +255,7 @@ export async function updateMemberInSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:P',
+    range: 'A:Q',
   })
 
   const rows = response.data.values ?? []
@@ -279,6 +282,7 @@ export async function updateMemberInSheet(params: {
     merged.contractEnd ?? '',
     merged.phone1 ?? '',
     merged.phone2 ?? '',
+    merged.surcharges.join(','),
   ]
 
   const sheetRow = rowIndex + 1

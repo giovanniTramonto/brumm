@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
     phone1: md.phone1,
     phone2: md.phone2,
     groupId: md.groupId,
+    surcharges: md.surcharges,
     storageRef: md.storageRef,
     deactivatedAt: md.deactivatedAt,
     contractEnd: md.contractEnd,

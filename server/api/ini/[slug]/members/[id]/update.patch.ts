@@ -49,29 +49,32 @@ export default defineEventHandler(async (event) => {
     phone1,
     phone2,
     groupId,
+    surcharges,
     contractEnd,
   } = parsed.data
 
   const newEmail1 = email1.toLowerCase()
   const newEmail2 = email2 ? email2.toLowerCase() : null
 
-  await updateMemberData(
-    memberId,
-    {
-      firstName,
-      lastName,
-      birthDate,
-      guardian1Name,
-      guardian2Name: guardian2Name || null,
-      email1: newEmail1,
-      email2: newEmail2,
-      phone1: phone1 || null,
-      phone2: phone2 || null,
-      groupId: groupId || null,
-      contractEnd: contractEnd || null,
-    },
-    club,
-  )
+  const updates: Parameters<typeof updateMemberData>[1] = {
+    firstName,
+    lastName,
+    birthDate,
+    guardian1Name,
+    guardian2Name: guardian2Name || null,
+    email1: newEmail1,
+    email2: newEmail2,
+    phone1: phone1 || null,
+    phone2: phone2 || null,
+    groupId: groupId || null,
+    contractEnd: contractEnd || null,
+  }
+
+  if (canManageMembers && surcharges !== undefined) {
+    updates.surcharges = surcharges
+  }
+
+  await updateMemberData(memberId, updates, club)
 
   // Cascade email changes to sibling members (other children of the same guardian)
   const email1Changed = existing.email1 !== newEmail1

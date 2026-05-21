@@ -73,6 +73,7 @@ export default defineEventHandler(async (event) => {
     phone1: phone1 || null,
     phone2: phone2 || null,
     groupId: groupId ?? null,
+    surcharges: [],
     isActive: false,
     deactivatedAt: null,
     deactivatedBy: null,
