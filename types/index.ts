@@ -91,6 +91,7 @@ export interface Member extends User {
   deactivatedAt: string | null
   contractEnd: string | null
   hasPendingInvite: boolean
+  hasInvite: boolean
   hasSubmittedDocuments: boolean
   group?: Group | null
 }

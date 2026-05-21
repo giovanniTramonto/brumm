@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
     phone2,
     groupId,
     contractEnd,
+    sendInvite,
   } = parsed.data
 
   const storageId = generateStorageId()
@@ -103,7 +104,7 @@ export default defineEventHandler(async (event) => {
 
   let emailError: string | null = null
 
-  if (inviteEmails.length > 0 && !parentAlreadyRegistered) {
+  if (sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered) {
     const invite = await prisma.invite.create({
       data: {
         clubId: club.id,

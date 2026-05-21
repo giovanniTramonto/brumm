@@ -38,6 +38,7 @@ const form = reactive({
   phone2: '',
   groupId: '',
   contractEnd: '',
+  sendInvite: true,
 })
 
 onMounted(async () => {
@@ -46,6 +47,9 @@ onMounted(async () => {
 })
 
 async function onSubmit() {
+  if (form.sendInvite && !isSuperUserGuardian.value) {
+    if (!confirm('Kind anlegen und Einladung senden?')) return
+  }
   error.value = null
   isSubmitting.value = true
   try {
@@ -61,6 +65,7 @@ async function onSubmit() {
       phone2: form.phone2.trim() || undefined,
       groupId: form.groupId || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
+      sendInvite: form.sendInvite,
     }
     const res = await $fetch<{ user: { id: string }; emailError: string | null }>(
       `/api/ini/${slug}/members/create`,
@@ -168,9 +173,14 @@ async function onSubmit() {
         </div>
       </div>
 
-      <div class="flex gap-3 pt-2">
+      <label v-if="!isSuperUserGuardian" class="flex items-center gap-2 text-sm text-gray-700">
+        <input v-model="form.sendInvite" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+        Einladung senden
+      </label>
+
+      <div class="flex gap-3">
         <button type="submit" class="btn-primary" :disabled="isSubmitting">
-          {{ isSubmitting ? 'Wird angelegt…' : isSuperUserGuardian ? 'Anlegen' : 'Anlegen & Einladung senden' }}
+          {{ isSubmitting ? 'Wird angelegt…' : 'Anlegen' }}
         </button>
         <NuxtLink :to="`/ini/${slug}/members`" class="btn-secondary">Abbrechen</NuxtLink>
       </div>

@@ -272,6 +272,14 @@ export async function listOtherDocuments(params: {
   }))
 }
 
+export async function deleteDriveFile(params: {
+  tokens: OAuthTokens
+  fileId: string
+}): Promise<void> {
+  const drive = getDriveClientFromTokens(params.tokens)
+  await drive.files.delete({ fileId: params.fileId, supportsAllDrives: true })
+}
+
 export async function updateDriveFile(params: {
   tokens: OAuthTokens
   fileId: string

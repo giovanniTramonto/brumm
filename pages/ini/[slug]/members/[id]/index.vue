@@ -53,6 +53,11 @@ const isLoadingOtherDocs = ref(false)
 const isUploadingOtherDoc = ref(false)
 const replacingOtherFileId = ref<string | null>(null)
 const otherUploadError = ref<string | null>(null)
+const otherReplaceError = ref<string | null>(null)
+const otherReplaceErrorFileId = ref<string | null>(null)
+
+const isUploadingContractDoc = ref(false)
+const contractUploadError = ref<string | null>(null)
 
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
 const canManageMembers = computed(() => {
@@ -79,6 +84,13 @@ const visibleTemplates = computed(() => {
   const frozen = member.value.isActive || !!member.value.deactivatedAt
   if (!frozen) return memberDocTemplates.value
   return memberDocTemplates.value.filter((t) => t.submission !== null)
+})
+
+const filteredDocuments = computed(() => {
+  const submittedIds = new Set(
+    memberDocTemplates.value.map((t) => t.submission?.driveFileId).filter((id): id is string => !!id),
+  )
+  return documents.value.filter((d) => !submittedIds.has(d.id))
 })
 
 function isDone(t: TemplateEntry): boolean {
@@ -174,11 +186,13 @@ async function onReplaceOtherDocument(fileId: string, event: Event) {
   const file = input.files?.[0]
   if (!file) return
   if (file.size > MAX_UPLOAD_SIZE_BYTES) {
-    otherUploadError.value = `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`
+    otherReplaceError.value = `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`
+    otherReplaceErrorFileId.value = fileId
     input.value = ''
     return
   }
-  otherUploadError.value = null
+  otherReplaceError.value = null
+  otherReplaceErrorFileId.value = null
   replacingOtherFileId.value = fileId
   try {
     const body = new FormData()
@@ -189,10 +203,56 @@ async function onReplaceOtherDocument(fileId: string, event: Event) {
     })
     await loadOtherDocuments()
   } catch (err: unknown) {
-    otherUploadError.value =
+    otherReplaceError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+    otherReplaceErrorFileId.value = fileId
   } finally {
     replacingOtherFileId.value = null
+    input.value = ''
+  }
+}
+
+async function onDeleteContractDocument(fileId: string) {
+  if (!confirm('Datei unwiderruflich löschen?')) return
+  try {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/${fileId}`, { method: 'DELETE' })
+    await loadDocuments()
+  } catch {
+    // ignore
+  }
+}
+
+async function onDeleteOtherDocument(fileId: string) {
+  if (!confirm('Datei unwiderruflich löschen?')) return
+  try {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/other/${fileId}`, { method: 'DELETE' })
+    await loadOtherDocuments()
+  } catch {
+    // ignore
+  }
+}
+
+async function onUploadContractDocument(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    contractUploadError.value = `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`
+    input.value = ''
+    return
+  }
+  contractUploadError.value = null
+  isUploadingContractDoc.value = true
+  try {
+    const body = new FormData()
+    body.append('file', file, file.name)
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents`, { method: 'POST', body })
+    await loadDocuments()
+  } catch (err: unknown) {
+    contractUploadError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    isUploadingContractDoc.value = false
     input.value = ''
   }
 }
@@ -264,6 +324,7 @@ onMounted(async () => {
     }
 
     if (m.isActive) await Promise.all([loadDocuments(), loadOtherDocuments()])
+    else if (!m.hasInvite) await loadDocuments()
   } catch {
     error.value = 'Kind nicht gefunden'
   } finally {
@@ -272,6 +333,11 @@ onMounted(async () => {
 })
 
 async function onSave() {
+  const email1Changed = form.email1.trim().toLowerCase() !== (member.value?.email1 ?? '').toLowerCase()
+  const email2Changed = (form.email2.trim().toLowerCase() || null) !== (member.value?.email2?.toLowerCase() ?? null)
+  if (email1Changed || email2Changed) {
+    if (!confirm('Die E-Mail-Adresse wurde geändert.\nDie betroffenen Adressen erhalten automatisch einen Hinweis.\n\nSpeichern und E-Mail-Hinweis versenden?')) return
+  }
   saveError.value = null
   isSubmitting.value = true
   try {
@@ -306,8 +372,9 @@ async function onSave() {
 
 async function onActivate() {
   if (!member.value) return
+  if (!confirm(`${member.value.firstName} ${member.value.lastName} freischalten?\nDie Erziehungsberechtigten erhalten eine Bestätigungs-E-Mail.`)) return
   await membersStore.activateMember(slug, member.value.id)
-  member.value = { ...member.value, isActive: true }
+  member.value = { ...member.value, isActive: true, hasInvite: true }
   await loadDocuments()
 }
 
@@ -692,6 +759,7 @@ async function onSubmit() {
                       @change="onReplaceOtherDocument(doc.id, $event)"
                     />
                   </label>
+                  <span v-if="otherReplaceErrorFileId === doc.id && otherReplaceError" class="text-xs text-red-600">{{ otherReplaceError }}</span>
                   <a
                     :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
                     class="btn-secondary py-1 text-xs"
@@ -892,7 +960,7 @@ async function onSubmit() {
           <div class="mb-3 flex items-center gap-3">
             <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
             <span
-              v-if="!member.isActive && !member.deactivatedAt && !member.hasSubmittedDocuments"
+              v-if="member.hasInvite && !member.isActive && !member.deactivatedAt && !member.hasSubmittedDocuments"
               class="text-xs text-amber-600"
             >Noch nicht eingereicht</span>
           </div>
@@ -905,6 +973,43 @@ async function onSubmit() {
           >
             Brumm, brumm …
           </div>
+
+          <!-- No invite: direct upload by canManageMembers -->
+          <template v-else-if="!member.hasInvite && !member.isActive && !member.deactivatedAt">
+            <ul v-if="documents.length > 0" class="mb-3 divide-y divide-gray-100">
+              <li
+                v-for="doc in documents"
+                :key="doc.id"
+                class="flex items-center gap-2 py-2 text-sm text-gray-700"
+              >
+                <span aria-hidden="true" class="text-gray-400">📄</span>
+                <span class="flex-1">{{ doc.name }}</span>
+                <a
+                  :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                  class="btn-secondary py-1 text-xs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Ansehen ↗</a>
+                <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteContractDocument(doc.id)">Löschen</button>
+              </li>
+            </ul>
+            <div class="flex items-center gap-3">
+              <label
+                class="btn-secondary cursor-pointer text-sm"
+                :class="{ 'opacity-50': isUploadingContractDoc }"
+              >
+                {{ isUploadingContractDoc ? 'Loading …' : 'Datei hinzufügen' }}
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  class="hidden"
+                  :disabled="isUploadingContractDoc"
+                  @change="onUploadContractDocument"
+                />
+              </label>
+              <span v-if="contractUploadError" class="text-xs text-red-600">{{ contractUploadError }}</span>
+            </div>
+          </template>
 
           <!-- template submission status -->
           <template v-else-if="memberDocTemplates.length > 0">
@@ -932,7 +1037,7 @@ async function onSubmit() {
                   <template v-if="t.documentType === 'read'">
                     <button
                       v-if="
-                        (isMember || isOwnChild) &&
+                        (isMember || isOwnChild || !member.hasInvite) &&
                         !member.isActive &&
                         !member.deactivatedAt &&
                         !readMap[t.id]
@@ -973,7 +1078,7 @@ async function onSubmit() {
                       :title="t.submission.filename"
                     >{{ t.submission.filename }}</span>
                     <label
-                      v-if="(isMember || isOwnChild) && !member.isActive && !member.deactivatedAt"
+                      v-if="(isMember || isOwnChild || !member.hasInvite) && !member.isActive && !member.deactivatedAt"
                       class="btn-secondary cursor-pointer py-1 text-xs"
                       :class="{ 'opacity-50': uploadingTemplateId === t.id }"
                     >
@@ -1013,21 +1118,27 @@ async function onSubmit() {
             </ul>
           </template>
 
-          <!-- Aktiv: uploaded documents -->
-          <ul v-else-if="documents.length > 0" class="space-y-1">
-            <li
-              v-for="doc in documents"
-              :key="doc.id"
-              class="flex items-center gap-2 text-sm text-gray-700"
-            >
-              <span aria-hidden="true" class="text-gray-400">📄</span>
-              {{ doc.name }}
-            </li>
-          </ul>
-
           <p v-else class="text-sm text-gray-500">
             Keine Vertragsunterlagen konfiguriert.
           </p>
+
+          <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates -->
+          <ul v-if="filteredDocuments.length > 0" class="mt-2 divide-y divide-gray-100">
+            <li
+              v-for="doc in filteredDocuments"
+              :key="doc.id"
+              class="flex items-center gap-2 py-2 text-sm text-gray-700"
+            >
+              <span aria-hidden="true" class="text-gray-400">📄</span>
+              <span class="flex-1">{{ doc.name }}</span>
+              <a
+                :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                class="btn-secondary py-1 text-xs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >Ansehen ↗</a>
+            </li>
+          </ul>
         </div>
 
         <div v-if="canManageMembers && member.isActive" class="border-t pt-4">
@@ -1057,6 +1168,7 @@ async function onSubmit() {
                     @change="onReplaceOtherDocument(doc.id, $event)"
                   />
                 </label>
+                <span v-if="otherReplaceErrorFileId === doc.id && otherReplaceError" class="text-xs text-red-600">{{ otherReplaceError }}</span>
                 <a
                   :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
                   class="btn-secondary py-1 text-xs"
@@ -1064,24 +1176,25 @@ async function onSubmit() {
                   rel="noopener noreferrer"
                   >Ansehen ↗</a
                 >
+                <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteOtherDocument(doc.id)">Löschen</button>
               </li>
             </ul>
-            <label
-              class="btn-secondary cursor-pointer text-sm"
-              :class="{ 'opacity-50': isUploadingOtherDoc }"
-            >
-              {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                class="hidden"
-                :disabled="isUploadingOtherDoc"
-                @change="onUploadOtherDocument"
-              />
-            </label>
-            <p v-if="otherUploadError" role="alert" class="mt-1 text-xs text-red-600">
-              {{ otherUploadError }}
-            </p>
+            <div class="flex items-center gap-3">
+              <label
+                class="btn-secondary cursor-pointer text-sm"
+                :class="{ 'opacity-50': isUploadingOtherDoc }"
+              >
+                {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  class="hidden"
+                  :disabled="isUploadingOtherDoc"
+                  @change="onUploadOtherDocument"
+                />
+              </label>
+              <span v-if="otherUploadError" role="alert" class="text-xs text-red-600">{{ otherUploadError }}</span>
+            </div>
           </template>
         </div>
 
@@ -1090,7 +1203,7 @@ async function onSubmit() {
             <button
               v-if="!member.isActive && !member.deactivatedAt"
               class="btn-primary text-sm"
-              :disabled="!member.hasSubmittedDocuments || !canManageMembers"
+              :disabled="(!member.hasSubmittedDocuments && member.hasInvite) || !canManageMembers"
               @click="onActivate"
             >
               Freischalten

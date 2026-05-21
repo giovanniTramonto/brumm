@@ -16,9 +16,10 @@ export default defineEventHandler(async (event) => {
     currentUser.role === 'TEAM' ||
     (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
 
-  const [user, pendingInvite, currentUserEmails] = await Promise.all([
+  const [user, pendingInvite, anyInvite, currentUserEmails] = await Promise.all([
     prisma.user.findFirst({ where: { id: memberId, clubId: club.id } }),
     prisma.invite.findFirst({ where: { userId: memberId, isUsed: false } }),
+    prisma.invite.findFirst({ where: { userId: memberId } }),
     currentUser.role === 'SUPERUSER'
       ? prisma.userEmail.findMany({ where: { userId: currentUser.id }, select: { email: true } })
       : Promise.resolve([] as { email: string }[]),
@@ -74,6 +75,7 @@ export default defineEventHandler(async (event) => {
     deactivatedAt: md.deactivatedAt,
     contractEnd: md.contractEnd,
     hasPendingInvite: !!pendingInvite,
+    hasInvite: !!anyInvite,
     hasSubmittedDocuments: user.hasSubmittedDocuments,
   }
 

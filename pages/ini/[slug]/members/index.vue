@@ -43,15 +43,7 @@ const filteredMembers = computed(() => {
         >
           Vertragsvorlagen
         </NuxtLink>
-        <span
-          v-if="authStore.currentUser?.role === 'SUPERUSER'"
-          class="btn-secondary cursor-not-allowed opacity-50"
-          aria-disabled="true"
-          role="link"
-        >
-          CSV importieren
-        </span>
-        <NuxtLink
+<NuxtLink
           v-if="canManageMembers"
           :to="`/ini/${slug}/members/create`"
           class="btn-primary"

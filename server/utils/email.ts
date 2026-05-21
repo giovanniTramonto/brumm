@@ -209,11 +209,11 @@ export async function sendEmailRemovedNotification(params: {
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `E-Mail-Adresse geändert – ${params.childName}`,
+    subject: `Ihre E-Mail-Adresse wurde geändert – ${params.clubName}`,
     html: `
-      <h2>Ihre E-Mail-Adresse wurde geändert</h2>
-      <p>Die E-Mail-Adresse, unter der Sie für <strong>${params.childName}</strong> bei <strong>${params.clubName}</strong> eingetragen waren, wurde entfernt.</p>
-      <p>Diese Adresse ist nicht mehr mit dem Kind verknüpft. Bei Fragen wenden Sie sich an den Admin.</p>
+      <p>Guten Tag,</p>
+      <p>diese E-Mail-Adresse ist ab sofort nicht mehr als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> hinterlegt.</p>
+      <p>Falls diese Änderung nicht von Ihnen veranlasst wurde oder Sie Fragen haben, wenden Sie sich bitte direkt an den Vereinsadmin.</p>
     `,
   })
 }
@@ -228,11 +228,13 @@ export async function sendEmailAddedNotification(params: {
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `E-Mail-Adresse eingetragen – ${params.childName}`,
+    subject: `Ihre E-Mail-Adresse wurde eingetragen – ${params.clubName}`,
     html: `
-      <h2>Ihre E-Mail-Adresse wurde eingetragen</h2>
-      <p>Diese E-Mail-Adresse wurde für <strong>${params.childName}</strong> bei <strong>${params.clubName}</strong> eingetragen.</p>
-      <p><a href="${loginLink}">Hier kannst du dich einloggen</a></p>
+      <p>Guten Tag,</p>
+      <p>diese E-Mail-Adresse wurde als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> eingetragen.</p>
+      <p>Sie können sich ab sofort mit dieser Adresse im Elternportal anmelden:</p>
+      <p><a href="${loginLink}">${loginLink}</a></p>
+      <p>Falls diese Änderung nicht von Ihnen veranlasst wurde oder Sie Fragen haben, wenden Sie sich bitte direkt an den Vereinsadmin.</p>
     `,
   })
 }
