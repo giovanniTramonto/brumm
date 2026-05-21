@@ -11,7 +11,7 @@ const reconnected = route.query.reconnected === '1'
 </script>
 
 <template>
-  <div class="max-w-2xl space-y-8">
+  <div class="max-w-3xl space-y-8">
     <h1 class="text-2xl font-bold text-gray-900">Einstellungen</h1>
 
     <div v-if="reconnected" class="rounded-md bg-green-50 p-3 text-sm text-green-700">

@@ -2,6 +2,7 @@
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 import type { Group, Member } from '~/types'
+import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -144,6 +145,11 @@ async function onUploadOtherDocument(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    otherUploadError.value = `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`
+    input.value = ''
+    return
+  }
   otherUploadError.value = null
   isUploadingOtherDoc.value = true
   try {
@@ -167,6 +173,11 @@ async function onReplaceOtherDocument(fileId: string, event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    otherUploadError.value = `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`
+    input.value = ''
+    return
+  }
   otherUploadError.value = null
   replacingOtherFileId.value = fileId
   try {
@@ -368,6 +379,14 @@ async function onUploadForTemplate(templateId: string, event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    uploadErrors.value = {
+      ...uploadErrors.value,
+      [templateId]: `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`,
+    }
+    input.value = ''
+    return
+  }
   uploadErrors.value = { ...uploadErrors.value, [templateId]: '' }
   uploadingTemplateId.value = templateId
   try {
@@ -400,7 +419,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="max-w-2xl">
+  <div class="max-w-3xl">
     <div class="mb-6">
       <NuxtLink
         :to="`/ini/${slug}/members`"
@@ -788,6 +807,11 @@ async function onSubmit() {
                 </template>
 
                 <template v-else-if="t.documentType === 'upload'">
+                  <span
+                    v-if="t.submission?.filename"
+                    class="max-w-[160px] truncate text-xs text-gray-500"
+                    :title="t.submission.filename"
+                  >{{ t.submission.filename }}</span>
                   <label
                     class="btn-secondary cursor-pointer py-1 text-xs"
                     :class="{ 'opacity-50': uploadingTemplateId === t.id }"
@@ -810,7 +834,7 @@ async function onSubmit() {
                   <span
                     v-if="uploadErrors[t.id]"
                     role="alert"
-                    class="max-w-[120px] truncate text-xs text-red-600"
+                    class="max-w-[160px] truncate text-xs text-red-600"
                     >{{ uploadErrors[t.id] }}</span
                   >
                   <a
@@ -830,7 +854,7 @@ async function onSubmit() {
             <span
               v-if="submitted"
               class="text-sm text-green-700"
-            >Fertig! Ihre Unterlagen wurden eingereicht. Sie erhalten eine Email, sobald Ihr Kind freigeschaltet wurded.</span>
+            >Fertig! Ihre Unterlagen wurden eingereicht. Sie erhalten eine Email, sobald Ihr Kind freigeschaltet wurde.</span>
             <button
               class="btn-primary text-sm"
               :disabled="!localAllSubmitted || submitted"
@@ -865,9 +889,13 @@ async function onSubmit() {
 
         <!-- canManageMembers: document overview -->
         <div v-if="canManageMembers" class="border-t pt-4">
-          <h3 class="mb-3 text-sm font-medium text-gray-900">
-            Vertragsunterlagen
-          </h3>
+          <div class="mb-3 flex items-center gap-3">
+            <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
+            <span
+              v-if="!member.isActive && !member.deactivatedAt && !member.hasSubmittedDocuments"
+              class="text-xs text-amber-600"
+            >Noch nicht eingereicht</span>
+          </div>
 
           <div
             v-if="isLoadingTemplates || isLoadingDocs"
@@ -904,6 +932,7 @@ async function onSubmit() {
                   <template v-if="t.documentType === 'read'">
                     <button
                       v-if="
+                        (isMember || isOwnChild) &&
                         !member.isActive &&
                         !member.deactivatedAt &&
                         !readMap[t.id]
@@ -938,8 +967,13 @@ async function onSubmit() {
                   </template>
 
                   <template v-if="t.documentType === 'upload'">
+                    <span
+                      v-if="t.submission?.filename"
+                      class="max-w-[160px] truncate text-xs text-gray-500"
+                      :title="t.submission.filename"
+                    >{{ t.submission.filename }}</span>
                     <label
-                      v-if="!member.isActive && !member.deactivatedAt"
+                      v-if="(isMember || isOwnChild) && !member.isActive && !member.deactivatedAt"
                       class="btn-secondary cursor-pointer py-1 text-xs"
                       :class="{ 'opacity-50': uploadingTemplateId === t.id }"
                     >
@@ -947,7 +981,7 @@ async function onSubmit() {
                         uploadingTemplateId === t.id
                           ? "Loading …"
                           : t.submission
-                            ? "Ersetzen"
+                            ? "Ändern"
                             : "Hochladen"
                       }}
                       <input
@@ -1056,7 +1090,7 @@ async function onSubmit() {
             <button
               v-if="!member.isActive && !member.deactivatedAt"
               class="btn-primary text-sm"
-              :disabled="!localAllSubmitted || !canManageMembers"
+              :disabled="!member.hasSubmittedDocuments || !canManageMembers"
               @click="onActivate"
             >
               Freischalten

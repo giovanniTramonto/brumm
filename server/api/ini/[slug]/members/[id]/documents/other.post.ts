@@ -2,6 +2,7 @@ import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { uploadOtherDocument } from '~/server/utils/storage/googleDrive'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
+import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -51,6 +52,12 @@ export default defineEventHandler(async (event) => {
   const filePart = formData?.find((p) => p.name === 'file')
   if (!filePart?.data || !filePart.filename) {
     throw createError({ statusCode: 400, statusMessage: 'Keine Datei hochgeladen' })
+  }
+  if (filePart.data.length > MAX_UPLOAD_SIZE_BYTES) {
+    throw createError({
+      statusCode: 413,
+      statusMessage: `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`,
+    })
   }
 
   const tokens = club.oauthToken as OAuthTokens

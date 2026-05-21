@@ -78,7 +78,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="max-w-2xl">
+  <div class="max-w-3xl">
     <div class="mb-6">
       <NuxtLink :to="`/ini/${slug}/members`" class="text-sm text-gray-500 hover:text-gray-900">
         ← Zurück

@@ -58,7 +58,7 @@ async function onSaveEdit() {
 </script>
 
 <template>
-  <div class="max-w-2xl">
+  <div class="max-w-3xl">
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-900">Gruppen</h1>
       <button

@@ -97,7 +97,7 @@ const filteredMembers = computed(() => {
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Name</th>
+            <th class="w-1/2 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Name</th>
             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Gruppe</th>
             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Status</th>
             <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">Aktionen</th>
