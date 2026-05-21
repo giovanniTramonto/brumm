@@ -43,6 +43,8 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/members/deactivate     → Selbst abmelden
 /ini/{slug}/contract-templates     → Vertragsvorlagen verwalten (SUPERUSER + isMemberManager)
 /ini/{slug}/groups
+/ini/{slug}/groups/create         → Gruppe anlegen
+/ini/{slug}/groups/{id}           → Gruppe bearbeiten
 /ini/{slug}/management             → Vorstand verwalten (SUPERUSER)
 /ini/{slug}/management/create      → Vorstand hinzufügen
 /ini/{slug}/management/{id}        → Vorstand bearbeiten

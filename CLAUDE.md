@@ -35,6 +35,8 @@
 /ini/{slug}/members/deactivate
 /ini/{slug}/contract-templates
 /ini/{slug}/groups
+/ini/{slug}/groups/create
+/ini/{slug}/groups/{id}
 /ini/{slug}/management
 /ini/{slug}/management/create
 /ini/{slug}/management/{id}

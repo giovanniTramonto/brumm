@@ -12,13 +12,15 @@ export default defineEventHandler(async (event) => {
   })
 
   const userIds = users.map((u) => u.id)
-  const [memberDataList, pendingInvites] = await Promise.all([
+  const [memberDataList, pendingInvites, groups] = await Promise.all([
     getAllMemberData(userIds, club),
     prisma.invite.findMany({
       where: { userId: { in: userIds }, isUsed: false },
       select: { userId: true },
     }),
+    prisma.group.findMany({ where: { clubId: club.id } }),
   ])
+  const groupMap = new Map(groups.map((g) => [g.id, g]))
   const pendingInviteUserIds = new Set(pendingInvites.map((i) => i.userId))
 
   const memberDataMap = new Map(memberDataList.map((md) => [md.userId, md]))
@@ -60,10 +62,13 @@ export default defineEventHandler(async (event) => {
         phone1: md.phone1,
         phone2: md.phone2,
         groupId: md.groupId,
+        group: md.groupId ? (groupMap.get(md.groupId) ?? null) : null,
         storageRef: md.storageRef,
         deactivatedAt: md.deactivatedAt,
         contractEnd: md.contractEnd,
         hasPendingInvite: pendingInviteUserIds.has(u.id),
+        hasInvite: false,
+        hasSubmittedDocuments: u.hasSubmittedDocuments,
       } satisfies Member
     })
     .filter((m): m is Member => m !== null)

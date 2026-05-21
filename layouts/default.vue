@@ -13,7 +13,7 @@ const navItems = computed(() => {
   ]
   items.push({ label: 'Kinder', to: `${base}/members` })
   if (authStore.currentUser.role !== 'MEMBER') {
-    items.push({ label: 'Gruppen', to: `${base}/groups`, disabled: true })
+    items.push({ label: 'Gruppen', to: `${base}/groups` })
   }
   if (authStore.currentUser.role === 'SUPERUSER') {
     items.push({ label: 'Vorstand', to: `${base}/management` })

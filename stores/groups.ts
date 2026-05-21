@@ -45,6 +45,11 @@ export const useGroupsStore = defineStore('groups', () => {
     return data.group
   }
 
+  async function deleteGroup(slug: string, groupId: string): Promise<void> {
+    await $fetch(`/api/ini/${slug}/groups/${groupId}`, { method: 'DELETE' })
+    groups.value = groups.value.filter((g) => g.id !== groupId)
+  }
+
   return {
     groups,
     isLoading,
@@ -52,5 +57,6 @@ export const useGroupsStore = defineStore('groups', () => {
     fetchGroups,
     createGroup,
     updateGroup,
+    deleteGroup,
   }
 })
