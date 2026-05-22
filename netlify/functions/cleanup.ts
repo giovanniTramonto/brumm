@@ -17,7 +17,7 @@ async function deleteFromDrive(tokens: OAuthTokens, folderId: string): Promise<v
   const auth = getGoogleAuth(tokens)
   const drive = google.drive({ version: 'v3', auth })
   try {
-    await drive.files.delete({ fileId: folderId })
+    await drive.files.delete({ fileId: folderId, supportsAllDrives: true })
   } catch {
     // Ordner bereits gelöscht oder nicht vorhanden
   }
@@ -96,7 +96,9 @@ export default async function handler() {
         const drive = google.drive({ version: 'v3', auth: getGoogleAuth(oauthToken) })
 
         const searchResult = await drive.files.list({
-          q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
+          supportsAllDrives: true,
+          includeItemsFromAllDrives: true,
+          q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents and trashed = false`,
           fields: 'files(id)',
         })
 
@@ -169,7 +171,9 @@ export default async function handler() {
         if (storageRef) {
           const drive = google.drive({ version: 'v3', auth })
           const searchResult = await drive.files.list({
-            q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
+            supportsAllDrives: true,
+            includeItemsFromAllDrives: true,
+            q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents and trashed = false`,
             fields: 'files(id)',
           })
           const folder = searchResult.data.files?.[0]
