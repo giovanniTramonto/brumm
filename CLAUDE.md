@@ -49,7 +49,7 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 
 ## Architektur
 - **Multi-Tenant**: Jeder Verein hat einen eigenen Slug, alle Daten über `clubId` isoliert
-- **Storage pro Verein**: Beim Onboarding verbindet der SUPERUSER seinen Google-Account via OAuth 2.0. Das OAuth-Token wird in `Club.oauthToken` (Neon) gespeichert. Kein globaler Service Account, kein GCP-Setup durch den Verein nötig.
+- **Storage pro Verein**: Beim Onboarding verbindet der SUPERUSER seinen Google-Account via OAuth 2.0 und gibt die **ID einer Geteilten Ablage** (Pflichtfeld) ein. Alle Vereinsdaten werden ausschließlich in dieser Geteilten Ablage angelegt. Das OAuth-Token wird in `Club.oauthToken` (Neon) gespeichert. Kein globaler Service Account, kein GCP-Setup durch den Verein nötig. Die Shared Drive ID wird als `parentId` durch den OAuth-State (`/api/ini/{slug}/auth/google` → Callback → `setupClubStorage` → `createRootFolderStructure`) durchgereicht.
 - **Datentrennung**: Neon speichert technische/Auth-Daten (`id`, `clubId`, `role`, `isActive`, `storageId`, `hasSubmittedDocuments`) sowie Vereins-Konfiguration (`membershipFee`). Alle persönlichen Mitgliederdaten (`firstName`, `lastName`, `birthDate`, `emails`, `phone1`, `phone2`, `groupId`, `surcharges`, `careType`, `contractEnd`, etc.) leben ausschließlich in Google Sheets. Sheets-Spalten: A–P bestehende Felder, Q = `surcharges`, R = `careType`, S = `lastEditedAt`, T = `lastEditedBy`
 - **AuthUser-Anreicherung**: `me.get.ts` und `verify/[token].get.ts` reichern den zurückgegebenen User für MEMBER-Nutzer mit `firstName`/`lastName` aus den Mitgliederdaten an. `firstName` wird auf `guardian1Name` gesetzt (Name des Erziehungsberechtigten, nicht des Kindes), `lastName` auf `null`
 - **MEMBER-Rolle**: Sieht den Nav-Eintrag „Kinder", hat gelb-gefärbten Hintergrund (`#ffdd76`). Dashboard zeigt für jedes eigene Kind einen statusbasierten Block (Ausstehend / Wartet auf Freischaltung / Aktiv / Abgemeldet). Auf der Kind-Detailseite sieht MEMBER dieselbe editierbare Form wie `canManageMembers` (alle Felder, inkl. Kontaktdaten). Ab Freischaltung (`isActive = true`) ist das gesamte Formular für MEMBER readonly (`memberFormReadonly`); der Speichern-Button wird ausgeblendet. Der Update-Endpoint erlaubt MEMBER, die eigene `memberId` zu updaten (`isSelfUpdate`)
@@ -83,6 +83,9 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 - **E-Mail-Benachrichtigungen**: Eltern erhalten E-Mails bei: Invite (Kind anlegen), Abmeldung aufheben, Kind entfernen, eigene E-Mail-Adresse geändert. `canManageMembers` erhält E-Mail wenn MEMBER Unterlagen einreicht (`sendDocumentsSubmittedNotification`)
 - **E-Mail-Cascade**: Wird `email1` oder `email2` eines Kindes geändert, werden alle anderen Kinder im gleichen Verein mit derselben alten E-Mail automatisch mitaktualisiert. Damit bleibt der Guardian-Email-Filter in der Kinderliste konsistent (MEMBER sieht alle eigenen Kinder). Gilt sowohl für `canManageMembers`-Updates als auch für MEMBER-Selbst-Updates
 - **Storage-Init**: `initUserStorage` schreibt nur noch Drive-Ordner und Einzel-Sheet (kein Master-Sheet-Write mehr). Der Master-Sheet-Eintrag wird ausschließlich über `saveMemberData` geschrieben, um Duplikate zu vermeiden
+- **Rate Limiting**: `server/middleware/rateLimit.ts` begrenzt `/api/login/lookup`, `/api/register` und Magic-Link-Endpunkte auf 5 Anfragen/Minute pro IP (in-memory Map mit TTL). Überschreitung → 429 mit deutscher Fehlermeldung
+- **Öffentliche Seiten**: `/`, `/login`, `/register`, `/about`, `/guide`, `/impressum`, `/datenschutz` verwenden `layout: 'public'` (`layouts/public.vue`). Dort: Skip-Link, Header mit Nav (aktive Seite via `route.path`), Bären-SVG-Logo, Beta-Badge, Footer mit Impressum/Datenschutz. `error.vue` (root) behandelt 404 und generische Fehler ohne Layout-Abhängigkeit
+- **Netlify**: `NETLIFY_NEXT_PLUGIN_SKIP = "true"` in `netlify.toml` verhindert, dass der global installierte `@netlify/plugin-nextjs` beim Nuxt-Build fälschlicherweise ausgeführt wird
 
 ## Environment Variables
 ```
@@ -108,6 +111,7 @@ GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
 | Managerdaten (Sheets/localData) | `server/utils/managerData.ts` |
 | Storage Utils | `server/utils/storage/` |
 | E-Mail Utils | `server/utils/email.ts` |
+| Rate Limiting | `server/middleware/rateLimit.ts` |
 | Server Middleware | `server/middleware/` |
 | API Routes | `server/api/` |
 | Pinia Stores | `stores/` |

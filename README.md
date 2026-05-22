@@ -67,4 +67,4 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 
 ## Lizenz
 
-MIT
+Business Source License 1.1 (BSL 1.1)
