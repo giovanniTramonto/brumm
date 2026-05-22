@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Disallow: /ini/
+Allow: /
+Allow: /about
+Allow: /guide
+Allow: /login
+Allow: /register
+
+Sitemap: https://brumm.berlin/sitemap.xml

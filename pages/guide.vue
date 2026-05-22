@@ -1,0 +1,59 @@
+<script setup lang="ts">
+definePageMeta({ layout: 'public' })
+useHead({ title: 'Anleitung – Brumm' })
+</script>
+
+<template>
+  <main id="main-content" class="mx-auto max-w-5xl px-6 py-24">
+    <h1 class="text-3xl font-bold text-gray-900">Anleitung</h1>
+    <p class="mt-4 text-gray-500 leading-relaxed">
+      Brumm hat vier Rollen – Admin, Vorstand, Team und Eltern. Aktuell verfügbar sind Admin, Vorstand und Eltern. Je nach Rolle sieht die App anders aus und erlaubt unterschiedliche Aktionen.
+    </p>
+
+    <section class="mt-12" aria-labelledby="role-superuser">
+      <h2 id="role-superuser" class="text-xl font-semibold text-gray-900">Admin</h2>
+      <p class="mt-2 text-sm text-gray-500">Hat vollen Zugriff auf alle Bereiche.</p>
+      <p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">Einmalige Einrichtung (nur Admin)</p>
+      <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
+        <li>Kita unter <strong class="text-gray-700">/register</strong> registrieren – du erhältst einen Einrichtungs-Link per E-Mail.</li>
+        <li>Im Onboarding einen Cloud-Account verbinden (z.B. Google), damit Brumm Daten in eurem Cloud-Speicher ablegen kann.</li>
+        <li>Unter <strong class="text-gray-700">Vorstand</strong> Vorstandsmitglieder hinzufügen, die ebenfalls Kinder verwalten dürfen.</li>
+      </ol>
+      <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Laufender Betrieb</p>
+      <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
+        <li>Unter <strong class="text-gray-700">Kinder</strong> neue Kinder anlegen. Optional: Einladungslink per E-Mail an die Eltern versenden.</li>
+        <li>Sobald Eltern ihre Vertragsunterlagen eingereicht haben, das Kind freischalten.</li>
+        <li>Unter <strong class="text-gray-700">Gruppen</strong> Betreuungsgruppen anlegen und Kindern zuweisen.</li>
+        <li>Unter <strong class="text-gray-700">Rechnung</strong> monatliche Kostenerstattungen und den Personalschlüssel einsehen.</li>
+      </ol>
+    </section>
+
+    <section class="mt-12" aria-labelledby="role-manager">
+      <h2 id="role-manager" class="text-xl font-semibold text-gray-900">Vorstand</h2>
+      <p class="mt-2 text-sm text-gray-500">Wird vom Admin eingerichtet. Je nach Berechtigung gibt es zwei Ausprägungen.</p>
+      <p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">Alle Vorstandsmitglieder</p>
+      <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
+        <li>Du erhältst einen Anmelde-Link per E-Mail – kein Passwort nötig.</li>
+        <li>Unter <strong class="text-gray-700">Rechnung</strong> siehst du die monatlichen Kostenerstattungen und den Personalschlüssel.</li>
+      </ol>
+      <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Mit Mitgliederverwaltung</p>
+      <p class="mt-1 text-sm text-gray-500">Nur wenn der Admin diese Berechtigung aktiviert hat.</p>
+      <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
+        <li>Unter <strong class="text-gray-700">Kinder</strong> Kinder anlegen, bearbeiten und freischalten.</li>
+        <li>Einladungslinks verwalten und Vertragsvorlagen pflegen.</li>
+      </ol>
+    </section>
+
+    <section class="mt-12" aria-labelledby="role-member">
+      <h2 id="role-member" class="text-xl font-semibold text-gray-900">Eltern</h2>
+      <p class="mt-2 text-sm text-gray-500">Sehen ausschließlich ihre eigenen Kinder.</p>
+      <ol class="mt-4 space-y-3 text-gray-500 list-decimal pl-5">
+        <li>Ihr erhaltet einen Einladungslink per E-Mail, sobald euer Kind in Brumm angelegt wurde.</li>
+        <li>Nach dem Klick auf den Link seid ihr eingeloggt und seht das Dashboard mit euren Kindern.</li>
+        <li>Unter <strong class="text-gray-700">Kinder</strong> ladet ihr die geforderten Vertragsunterlagen hoch bzw. bestätigt sie als gelesen.</li>
+        <li>Sobald alle Unterlagen vollständig sind, klickt ihr auf <strong class="text-gray-700">Einreichen</strong> – der Vorstand wird benachrichtigt und schaltet euer Kind frei.</li>
+        <li>Nach der Freischaltung sind eure Angaben schreibgeschützt. Änderungen nur über den Vorstand.</li>
+      </ol>
+    </section>
+  </main>
+</template>

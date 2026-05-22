@@ -29,7 +29,8 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 ## URL-Struktur
 
 ```
-/                                  → Globaler Login (Email-Lookup über alle Vereine)
+/                                  → Landing Page
+/login                             → Globaler Login (Email-Lookup über alle Vereine)
 /register                          → Verein registrieren
 /admin                             → Brumm Admin (ADMIN_SECRET)
 /ini/{slug}/login                  → Anmeldung per Magic Link

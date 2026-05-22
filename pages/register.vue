@@ -1,5 +1,6 @@
 <script setup lang="ts">
-definePageMeta({ layout: false })
+definePageMeta({ layout: 'public' })
+useHead({ title: 'Kita registrieren – Brumm' })
 
 const name = ref('')
 const slug = ref('')
@@ -57,14 +58,10 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+  <main id="main-content" class="flex flex-grow flex-col items-center bg-gray-50 px-4 py-16">
     <div class="w-full max-w-md">
-      <div class="mb-8 text-center">
-        <h1 class="text-3xl font-bold text-gray-900">Brumm</h1>
-        <p class="mt-2 text-gray-600">Kindergarten-Vereinsverwaltung</p>
-      </div>
-
-      <div class="card">
+      <h1 class="sr-only">Kita registrieren</h1>
+      <div class="card" aria-live="polite" aria-atomic="true">
         <template v-if="isSuccess">
           <div class="space-y-4 text-center">
             <div class="text-4xl">✉️</div>
@@ -96,7 +93,7 @@ async function onSubmit() {
             <div>
               <label for="slug" class="label">URL-Kürzel</label>
               <div class="mt-1 flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-primary-600">
-                <span class="flex select-none items-center pl-3 text-gray-500 sm:text-sm">brumm.app/ini/</span>
+                <span class="flex select-none items-center pl-3 text-gray-500 sm:text-sm">brumm.berlin/ini/</span>
                 <input
                   id="slug"
                   :value="slug"
@@ -119,7 +116,7 @@ async function onSubmit() {
               <input id="email" v-model="email" type="email" class="input mt-1" autocomplete="email" required />
             </div>
 
-            <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <div v-if="error" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
               {{ error }}
             </div>
 
@@ -130,5 +127,5 @@ async function onSubmit() {
         </template>
       </div>
     </div>
-  </div>
+  </main>
 </template>
