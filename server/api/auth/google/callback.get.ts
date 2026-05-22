@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const stateRaw = query.state as string | undefined
   const errorParam = query.error as string | undefined
 
-  let state: { clubId: string; slug: string } | null = null
+  let state: { clubId: string; slug: string; parentId?: string } | null = null
   try {
     if (stateRaw) state = JSON.parse(stateRaw)
   } catch {
@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
       clubId: club.id,
       clubName: club.name,
       tokens: oauthTokens,
+      parentId: state.parentId,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unbekannter Fehler'

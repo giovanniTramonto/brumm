@@ -388,6 +388,7 @@ export async function createManagementStructure(params: {
 export async function createRootFolderStructure(params: {
   tokens: OAuthTokens
   clubName: string
+  parentId?: string
 }): Promise<{
   rootFolderId: string
   appFolderId: string
@@ -410,7 +411,7 @@ export async function createRootFolderStructure(params: {
     return id
   }
 
-  const rootFolderId = await createFolder(params.clubName)
+  const rootFolderId = await createFolder(params.clubName, params.parentId)
   const [appFolderId, membersFolderId] = await Promise.all([
     createFolder('app', rootFolderId),
     createFolder('members', rootFolderId),

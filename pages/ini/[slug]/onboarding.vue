@@ -9,6 +9,14 @@ const authStore = useAuthStore()
 
 const successParam = route.query.success === '1'
 const errorParam = route.query.error as string | undefined
+
+const sharedDriveId = ref('')
+
+const googleAuthUrl = computed(() => {
+  const base = `/api/ini/${slug}/auth/google`
+  const id = sharedDriveId.value.trim()
+  return id ? `${base}?parentId=${encodeURIComponent(id)}` : base
+})
 </script>
 
 <template>
@@ -74,13 +82,28 @@ const errorParam = route.query.error as string | undefined
               <div>
                 <h3 class="font-medium text-gray-900">Google Drive</h3>
                 <p class="text-sm text-gray-500">
-                  Daten in deinem Google Drive speichern
+                  Daten in einer Geteilten Ablage speichern
                 </p>
               </div>
             </div>
+            <div class="mb-3">
+              <label for="sharedDriveId" class="label">ID der Geteilten Ablage</label>
+              <input
+                id="sharedDriveId"
+                v-model="sharedDriveId"
+                type="text"
+                class="input mt-1"
+                placeholder="z.B. 0ABCxyz123..."
+                required
+              />
+              <p class="mt-1 text-xs text-gray-400">
+                Die ID steht in der URL der Ablage: <code>drive.google.com/drive/folders/<strong>ID</strong></code>
+              </p>
+            </div>
             <a
-              :href="`/api/ini/${slug}/auth/google`"
-              class="btn-primary block text-center"
+              :href="googleAuthUrl"
+              :class="['btn-primary block text-center', !sharedDriveId.trim() && 'pointer-events-none opacity-50']"
+              :aria-disabled="!sharedDriveId.trim()"
             >
               Mit Google verbinden
             </a>

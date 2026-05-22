@@ -3,6 +3,8 @@ import { getOAuth2Client } from '~/server/utils/googleAuth'
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')
   const club = event.context.club
+  const query = getQuery(event)
+  const parentId = query.parentId as string | undefined
 
   const oauth2Client = getOAuth2Client()
 
@@ -13,7 +15,7 @@ export default defineEventHandler(async (event) => {
       'https://www.googleapis.com/auth/drive',
       'https://www.googleapis.com/auth/spreadsheets',
     ],
-    state: JSON.stringify({ clubId: club.id, slug }),
+    state: JSON.stringify({ clubId: club.id, slug, parentId: parentId || undefined }),
   })
 
   return sendRedirect(event, url)
