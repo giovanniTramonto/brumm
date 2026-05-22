@@ -29,6 +29,9 @@
     "vue-router": "^4.5.0",
     "zod": "^3.24.0"
   },
+  "overrides": {
+    "uuid": "^11.1.1"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
     "@nuxtjs/tailwindcss": "^6.12.0",
