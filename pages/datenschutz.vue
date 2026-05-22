@@ -19,7 +19,7 @@ useHead({ title: 'Datenschutzerklärung – Brumm' })
         <li><strong class="text-gray-700">Name:</strong> Johannes Abendroth</li>
         <li><strong class="text-gray-700">Adresse:</strong> c/o Yoyo e.V., Goethestraße 14, 10625 Berlin</li>
         <li><strong class="text-gray-700">Land:</strong> Deutschland</li>
-        <li><strong class="text-gray-700">E-Mail:</strong> <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#104;&#97;&#108;&#108;&#111;&#64;&#98;&#114;&#117;&#109;&#109;&#46;&#98;&#101;&#114;&#108;&#105;&#110;" class="text-primary-600 hover:text-primary-800">&#104;&#97;&#108;&#108;&#111;&#64;&#98;&#114;&#117;&#109;&#109;&#46;&#98;&#101;&#114;&#108;&#105;&#110;</a></li>
+        <li><strong class="text-gray-700">E-Mail:</strong> <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#104;&#97;&#108;&#108;&#111;&#64;&#98;&#114;&#117;&#109;&#109;&#46;&#98;&#101;&#114;&#108;&#105;&#110;" class="text-primary-600 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">&#104;&#97;&#108;&#108;&#111;&#64;&#98;&#114;&#117;&#109;&#109;&#46;&#98;&#101;&#114;&#108;&#105;&#110;</a></li>
       </ul>
     </section>
 
