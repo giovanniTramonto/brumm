@@ -20,6 +20,8 @@ const MASTER_SHEET_HEADERS = [
   'phone2',
   'surcharges',
   'careType',
+  'lastEditedAt',
+  'lastEditedBy',
 ]
 
 function rowToMemberData(row: string[]): MemberData {
@@ -42,6 +44,8 @@ function rowToMemberData(row: string[]): MemberData {
     phone2: row[15] || null,
     surcharges: row[16] ? row[16].split(',').filter(Boolean) : [],
     careType: row[17] || null,
+    lastEditedAt: row[18] || null,
+    lastEditedBy: row[19] || null,
   }
 }
 
@@ -144,6 +148,8 @@ export async function writeMemberToSheet(params: {
     data.phone2 ?? '',
     data.surcharges.join(','),
     data.careType ?? '',
+    data.lastEditedAt ?? '',
+    data.lastEditedBy ?? '',
   ]
 
   await sheets.spreadsheets.values.append({
@@ -198,7 +204,7 @@ export async function getAllMembersFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:R',
+    range: 'A:T',
   })
 
   const rows = response.data.values ?? []
@@ -214,7 +220,7 @@ export async function getMemberFromSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:R',
+    range: 'A:T',
   })
 
   const rows = response.data.values ?? []
@@ -233,7 +239,7 @@ export async function findUserIdByEmail(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:R',
+    range: 'A:T',
   })
 
   const rows = response.data.values ?? []
@@ -258,7 +264,7 @@ export async function updateMemberInSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.masterSheetId,
-    range: 'A:R',
+    range: 'A:T',
   })
 
   const rows = response.data.values ?? []
@@ -287,6 +293,8 @@ export async function updateMemberInSheet(params: {
     merged.phone2 ?? '',
     merged.surcharges.join(','),
     merged.careType ?? '',
+    merged.lastEditedAt ?? '',
+    merged.lastEditedBy ?? '',
   ]
 
   const sheetRow = rowIndex + 1

@@ -344,9 +344,9 @@ async function onSaveMembershipFee() {
       </div>
 
       <!-- Quellenhinweise -->
-      <div class="mt-8 border-t border-ini-300 pt-4">
-        <p class="mb-2 text-xs font-medium text-ini-800">Hinweise zur Berechnung</p>
-        <ul class="list-disc space-y-1 pl-4 text-xs text-ini-800">
+      <FootnoteCard>
+        <p class="mb-2 text-xs font-medium">Hinweise zur Berechnung</p>
+        <ul class="list-disc space-y-1 pl-4 text-xs">
           <li>Einnahmezahlen auf volle Euro gerundet</li>
           <li>Inkl. gesetzliche Elternbeteiligung an Verpflegungskosten ({{ getMealAllowance() }} €)</li>
           <li>Inkl. Krippenschlüsselverbesserung (2 Stufen im Januar und August 2026) nach KitaFöG</li>
@@ -354,8 +354,8 @@ async function onSaveMembershipFee() {
           <li>Unter Berücksichtigung des Tarifabschlusses im TV-L</li>
           <li>Inkl. Zahlung für Praxisunterstützungssystem (3,75 €/Kind/Monat)</li>
         </ul>
-        <p class="mt-2 text-xs text-ini-700">Quelle: Roland Kern, DaKS e.V. (Stand 27.3.26)</p>
-      </div>
+        <p class="mt-2 text-xs">Quelle: Roland Kern, DaKS e.V. (Stand 27.3.26)</p>
+      </FootnoteCard>
     </template>
   </div>
 </template>

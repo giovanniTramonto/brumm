@@ -47,6 +47,8 @@ function localDataToMemberData(userId: string, localData: unknown): MemberData |
     deactivatedAt: (d.deactivatedAt as string | null) ?? null,
     deactivatedBy: (d.deactivatedBy as string | null) ?? null,
     contractEnd: (d.contractEnd as string | null) ?? null,
+    lastEditedAt: (d.lastEditedAt as string | null) ?? null,
+    lastEditedBy: (d.lastEditedBy as string | null) ?? null,
   }
 }
 

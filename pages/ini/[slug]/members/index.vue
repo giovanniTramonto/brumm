@@ -17,6 +17,8 @@ const canManageMembers = computed(() => {
   return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
 })
 
+const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
+
 const showNoMemberManagerHint = computed(() => {
   const user = authStore.currentUser
   return user?.role === 'MANAGER' && !user?.isMemberManager
@@ -45,7 +47,7 @@ const filteredMembers = computed(() => {
           Vertragsvorlagen
         </NuxtLink>
 <NuxtLink
-          v-if="canManageMembers"
+          v-if="canManageMembers || isMember"
           :to="`/ini/${slug}/members/create`"
           class="btn-primary"
         >
@@ -92,7 +94,8 @@ const filteredMembers = computed(() => {
           <tr>
             <th class="w-1/2 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Name</th>
             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Gruppe</th>
-            <th v-if="canManageMembers" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Betreuungsumfang</th>
+            <th v-if="canManageMembers || isMember" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Betreuungsumfang</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Vertragsende</th>
             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Status</th>
             <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">Aktionen</th>
           </tr>
@@ -105,13 +108,14 @@ const filteredMembers = computed(() => {
               </NuxtLink>
             </td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ member.group?.name ?? "–" }}</td>
-            <td v-if="canManageMembers" class="px-4 py-3 text-sm">
+            <td v-if="canManageMembers || isMember" class="px-4 py-3 text-sm">
               <span v-if="member.careType" class="text-gray-600">
                 {{ CARE_TYPE_OPTIONS.find(o => o.key === member.careType)?.label ?? member.careType }}
               </span>
               <span v-else-if="member.isActive" class="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">fehlt</span>
               <span v-else class="text-gray-400">–</span>
             </td>
+            <td class="px-4 py-3 text-sm text-gray-600">{{ member.contractEnd ?? '–' }}</td>
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"

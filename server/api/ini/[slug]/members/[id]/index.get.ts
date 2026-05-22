@@ -79,6 +79,8 @@ export default defineEventHandler(async (event) => {
     storageRef: md.storageRef,
     deactivatedAt: md.deactivatedAt,
     contractEnd: md.contractEnd,
+    lastEditedAt: md.lastEditedAt,
+    lastEditedBy: md.lastEditedBy,
     hasPendingInvite: !!pendingInvite,
     hasInvite: !!anyInvite,
     hasSubmittedDocuments: user.hasSubmittedDocuments,

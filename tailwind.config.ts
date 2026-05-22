@@ -22,7 +22,14 @@ export default {
           700: '#7a8a32',
           800: '#4f5e1a',
         },
-        member: '#ffdd76',
+        member: {
+          DEFAULT: '#ffdd76',
+          200: '#fff3c4',
+          300: '#edc844',
+          500: '#ffdd76',
+          700: '#c9a000',
+          800: '#7a5e00',
+        },
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

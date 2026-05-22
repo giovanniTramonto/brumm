@@ -77,6 +77,8 @@ export interface MemberData {
   deactivatedAt: string | null
   deactivatedBy: string | null
   contractEnd: string | null
+  lastEditedAt: string | null
+  lastEditedBy: string | null
 }
 
 export interface Member extends User {
@@ -95,6 +97,8 @@ export interface Member extends User {
   storageRef: string
   deactivatedAt: string | null
   contractEnd: string | null
+  lastEditedAt: string | null
+  lastEditedBy: string | null
   hasPendingInvite: boolean
   hasInvite: boolean
   hasSubmittedDocuments: boolean

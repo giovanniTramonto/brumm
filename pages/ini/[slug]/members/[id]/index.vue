@@ -61,6 +61,7 @@ const isUploadingContractDoc = ref(false)
 const contractUploadError = ref<string | null>(null)
 
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
+const memberFormReadonly = computed(() => isMember.value && !!member.value?.isActive)
 const canManageMembers = computed(() => {
   const user = authStore.currentUser
   return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
@@ -89,7 +90,9 @@ const visibleTemplates = computed(() => {
 
 const filteredDocuments = computed(() => {
   const submittedIds = new Set(
-    memberDocTemplates.value.map((t) => t.submission?.driveFileId).filter((id): id is string => !!id),
+    memberDocTemplates.value
+      .map((t) => t.submission?.driveFileId)
+      .filter((id): id is string => !!id),
   )
   return documents.value.filter((d) => !submittedIds.has(d.id))
 })
@@ -113,6 +116,26 @@ async function onMarkRead(templateId: string) {
 }
 
 const SURCHARGE_OPTIONS = [{ key: 'ndhs', label: 'NdHS' }]
+
+const hasChanges = computed(() => {
+  const m = member.value
+  if (!m) return false
+  return (
+    form.firstName.trim() !== m.firstName ||
+    form.lastName.trim() !== m.lastName ||
+    form.birthDate !== m.birthDate.slice(0, 10) ||
+    form.guardian1Name.trim() !== (m.guardian1Name ?? '') ||
+    form.guardian2Name.trim() !== (m.guardian2Name ?? '') ||
+    form.email1.trim().toLowerCase() !== m.email1.toLowerCase() ||
+    (form.email2.trim().toLowerCase() || null) !== (m.email2?.toLowerCase() ?? null) ||
+    (form.phone1.trim() || null) !== (m.phone1 ?? null) ||
+    (form.phone2.trim() || null) !== (m.phone2 ?? null) ||
+    (form.groupId || null) !== (m.groupId ?? null) ||
+    (form.careType || null) !== (m.careType ?? null) ||
+    form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
+    (form.contractEnd.trim() || null) !== (m.contractEnd ?? null)
+  )
+})
 
 const form = reactive({
   firstName: '',
@@ -230,7 +253,9 @@ async function onDeleteContractDocument(fileId: string) {
 async function onDeleteOtherDocument(fileId: string) {
   if (!confirm('Datei unwiderruflich löschen?')) return
   try {
-    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/other/${fileId}`, { method: 'DELETE' })
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/other/${fileId}`, {
+      method: 'DELETE',
+    })
     await loadOtherDocuments()
   } catch {
     // ignore
@@ -340,10 +365,17 @@ onMounted(async () => {
 })
 
 async function onSave() {
-  const email1Changed = form.email1.trim().toLowerCase() !== (member.value?.email1 ?? '').toLowerCase()
-  const email2Changed = (form.email2.trim().toLowerCase() || null) !== (member.value?.email2?.toLowerCase() ?? null)
+  const email1Changed =
+    form.email1.trim().toLowerCase() !== (member.value?.email1 ?? '').toLowerCase()
+  const email2Changed =
+    (form.email2.trim().toLowerCase() || null) !== (member.value?.email2?.toLowerCase() ?? null)
   if (email1Changed || email2Changed) {
-    if (!confirm('Die E-Mail-Adresse wurde geändert.\nDie betroffenen Adressen erhalten automatisch einen Hinweis.\n\nSpeichern und E-Mail-Hinweis versenden?')) return
+    if (
+      !confirm(
+        'Die E-Mail-Adresse wurde geändert.\nDie betroffenen Adressen erhalten automatisch einen Hinweis.\n\nSpeichern und E-Mail-Hinweis versenden?',
+      )
+    )
+      return
   }
   saveError.value = null
   isSubmitting.value = true
@@ -361,7 +393,7 @@ async function onSave() {
         phone1: form.phone1.trim() || undefined,
         phone2: form.phone2.trim() || undefined,
         groupId: form.groupId || undefined,
-        careType: canManageMembers.value ? (form.careType || undefined) : undefined,
+        careType: canManageMembers.value ? form.careType || undefined : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
       },
@@ -381,7 +413,12 @@ async function onSave() {
 
 async function onActivate() {
   if (!member.value) return
-  if (!confirm(`${member.value.firstName} ${member.value.lastName} freischalten?\nDie Erziehungsberechtigten erhalten eine Bestätigungs-E-Mail.`)) return
+  if (
+    !confirm(
+      `${member.value.firstName} ${member.value.lastName} freischalten?\nDie Erziehungsberechtigten erhalten eine Bestätigungs-E-Mail.`,
+    )
+  )
+    return
   await membersStore.activateMember(slug, member.value.id)
   member.value = { ...member.value, isActive: true, hasInvite: true }
   await loadDocuments()
@@ -506,14 +543,7 @@ async function onSubmit() {
       </NuxtLink>
     </div>
 
-    <div
-      v-if="isLoading"
-      role="status"
-      aria-live="polite"
-      class="py-12 text-gray-500"
-    >
-      Brumm, brumm …
-    </div>
+    <div v-if="isLoading" class="py-12 text-sm text-gray-500">Brumm, brumm …</div>
     <div
       v-else-if="error"
       class="rounded-md bg-red-50 p-4 text-sm text-red-700"
@@ -609,6 +639,7 @@ async function onSubmit() {
               id="field-groupId"
               v-model="form.groupId"
               class="input mt-1"
+              :disabled="memberFormReadonly"
             >
               <option value="">Keine Gruppe</option>
               <option v-for="group in groups" :key="group.id" :value="group.id">
@@ -659,6 +690,7 @@ async function onSubmit() {
               class="input mt-1"
               placeholder="YYYY"
               maxlength="4"
+              :readonly="memberFormReadonly"
             />
           </div>
 
@@ -671,7 +703,7 @@ async function onSubmit() {
               v-model="form.guardian1Name"
               type="text"
               class="input mt-1"
-              :readonly="!!member.deactivatedAt"
+              :readonly="memberFormReadonly || !!member.deactivatedAt"
               :required="!member.isActive"
             />
           </div>
@@ -683,7 +715,7 @@ async function onSubmit() {
                 v-model="form.email1"
                 type="email"
                 class="input mt-1"
-                :readonly="!!member.deactivatedAt"
+                :readonly="memberFormReadonly || !!member.deactivatedAt"
                 :required="!member.isActive"
               />
             </div>
@@ -694,7 +726,7 @@ async function onSubmit() {
                 v-model="form.phone1"
                 type="tel"
                 class="input mt-1"
-                :readonly="!!member.deactivatedAt"
+                :readonly="memberFormReadonly || !!member.deactivatedAt"
               />
             </div>
           </div>
@@ -708,7 +740,7 @@ async function onSubmit() {
               v-model="form.guardian2Name"
               type="text"
               class="input mt-1"
-              :readonly="!!member.deactivatedAt"
+              :readonly="memberFormReadonly || !!member.deactivatedAt"
             />
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -719,7 +751,7 @@ async function onSubmit() {
                 v-model="form.email2"
                 type="email"
                 class="input mt-1"
-                :readonly="!!member.deactivatedAt"
+                :readonly="memberFormReadonly || !!member.deactivatedAt"
               />
             </div>
             <div>
@@ -729,16 +761,16 @@ async function onSubmit() {
                 v-model="form.phone2"
                 type="tel"
                 class="input mt-1"
-                :readonly="!!member.deactivatedAt"
+                :readonly="memberFormReadonly || !!member.deactivatedAt"
               />
             </div>
           </div>
 
-          <div class="flex gap-2">
+          <div v-if="!memberFormReadonly" class="flex gap-2">
             <button
               type="submit"
               class="btn-primary text-sm"
-              :disabled="isSubmitting"
+              :disabled="isSubmitting || !hasChanges"
             >
               {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
             </button>
@@ -1293,6 +1325,13 @@ async function onSubmit() {
           </p>
         </div>
       </div>
+
+      <FootnoteCard v-if="member?.lastEditedAt">
+        <p class="text-xs">
+          Letzte Änderung am {{ new Date(member.lastEditedAt).toLocaleDateString('de-DE') }}
+          <template v-if="member.lastEditedBy"> von {{ member.lastEditedBy }}</template>
+        </p>
+      </FootnoteCard>
     </template>
   </div>
 </template>
