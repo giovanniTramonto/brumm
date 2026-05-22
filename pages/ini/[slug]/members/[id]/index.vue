@@ -3,6 +3,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 import type { Group, Member } from '~/types'
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
+import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -124,6 +125,7 @@ const form = reactive({
   phone1: '',
   phone2: '',
   groupId: '',
+  careType: '',
   surcharges: [] as string[],
   contractEnd: '',
 })
@@ -311,6 +313,7 @@ onMounted(async () => {
     form.phone1 = m.phone1 ?? ''
     form.phone2 = m.phone2 ?? ''
     form.groupId = m.groupId ?? ''
+    form.careType = m.careType ?? ''
     form.surcharges = m.surcharges ?? []
     form.contractEnd = m.contractEnd ?? ''
 
@@ -358,6 +361,7 @@ async function onSave() {
         phone1: form.phone1.trim() || undefined,
         phone2: form.phone2.trim() || undefined,
         groupId: form.groupId || undefined,
+        careType: canManageMembers.value ? (form.careType || undefined) : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
       },
@@ -609,6 +613,20 @@ async function onSubmit() {
               <option value="">Keine Gruppe</option>
               <option v-for="group in groups" :key="group.id" :value="group.id">
                 {{ group.name }}
+              </option>
+            </select>
+          </div>
+
+          <div v-if="canManageMembers">
+            <label for="field-careType" class="label">Betreuungsumfang</label>
+            <select
+              id="field-careType"
+              v-model="form.careType"
+              class="input mt-1"
+            >
+              <option value="">Nicht angegeben</option>
+              <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
+                {{ opt.label }}
               </option>
             </select>
           </div>

@@ -40,15 +40,18 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       </div>
     </div>
 
+    <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="card mt-6">
+      <h2 class="mb-3 text-sm font-medium text-gray-900">Aktuell</h2>
+      <NuxtLink :to="`/ini/${slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
+        Adressliste →
+      </NuxtLink>
+    </div>
+
     <div v-else class="card mt-4">
       <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
       <p v-if="membersStore.isLoading" class="text-sm text-gray-500">Daten werden geladen…</p>
       <template v-else-if="membersStore.members.length > 0">
-        <div
-          v-for="child in membersStore.members"
-          :key="child.id"
-          class="mb-2 last:mb-0"
-        >
+        <div v-for="child in membersStore.members" :key="child.id" class="mb-2 last:mb-0">
           <div v-if="child.isActive" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
             <strong>{{ child.firstName }} {{ child.lastName }}</strong> ist aktiv und für die Betreuung freigeschaltet.
           </div>
@@ -56,15 +59,10 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
             <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde abgemeldet.
           </div>
           <div v-else class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-            <p>
-              <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde bestätigt und wartet auf Freischaltung.
-            </p>
+            <p><strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde bestätigt und wartet auf Freischaltung.</p>
             <p class="mt-1">
               Die Betreuung kann erst beginnen, wenn alle Vertragsunterlagen eingereicht wurden.
-              <NuxtLink
-                :to="`/ini/${slug}/members/${child.id}`"
-                class="font-medium underline hover:no-underline"
-              >
+              <NuxtLink :to="`/ini/${slug}/members/${child.id}`" class="font-medium underline hover:no-underline">
                 Hier können Sie die Unterlagen hochladen.
               </NuxtLink>
             </p>
@@ -72,13 +70,6 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
         </div>
       </template>
       <p v-else class="text-sm text-gray-500">Kein Kind angemeldet.</p>
-    </div>
-
-    <div class="card mt-6">
-      <h2 class="mb-3 text-sm font-medium text-gray-900">Aktuell</h2>
-      <NuxtLink :to="`/ini/${slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
-        Adressliste →
-      </NuxtLink>
     </div>
 
     <div v-if="pendingCount > 0 && authStore.currentUser?.role === 'SUPERUSER'" class="mt-6">

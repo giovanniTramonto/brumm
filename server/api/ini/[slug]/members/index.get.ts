@@ -72,6 +72,7 @@ export default defineEventHandler(async (event) => {
         phone1: md.phone1,
         phone2: md.phone2,
         groupId: md.groupId,
+        careType: md.careType,
         surcharges: md.surcharges,
         group: (() => {
           const g = md.groupId ? groupMap.get(md.groupId) : undefined

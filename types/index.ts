@@ -34,6 +34,7 @@ export interface Club {
   storageType: Storage | null
   storageConfig: StorageConfig | null
   isSetupDone: boolean
+  membershipFee: number | null
   createdAt: string
 }
 
@@ -70,6 +71,7 @@ export interface MemberData {
   phone1: string | null
   phone2: string | null
   groupId: string | null
+  careType: string | null
   surcharges: string[]
   isActive: boolean
   deactivatedAt: string | null
@@ -88,6 +90,7 @@ export interface Member extends User {
   phone1: string | null
   phone2: string | null
   groupId: string | null
+  careType: string | null
   surcharges: string[]
   storageRef: string
   deactivatedAt: string | null

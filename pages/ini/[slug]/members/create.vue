@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import type { Group } from '~/types'
+import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -37,6 +38,7 @@ const form = reactive({
   phone1: '',
   phone2: '',
   groupId: '',
+  careType: '',
   contractEnd: '',
   sendInvite: true,
 })
@@ -64,6 +66,7 @@ async function onSubmit() {
       phone1: form.phone1.trim() || undefined,
       phone2: form.phone2.trim() || undefined,
       groupId: form.groupId || undefined,
+      careType: form.careType || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
       sendInvite: form.sendInvite,
     }
@@ -134,6 +137,16 @@ async function onSubmit() {
           <option value="">Keine Gruppe</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">
             {{ group.name }}
+          </option>
+        </select>
+      </div>
+
+      <div>
+        <label class="label">Betreuungsumfang</label>
+        <select v-model="form.careType" class="input mt-1">
+          <option value="">Nicht angegeben</option>
+          <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
+            {{ opt.label }}
           </option>
         </select>
       </div>

@@ -14,7 +14,14 @@ export default {
     extend: {
       colors: {
         admin: '#d5e4eb',
-        ini: '#dde2b0',
+        ini: {
+          DEFAULT: '#dde2b0',
+          200: '#eaedca',
+          300: '#c4cb8a',
+          500: '#a8b058',
+          700: '#7a8a32',
+          800: '#4f5e1a',
+        },
         member: '#ffdd76',
         primary: {
           50: '#eff6ff',

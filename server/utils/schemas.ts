@@ -27,6 +27,7 @@ export const createMemberSchema = z.object({
   phone1: z.string().optional().or(z.literal('')),
   phone2: z.string().optional().or(z.literal('')),
   groupId: z.string().optional(),
+  careType: z.string().optional(),
   contractEnd: contractEndField,
   sendInvite: z.boolean().default(true),
 })
@@ -42,6 +43,7 @@ export const updateMemberSchema = z.object({
   phone1: z.string().optional().or(z.literal('')),
   phone2: z.string().optional().or(z.literal('')),
   groupId: z.string().optional(),
+  careType: z.string().optional(),
   surcharges: z.array(z.string()).optional(),
   contractEnd: contractEndField,
 })
