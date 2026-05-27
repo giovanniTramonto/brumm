@@ -7,7 +7,7 @@
 - Prisma ORM + Neon (PostgreSQL)
 - googleapis (Google Drive + Sheets), google-auth-library (OAuth 2.0)
 - Resend (E-Mails), @paralleldrive/cuid2 (IDs)
-- Biome (Formatter + Linter), Netlify (Hosting + Scheduled Functions)
+- Biome (Formatter + Linter), Lefthook (Git Hooks), Netlify (Hosting + Scheduled Functions)
 
 ## Projektsprache
 - UI / Texte / Fehlermeldungen: **Deutsch**
@@ -143,9 +143,14 @@ docker compose down -v     # stoppen + Daten löschen
 ## Dev
 ```bash
 npm install
+npx lefthook install   # Git Hooks einrichten (einmalig nach clone)
 npm run dev
-npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
+npm run clean          # löscht .nuxt, .output, dist (bei Cache-Problemen)
 ```
+
+Git Hooks (`lefthook.yml`):
+- `pre-commit`: Biome lint auf gestagte `.ts/.vue/.js`-Dateien
+- `pre-push`: E2E-Tests (`npm test`, Docker muss laufen)
 
 ## Tests (E2E)
 Playwright + Docker PostgreSQL. Docker muss laufen, `.env.test` wird automatisch geladen.

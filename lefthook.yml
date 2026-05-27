@@ -1,0 +1,10 @@
+pre-commit:
+  jobs:
+    - name: biome
+      glob: '*.{ts,vue,js}'
+      run: npx biome check --no-errors-on-unmatched {staged_files}
+
+pre-push:
+  jobs:
+    - name: e2e
+      run: npm test

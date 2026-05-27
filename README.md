@@ -20,6 +20,7 @@ cp .env.example .env.local
 # .env.local befüllen (siehe .env.example)
 
 npm install
+npx lefthook install   # Git Hooks einrichten (einmalig)
 npm run db:push
 npm run dev
 npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
