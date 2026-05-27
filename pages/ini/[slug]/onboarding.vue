@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { PopoverArrow, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: false, middleware: ['auth'] })
@@ -11,6 +12,7 @@ const successParam = route.query.success === '1'
 const errorParam = route.query.error as string | undefined
 
 const sharedDriveId = ref('')
+const isDev = import.meta.dev
 
 const googleAuthUrl = computed(() => {
   const base = `/api/ini/${slug}/auth/google`
@@ -80,30 +82,51 @@ const googleAuthUrl = computed(() => {
             <div class="mb-3 flex items-center gap-3">
               <span class="text-2xl">📁</span>
               <div>
-                <h3 class="font-medium text-gray-900">Google Drive</h3>
+                <h3 class="font-medium text-gray-900">Google Workspace</h3>
                 <p class="text-sm text-gray-500">
-                  Daten in einer Geteilten Ablage speichern
+                  Daten in einem Shared Drive speichern
                 </p>
               </div>
             </div>
             <div class="mb-3">
-              <label for="sharedDriveId" class="label">ID der Geteilten Ablage</label>
+              <div class="flex items-center gap-1">
+                <label for="sharedDriveId" class="label">Shared Drive ID</label>
+                <PopoverRoot>
+                  <PopoverTrigger class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                  </PopoverTrigger>
+                  <PopoverPortal>
+                    <PopoverContent
+                      class="z-50 max-w-xs rounded-md bg-gray-900 px-3 py-2 text-xs text-white shadow-lg"
+                      :side-offset="6"
+                    >
+                      Erfordert einen <strong>Google Workspace</strong> Account (kein persönliches Gmail).<br>
+                      Shared Drive anlegen: Google Drive → „Shared drives" (linke Sidebar) → „+ Neu"
+                      <PopoverArrow class="fill-gray-900" />
+                    </PopoverContent>
+                  </PopoverPortal>
+                </PopoverRoot>
+              </div>
               <input
                 id="sharedDriveId"
                 v-model="sharedDriveId"
                 type="text"
                 class="input mt-1"
-                placeholder="z.B. 0ABCxyz123..."
-                required
+                :placeholder="isDev ? 'z.B. 0ABCxyz123... (leer = persönlicher Drive)' : 'z.B. 0ABCxyz123...'"
+                :required="!isDev"
               />
               <p class="mt-1 text-xs text-gray-400">
-                Die ID steht in der URL der Ablage: <code>drive.google.com/drive/folders/<strong>ID</strong></code>
+                Die ID steht in der URL des Shared Drive: <code>drive.google.com/drive/folders/<strong>ID</strong></code>
               </p>
             </div>
             <a
               :href="googleAuthUrl"
-              :class="['btn-primary block text-center', !sharedDriveId.trim() && 'pointer-events-none opacity-50']"
-              :aria-disabled="!sharedDriveId.trim()"
+              :class="['btn-primary block text-center', !isDev && !sharedDriveId.trim() && 'pointer-events-none opacity-50']"
+              :aria-disabled="!isDev && !sharedDriveId.trim()"
             >
               Mit Google verbinden
             </a>
