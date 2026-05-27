@@ -40,3 +40,7 @@ npm-debug.log*
 .calculation-references
 .env.test
 .env.local
+
+# Playwright
+playwright-report/
+test-results/
