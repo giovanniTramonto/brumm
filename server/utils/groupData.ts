@@ -1,5 +1,5 @@
 import { createId } from '@paralleldrive/cuid2'
-import { Prisma } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, Group, GroupData, OAuthTokens } from '~/types'
 import { createGroupsStructure } from './storage/googleDrive'
@@ -30,9 +30,13 @@ function groupDataToGroup(data: GroupData): Group {
   return { id: data.groupId, name: data.name, email: data.email }
 }
 
-async function ensureGroupsStorage(club: ClubForData): Promise<GoogleDriveConfig> {
+type GroupsConfig = GoogleDriveConfig & { groupsFolderId: string; groupsSheetId: string }
+
+async function ensureGroupsStorage(club: ClubForData): Promise<GroupsConfig> {
   const config = getStorageConfig(club.storageConfig)
-  if (config.groupsFolderId && config.groupsSheetId) return config
+  if (config.groupsFolderId && config.groupsSheetId) {
+    return config as GroupsConfig
+  }
 
   const tokens = getTokens(club.oauthToken)
   const { groupsFolderId } = await createGroupsStructure({
@@ -41,7 +45,7 @@ async function ensureGroupsStorage(club: ClubForData): Promise<GoogleDriveConfig
   })
   const groupsSheetId = await createGroupsSheet({ tokens, groupsFolderId })
 
-  const updated: GoogleDriveConfig = { ...config, groupsFolderId, groupsSheetId }
+  const updated: GroupsConfig = { ...config, groupsFolderId, groupsSheetId }
   await prisma.club.update({
     where: { id: club.id },
     data: { storageConfig: updated as unknown as Prisma.InputJsonValue },
@@ -52,7 +56,7 @@ async function ensureGroupsStorage(club: ClubForData): Promise<GoogleDriveConfig
 export async function getAllGroups(club: ClubForData): Promise<Group[]> {
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
-  const rows = await getAllGroupsFromSheet({ tokens, groupsSheetId: config.groupsSheetId! })
+  const rows = await getAllGroupsFromSheet({ tokens, groupsSheetId: config.groupsSheetId })
   return rows.map(groupDataToGroup).sort((a, b) => a.name.localeCompare(b.name))
 }
 
@@ -67,14 +71,14 @@ export async function createGroup(
     name: params.name.trim(),
     email: params.email || null,
   }
-  await writeGroupToSheet({ tokens, groupsSheetId: config.groupsSheetId!, data })
+  await writeGroupToSheet({ tokens, groupsSheetId: config.groupsSheetId, data })
   return groupDataToGroup(data)
 }
 
 export async function getGroup(club: ClubForData, groupId: string): Promise<Group | null> {
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
-  const rows = await getAllGroupsFromSheet({ tokens, groupsSheetId: config.groupsSheetId! })
+  const rows = await getAllGroupsFromSheet({ tokens, groupsSheetId: config.groupsSheetId })
   const found = rows.find((r) => r.groupId === groupId)
   return found ? groupDataToGroup(found) : null
 }
@@ -86,12 +90,12 @@ export async function updateGroup(
 ): Promise<Group | null> {
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
-  await updateGroupInSheet({ tokens, groupsSheetId: config.groupsSheetId!, groupId, updates })
+  await updateGroupInSheet({ tokens, groupsSheetId: config.groupsSheetId, groupId, updates })
   return getGroup(club, groupId)
 }
 
 export async function deleteGroup(club: ClubForData, groupId: string): Promise<void> {
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
-  await removeGroupFromSheet({ tokens, groupsSheetId: config.groupsSheetId!, groupId })
+  await removeGroupFromSheet({ tokens, groupsSheetId: config.groupsSheetId, groupId })
 }
