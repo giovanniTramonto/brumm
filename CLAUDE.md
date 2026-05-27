@@ -99,6 +99,7 @@ ADMIN_SECRET          # Brumm Admin-Bereich (/admin)
 APP_URL               # Basis-URL der App (z.B. http://localhost:3001)
 GOOGLE_CLIENT_ID      # Google OAuth 2.0 Client ID
 GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
+DEV_EMAIL_WHITELIST   # Optional: kommaseparierte Whitelist – nur diese Adressen erhalten E-Mails in Dev (leer = alle erlaubt)
 ```
 
 ## Wichtige Pfade
@@ -119,6 +120,9 @@ GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
 | Pinia Stores | `stores/` |
 | Types | `types/` |
 | Netlify Cleanup | `netlify/functions/cleanup.ts` |
+| E2E Tests | `tests/e2e/` |
+| Playwright Konfiguration | `playwright.config.ts` |
+| Test DB Setup / Seed | `tests/global-setup.ts` |
 
 ## Datenbank
 ```bash
@@ -131,7 +135,7 @@ npm run db:generate        # Prisma Client generieren
 
 Lokale DB via Docker:
 ```bash
-docker compose up -d       # PostgreSQL starten (brumm:brumm@localhost:5432/brumm)
+docker compose up -d       # PostgreSQL starten (brumm:brumm@localhost:5433/brumm)
 docker compose down        # stoppen (Daten bleiben erhalten)
 docker compose down -v     # stoppen + Daten löschen
 ```
@@ -142,3 +146,15 @@ npm install
 npm run dev
 npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
 ```
+
+## Tests (E2E)
+Playwright + Docker PostgreSQL. Docker muss laufen, `.env.test` wird automatisch geladen.
+
+```bash
+docker compose up -d   # Test-DB starten (Port 5433)
+npm test               # E2E-Tests ausführen
+npm run test:ui        # Playwright UI-Modus
+npm run test:debug     # Debug-Modus
+```
+
+`.env.test` enthält `DEV_EMAIL_WHITELIST=__blocked__@test.local` → kein echter E-Mail-Versand in Tests.

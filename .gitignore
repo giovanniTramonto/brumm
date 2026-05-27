@@ -38,3 +38,5 @@ npm-debug.log*
 
 # Calculations
 .calculation-references
+.env.test
+.env.local

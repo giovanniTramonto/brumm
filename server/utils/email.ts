@@ -6,9 +6,28 @@ function getResend(): Resend {
   return new Resend(key)
 }
 
+const DEV_WHITELIST = process.env.DEV_EMAIL_WHITELIST
+  ? process.env.DEV_EMAIL_WHITELIST.split(',').map((e) => e.trim().toLowerCase())
+  : null
+
+function filterRecipients(to: string | string[]): string[] | null {
+  if (!DEV_WHITELIST) return Array.isArray(to) ? to : [to]
+  const allowed = (Array.isArray(to) ? to : [to]).filter((e) =>
+    DEV_WHITELIST.includes(e.toLowerCase()),
+  )
+  if (allowed.length === 0) return null
+  return allowed
+}
+
 async function send(...args: Parameters<Resend['emails']['send']>): Promise<void> {
+  const [params] = args
+  const recipients = filterRecipients(params.to as string | string[])
+  if (!recipients) {
+    console.log(`[DEV] E-Mail nicht gesendet (kein Empfänger in Whitelist): ${JSON.stringify(params.to)}`)
+    return
+  }
   const resend = getResend()
-  const { error } = await resend.emails.send(...args)
+  const { error } = await resend.emails.send({ ...params, to: recipients })
   if (error) throw new Error(`Resend error: ${error.message}`)
 }
 
