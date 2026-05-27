@@ -16,8 +16,8 @@ Multi-Tenant SPA für Kindergarten-Vereinsverwaltung. Jeder Verein ist komplett 
 ## Setup
 
 ```bash
-cp .env.example .env.local
-# .env.local befüllen (siehe .env.example)
+cp .env.example .env
+# .env befüllen (siehe .env.example)
 
 npm install
 npx lefthook install   # Git Hooks einrichten (einmalig)

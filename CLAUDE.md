@@ -127,9 +127,7 @@ DEV_EMAIL_WHITELIST   # Optional: kommaseparierte Whitelist – nur diese Adress
 ## Datenbank
 ```bash
 npm run db:push            # Schema auf Neon pushen
-npm run db:push:local      # Schema auf lokale Docker-DB pushen (.env.local)
 npm run db:migrate         # Migration erstellen (Neon)
-npm run db:migrate:local   # Migration erstellen (Docker)
 npm run db:generate        # Prisma Client generieren
 ```
 
