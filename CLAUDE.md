@@ -1,7 +1,7 @@
 # Brumm – CLAUDE.md
 
 ## Stack
-- Nuxt 3 (Hybrid: SSG/SPA), Vue 3 + Composition API
+- Nuxt 3 (SPA, `ssr: false`; nur `/register` vorgerendert), Vue 3 + Composition API
 - Pinia (State Management), TypeScript strict
 - Reka UI + Tailwind CSS
 - Prisma ORM + Neon (PostgreSQL)

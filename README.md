@@ -1,12 +1,12 @@
 # Brumm
 
-Multi-Tenant SPA für Kindergarten-Vereinsverwaltung. Jeder Verein ist komplett isoliert und hat einen eigenen Slug.
+Verwaltungssoftware für Berliner Kindergarten-Vereine. Mehrere Vereine laufen auf einer Instanz – jeder mit eigenem Slug und getrennten Daten.
 
 **Datentrennung**: Neon speichert ausschließlich technische Auth-Daten. Alle persönlichen Mitgliederdaten (Name, Geburtsdatum, E-Mails, Telefonnummern) sowie Vorstandsdaten leben pro Verein in Google Sheets – kein globaler Service Account, keine persönlichen Daten in der zentralen Datenbank.
 
 ## Stack
 
-- **Nuxt 3** – Hybrid SSG/SPA
+- **Nuxt 3** – SPA
 - **Prisma + Neon** – PostgreSQL (nur Auth/Tech-Daten, Multi-Tenant via `clubId`)
 - **Google Drive + Sheets** – Persönliche Mitgliederdaten, Storage pro Verein (OAuth 2.0)
 - **Resend** – Transaktionale E-Mails
