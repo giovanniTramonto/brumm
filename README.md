@@ -22,6 +22,7 @@ cp .env.example .env
 npm install
 npm run db:push
 npm run dev
+npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
 ```
 
 Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallback in `User.localData` (Neon) gespeichert und nach dem Storage-Onboarding automatisch nach Sheets migriert.
