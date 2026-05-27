@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
+    "clean": "rm -rf .nuxt .output dist",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
