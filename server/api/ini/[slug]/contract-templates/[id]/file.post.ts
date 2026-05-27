@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
 
   const result = await uploadTemplateFile({
     tokens,
-    appFolderId: storageConfig.appFolderId,
+    memberFolderId: storageConfig.memberFolderId,
     ref: template.ref,
     filename: filePart.filename,
     mimeType: filePart.type ?? 'application/octet-stream',

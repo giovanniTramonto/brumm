@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
     const storageConfig = club.storageConfig as GoogleDriveConfig
     const folderId = await findMemberFolderId({
       tokens,
-      membersFolderId: storageConfig.membersFolderId,
+      memberFolderId: storageConfig.memberFolderId,
       storageRef: memberData.storageRef,
     })
     if (folderId) {

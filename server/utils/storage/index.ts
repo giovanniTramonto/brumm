@@ -1,7 +1,7 @@
 import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
 import { getDriveClientFromTokens } from '../googleAuth'
 import { createMemberFolder, createUploadSubfolders, deleteMemberFolder } from './googleDrive'
-import { createMemberSheet, removeMemberFromMasterSheet } from './sheets'
+import { createMemberSheet, removeMemberFromSheet } from './sheets'
 
 export async function initUserStorage(params: {
   memberData: MemberData
@@ -12,7 +12,7 @@ export async function initUserStorage(params: {
 
   const memberFolderId = await createMemberFolder({
     tokens,
-    parentFolderId: storageConfig.membersFolderId,
+    parentFolderId: storageConfig.memberFolderId,
     folderName: memberData.storageRef,
   })
 
@@ -34,7 +34,7 @@ export async function deleteMemberStorage(params: {
   const searchResult = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.memberFolderId}' in parents`,
     fields: 'files(id)',
   })
 
@@ -43,9 +43,9 @@ export async function deleteMemberStorage(params: {
     await deleteMemberFolder({ tokens, folderId: folder.id })
   }
 
-  await removeMemberFromMasterSheet({
+  await removeMemberFromSheet({
     tokens,
-    masterSheetId: storageConfig.masterSheetId,
+    membersSheetId: storageConfig.membersSheetId,
     storageRef: params.storageRef,
   })
 }

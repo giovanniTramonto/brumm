@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     const storageConfig = club.storageConfig as GoogleDriveConfig
     const result = await uploadTemplateFile({
       tokens,
-      appFolderId: storageConfig.appFolderId,
+      memberFolderId: storageConfig.memberFolderId,
       ref,
       filename: filePart.filename,
       mimeType: filePart.type ?? 'application/octet-stream',

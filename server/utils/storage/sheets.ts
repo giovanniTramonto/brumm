@@ -49,9 +49,9 @@ function rowToMemberData(row: string[]): MemberData {
   }
 }
 
-export async function createMasterSheet(params: {
+export async function createMembersSheet(params: {
   tokens: OAuthTokens
-  appFolderId: string
+  memberFolderId: string
   clubName: string
 }): Promise<string> {
   const drive = getDriveClientFromTokens(params.tokens)
@@ -60,9 +60,9 @@ export async function createMasterSheet(params: {
   const file = await drive.files.create({
     supportsAllDrives: true,
     requestBody: {
-      name: 'master',
+      name: 'members',
       mimeType: 'application/vnd.google-apps.spreadsheet',
-      parents: [params.appFolderId],
+      parents: [params.memberFolderId],
     },
     fields: 'id',
   })
@@ -123,7 +123,7 @@ export async function createMemberSheet(params: {
 
 export async function writeMemberToSheet(params: {
   tokens: OAuthTokens
-  masterSheetId: string
+  membersSheetId: string
   data: MemberData
 }): Promise<void> {
   const sheets = getSheetsClientFromTokens(params.tokens)
@@ -153,7 +153,7 @@ export async function writeMemberToSheet(params: {
   ]
 
   await sheets.spreadsheets.values.append({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: 'A1',
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
@@ -161,15 +161,15 @@ export async function writeMemberToSheet(params: {
   })
 }
 
-export async function removeMemberFromMasterSheet(params: {
+export async function removeMemberFromSheet(params: {
   tokens: OAuthTokens
-  masterSheetId: string
+  membersSheetId: string
   storageRef: string
 }): Promise<void> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: 'B:B',
   })
 
@@ -178,7 +178,7 @@ export async function removeMemberFromMasterSheet(params: {
   if (rowIndex === -1) return
 
   await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     requestBody: {
       requests: [
         {
@@ -198,12 +198,12 @@ export async function removeMemberFromMasterSheet(params: {
 
 export async function getAllMembersFromSheet(params: {
   tokens: OAuthTokens
-  masterSheetId: string
+  membersSheetId: string
 }): Promise<MemberData[]> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: 'A:T',
   })
 
@@ -213,13 +213,13 @@ export async function getAllMembersFromSheet(params: {
 
 export async function getMemberFromSheet(params: {
   tokens: OAuthTokens
-  masterSheetId: string
+  membersSheetId: string
   userId: string
 }): Promise<MemberData | null> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: 'A:T',
   })
 
@@ -232,13 +232,13 @@ export async function getMemberFromSheet(params: {
 
 export async function findUserIdByEmail(params: {
   tokens: OAuthTokens
-  masterSheetId: string
+  membersSheetId: string
   email: string
 }): Promise<string | null> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: 'A:T',
   })
 
@@ -256,14 +256,14 @@ export async function findUserIdByEmail(params: {
 
 export async function updateMemberInSheet(params: {
   tokens: OAuthTokens
-  masterSheetId: string
+  membersSheetId: string
   userId: string
   updates: Partial<MemberData>
 }): Promise<void> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: 'A:T',
   })
 
@@ -299,7 +299,7 @@ export async function updateMemberInSheet(params: {
 
   const sheetRow = rowIndex + 1
   await sheets.spreadsheets.values.update({
-    spreadsheetId: params.masterSheetId,
+    spreadsheetId: params.membersSheetId,
     range: `A${sheetRow}`,
     valueInputOption: 'RAW',
     requestBody: { values: [updatedRow] },

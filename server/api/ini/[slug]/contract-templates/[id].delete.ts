@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
       await drive.files.delete({ fileId: template.driveFileId, supportsAllDrives: true })
       const folderId = await getOrCreateTemplateSubfolder({
         tokens,
-        appFolderId: storageConfig.appFolderId,
+        memberFolderId: storageConfig.memberFolderId,
         ref: template.ref,
       })
       await drive.files.delete({ fileId: folderId, supportsAllDrives: true })

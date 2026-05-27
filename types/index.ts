@@ -3,10 +3,9 @@ export type Storage = 'GOOGLE_DRIVE' | 'S3' | 'R2'
 
 export interface GoogleDriveConfig {
   rootFolderId: string
-  appFolderId: string
-  membersFolderId: string
-  masterSheetId: string
-  managementFolderId?: string
+  memberFolderId: string
+  membersSheetId: string
+  managersFolderId?: string
   managersSheetId?: string
 }
 

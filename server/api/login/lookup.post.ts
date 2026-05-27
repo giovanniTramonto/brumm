@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
           const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
           const userId = await findUserIdByEmail({
             tokens,
-            masterSheetId: storageConfig.masterSheetId,
+            membersSheetId: storageConfig.membersSheetId,
             email,
           })
           if (userId) found.set(club.slug, { slug: club.slug, name: club.name })

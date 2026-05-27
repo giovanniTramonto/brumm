@@ -66,7 +66,7 @@ export default defineEventHandler(async (event) => {
     const [memberId, managerId] = await Promise.all([
       findUserIdByEmail({
         tokens,
-        masterSheetId: storageConfig.masterSheetId,
+        membersSheetId: storageConfig.membersSheetId,
         email: normalizedEmail,
       }),
       storageConfig.managersSheetId

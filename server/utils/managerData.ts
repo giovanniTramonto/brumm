@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, ManagerData, OAuthTokens } from '~/types'
-import { createManagementStructure } from './storage/googleDrive'
+import { createManagersStructure } from './storage/googleDrive'
 import {
   createManagersSheet,
   getAllManagersFromSheet,
@@ -37,18 +37,18 @@ function localDataToManagerData(managerId: string, localData: unknown): ManagerD
   }
 }
 
-async function ensureManagementStorage(club: ClubForData): Promise<GoogleDriveConfig> {
+async function ensureManagersStorage(club: ClubForData): Promise<GoogleDriveConfig> {
   const config = getStorageConfig(club.storageConfig)
-  if (config.managementFolderId && config.managersSheetId) return config
+  if (config.managersFolderId && config.managersSheetId) return config
 
   const tokens = getTokens(club.oauthToken)
-  const { managementFolderId } = await createManagementStructure({
+  const { managersFolderId } = await createManagersStructure({
     tokens,
-    appFolderId: config.appFolderId,
+    rootFolderId: config.rootFolderId,
   })
-  const managersSheetId = await createManagersSheet({ tokens, managementFolderId })
+  const managersSheetId = await createManagersSheet({ tokens, managersFolderId })
 
-  const updated: GoogleDriveConfig = { ...config, managementFolderId, managersSheetId }
+  const updated: GoogleDriveConfig = { ...config, managersFolderId, managersSheetId }
   await prisma.club.update({
     where: { id: club.id },
     data: { storageConfig: updated as unknown as Prisma.InputJsonValue },
@@ -66,7 +66,7 @@ export async function getManagerData(
     return localDataToManagerData(managerId, manager.localData)
   }
 
-  const config = await ensureManagementStorage(club)
+  const config = await ensureManagersStorage(club)
   const tokens = getTokens(club.oauthToken)
   return getManagerFromSheet({ tokens, managersSheetId: config.managersSheetId!, managerId })
 }
@@ -98,7 +98,7 @@ export async function saveManagerData(data: ManagerData, club: ClubForData): Pro
     return
   }
 
-  const config = await ensureManagementStorage(club)
+  const config = await ensureManagersStorage(club)
   if (!config.managersSheetId) return
   const tokens = getTokens(club.oauthToken)
 

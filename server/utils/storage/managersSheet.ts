@@ -14,7 +14,7 @@ function rowToManagerData(row: string[]): ManagerData {
 
 export async function createManagersSheet(params: {
   tokens: OAuthTokens
-  managementFolderId: string
+  managersFolderId: string
 }): Promise<string> {
   const drive = getDriveClientFromTokens(params.tokens)
   const sheets = getSheetsClientFromTokens(params.tokens)
@@ -24,7 +24,7 @@ export async function createManagersSheet(params: {
     requestBody: {
       name: 'managers',
       mimeType: 'application/vnd.google-apps.spreadsheet',
-      parents: [params.managementFolderId],
+      parents: [params.managersFolderId],
     },
     fields: 'id',
   })

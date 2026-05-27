@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
     if (memberData?.storageRef) {
       driveFileId = await copyFileToMemberDocuments({
         tokens,
-        membersFolderId: storageConfig.membersFolderId,
+        memberFolderId: storageConfig.memberFolderId,
         storageRef: memberData.storageRef,
         sourceFileId: template.driveFileId,
         filename: template.driveFileName,

@@ -1,7 +1,7 @@
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 import { createRootFolderStructure } from './googleDrive'
-import { createMasterSheet } from './sheets'
+import { createMembersSheet } from './sheets'
 
 export async function setupClubStorage(params: {
   clubId: string
@@ -9,23 +9,21 @@ export async function setupClubStorage(params: {
   tokens: OAuthTokens
   parentId?: string
 }): Promise<GoogleDriveConfig> {
-  const { rootFolderId, appFolderId, membersFolderId } = await createRootFolderStructure({
+  const { rootFolderId, memberFolderId } = await createRootFolderStructure({
     tokens: params.tokens,
-    clubName: params.clubName,
     parentId: params.parentId,
   })
 
-  const masterSheetId = await createMasterSheet({
+  const membersSheetId = await createMembersSheet({
     tokens: params.tokens,
-    appFolderId,
+    memberFolderId,
     clubName: params.clubName,
   })
 
   const storageConfig: GoogleDriveConfig = {
     rootFolderId,
-    appFolderId,
-    membersFolderId,
-    masterSheetId,
+    memberFolderId,
+    membersSheetId,
   }
 
   await prisma.club.update({

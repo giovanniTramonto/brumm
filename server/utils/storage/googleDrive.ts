@@ -75,14 +75,14 @@ export async function deleteMemberFolder(params: {
 
 export async function copyFileToMemberDocuments(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
   sourceFileId: string
   filename: string
 }): Promise<string | null> {
   const contractFolderId = await findContractFolderId({
     tokens: params.tokens,
-    membersFolderId: params.membersFolderId,
+    memberFolderId: params.memberFolderId,
     storageRef: params.storageRef,
   })
   if (!contractFolderId) return null
@@ -99,14 +99,14 @@ export async function copyFileToMemberDocuments(params: {
 
 export async function findMemberFolderId(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const drive = getDriveClientFromTokens(params.tokens)
   const result = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.memberFolderId}' in parents and trashed = false`,
     fields: 'files(id)',
   })
   return result.data.files?.[0]?.id ?? null
@@ -114,21 +114,21 @@ export async function findMemberFolderId(params: {
 
 export async function getOrCreateTemplateSubfolder(params: {
   tokens: OAuthTokens
-  appFolderId: string
+  memberFolderId: string
   ref: string
 }): Promise<string> {
   const drive = getDriveClientFromTokens(params.tokens)
   const templatesFolderId = await getOrCreateFolder({
     drive,
     name: 'contract-templates',
-    parentId: params.appFolderId,
+    parentId: params.memberFolderId,
   })
   return getOrCreateFolder({ drive, name: params.ref, parentId: templatesFolderId })
 }
 
 export async function uploadTemplateFile(params: {
   tokens: OAuthTokens
-  appFolderId: string
+  memberFolderId: string
   ref: string
   filename: string
   mimeType: string
@@ -136,7 +136,7 @@ export async function uploadTemplateFile(params: {
 }): Promise<{ driveFileId: string }> {
   const folderId = await getOrCreateTemplateSubfolder({
     tokens: params.tokens,
-    appFolderId: params.appFolderId,
+    memberFolderId: params.memberFolderId,
     ref: params.ref,
   })
 
@@ -176,7 +176,7 @@ export async function downloadDriveFile(params: {
 
 async function findDocumentsFolderId(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const drive = getDriveClientFromTokens(params.tokens)
@@ -184,7 +184,7 @@ async function findDocumentsFolderId(params: {
   const memberResult = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.memberFolderId}' in parents and trashed = false`,
     fields: 'files(id)',
   })
   const memberFolderId = memberResult.data.files?.[0]?.id
@@ -201,7 +201,7 @@ async function findDocumentsFolderId(params: {
 
 async function findContractFolderId(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const documentsFolderId = await findDocumentsFolderId(params)
@@ -219,7 +219,7 @@ async function findContractFolderId(params: {
 
 async function findOtherFolderId(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const documentsFolderId = await findDocumentsFolderId(params)
@@ -236,7 +236,7 @@ async function findOtherFolderId(params: {
 
 async function getOrCreateOtherFolder(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const drive = getDriveClientFromTokens(params.tokens)
@@ -252,7 +252,7 @@ async function getOrCreateOtherFolder(params: {
 
 export async function listOtherDocuments(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<Array<{ id: string; name: string; createdTime: string | null }>> {
   const folderId = await findOtherFolderId(params)
@@ -299,7 +299,7 @@ export async function updateDriveFile(params: {
 
 export async function uploadOtherDocument(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
   filename: string
   mimeType: string
@@ -307,7 +307,7 @@ export async function uploadOtherDocument(params: {
 }): Promise<{ id: string; name: string }> {
   const folderId = await getOrCreateOtherFolder({
     tokens: params.tokens,
-    membersFolderId: params.membersFolderId,
+    memberFolderId: params.memberFolderId,
     storageRef: params.storageRef,
   })
   if (!folderId) throw new Error('Other documents folder not found')
@@ -324,7 +324,7 @@ export async function uploadOtherDocument(params: {
 
 export async function listMemberDocuments(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
 }): Promise<Array<{ id: string; name: string; createdTime: string | null }>> {
   const folderId = await findContractFolderId(params)
@@ -348,7 +348,7 @@ export async function listMemberDocuments(params: {
 
 export async function uploadMemberDocument(params: {
   tokens: OAuthTokens
-  membersFolderId: string
+  memberFolderId: string
   storageRef: string
   filename: string
   mimeType: string
@@ -356,7 +356,7 @@ export async function uploadMemberDocument(params: {
 }): Promise<{ id: string; name: string }> {
   const folderId = await findContractFolderId({
     tokens: params.tokens,
-    membersFolderId: params.membersFolderId,
+    memberFolderId: params.memberFolderId,
     storageRef: params.storageRef,
   })
   if (!folderId) throw new Error('Contract folder not found')
@@ -373,26 +373,24 @@ export async function uploadMemberDocument(params: {
   return { id: result.data.id ?? '', name: result.data.name ?? '' }
 }
 
-export async function createManagementStructure(params: {
+export async function createManagersStructure(params: {
   tokens: OAuthTokens
-  appFolderId: string
-}): Promise<{ managementFolderId: string }> {
-  const managementFolderId = await getOrCreateFolder({
+  rootFolderId: string
+}): Promise<{ managersFolderId: string }> {
+  const managersFolderId = await getOrCreateFolder({
     drive: getDriveClientFromTokens(params.tokens),
-    name: 'management',
-    parentId: params.appFolderId,
+    name: 'managers',
+    parentId: params.rootFolderId,
   })
-  return { managementFolderId }
+  return { managersFolderId }
 }
 
 export async function createRootFolderStructure(params: {
   tokens: OAuthTokens
-  clubName: string
   parentId?: string
 }): Promise<{
   rootFolderId: string
-  appFolderId: string
-  membersFolderId: string
+  memberFolderId: string
 }> {
   const drive = getDriveClientFromTokens(params.tokens)
 
@@ -411,11 +409,8 @@ export async function createRootFolderStructure(params: {
     return id
   }
 
-  const rootFolderId = await createFolder(params.clubName, params.parentId)
-  const [appFolderId, membersFolderId] = await Promise.all([
-    createFolder('app', rootFolderId),
-    createFolder('members', rootFolderId),
-  ])
+  const rootFolderId = await createFolder('brumm', params.parentId)
+  const memberFolderId = await createFolder('members', rootFolderId)
 
-  return { rootFolderId, appFolderId, membersFolderId }
+  return { rootFolderId, memberFolderId }
 }

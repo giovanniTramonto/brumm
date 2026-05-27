@@ -106,7 +106,7 @@ function isDone(t: TemplateEntry): boolean {
 async function onMarkRead(templateId: string) {
   readMap[templateId] = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${memberId}/member-documents/${templateId}/read`, {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/contract/${templateId}/read`, {
       method: 'POST',
     })
     await loadMemberDocTemplates()
@@ -293,7 +293,7 @@ async function loadMemberDocTemplates() {
     const data = await $fetch<{
       templates: TemplateEntry[]
       allSubmitted: boolean
-    }>(`/api/ini/${slug}/members/${memberId}/member-documents`)
+    }>(`/api/ini/${slug}/members/${memberId}/documents/contract`)
     memberDocTemplates.value = data.templates
     allSubmitted.value = data.allSubmitted
     for (const t of data.templates) {
@@ -317,7 +317,7 @@ onMounted(async () => {
         : Promise.resolve(null),
       isMember.value || canManageMembers.value
         ? $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
-            `/api/ini/${slug}/members/${memberId}/member-documents`,
+            `/api/ini/${slug}/members/${memberId}/documents/contract`,
           ).catch(() => null)
         : Promise.resolve(null),
     ])
@@ -505,7 +505,7 @@ async function onUploadForTemplate(templateId: string, event: Event) {
   try {
     const body = new FormData()
     body.append('file', file, file.name)
-    await $fetch(`/api/ini/${slug}/members/${memberId}/member-documents/${templateId}`, {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/documents/contract/${templateId}`, {
       method: 'POST',
       body,
     })
@@ -932,7 +932,7 @@ async function onSubmit() {
                   >
                   <a
                     v-if="t.submission?.driveFileId"
-                    :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
                     class="btn-secondary py-1 text-xs"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1129,7 +1129,7 @@ async function onSubmit() {
                     >
                     <a
                       v-if="t.submission?.driveFileId"
-                      :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                      :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
                       class="btn-secondary py-1 text-xs"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1173,7 +1173,7 @@ async function onSubmit() {
                     </label>
                     <a
                       v-if="t.submission"
-                      :href="`/api/ini/${slug}/members/${memberId}/member-documents/${t.id}/download`"
+                      :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
                       class="btn-secondary py-1 text-xs"
                       target="_blank"
                       rel="noopener noreferrer"

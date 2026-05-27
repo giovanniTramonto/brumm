@@ -23,16 +23,16 @@ async function deleteFromDrive(tokens: OAuthTokens, folderId: string): Promise<v
   }
 }
 
-async function removeFromMasterSheet(
+async function removeFromMembersSheet(
   tokens: OAuthTokens,
-  masterSheetId: string,
+  membersSheetId: string,
   storageRef: string,
 ): Promise<void> {
   const auth = getGoogleAuth(tokens)
   const sheets = google.sheets({ version: 'v4', auth })
 
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: masterSheetId,
+    spreadsheetId: membersSheetId,
     range: 'B:B',
   })
 
@@ -41,7 +41,7 @@ async function removeFromMasterSheet(
   if (rowIndex === -1) return
 
   await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: masterSheetId,
+    spreadsheetId: membersSheetId,
     requestBody: {
       requests: [
         {
@@ -98,7 +98,7 @@ export default async function handler() {
         const searchResult = await drive.files.list({
           supportsAllDrives: true,
           includeItemsFromAllDrives: true,
-          q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents and trashed = false`,
+          q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.memberFolderId}' in parents and trashed = false`,
           fields: 'files(id)',
         })
 
@@ -107,7 +107,7 @@ export default async function handler() {
           await deleteFromDrive(oauthToken, folder.id)
         }
 
-        await removeFromMasterSheet(oauthToken, storageConfig.masterSheetId, storageRef)
+        await removeFromMembersSheet(oauthToken, storageConfig.membersSheetId, storageRef)
       }
 
       await prisma.session.deleteMany({ where: { userId: user.id } })
@@ -146,7 +146,7 @@ export default async function handler() {
       const sheets = google.sheets({ version: 'v4', auth })
 
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: storageConfig.masterSheetId,
+        spreadsheetId: storageConfig.membersSheetId,
         range: 'A:M',
       })
 
@@ -173,14 +173,14 @@ export default async function handler() {
           const searchResult = await drive.files.list({
             supportsAllDrives: true,
             includeItemsFromAllDrives: true,
-            q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents and trashed = false`,
+            q: `name = '${storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.memberFolderId}' in parents and trashed = false`,
             fields: 'files(id)',
           })
           const folder = searchResult.data.files?.[0]
           if (folder?.id) {
             await deleteFromDrive(oauthToken, folder.id)
           }
-          await removeFromMasterSheet(oauthToken, storageConfig.masterSheetId, storageRef)
+          await removeFromMembersSheet(oauthToken, storageConfig.membersSheetId, storageRef)
         }
 
         await prisma.session.deleteMany({ where: { userId } })
