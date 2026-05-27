@@ -1,4 +1,4 @@
-import { prisma } from '~/server/utils/prisma'
+import { deleteGroup, getGroup } from '~/server/utils/groupData'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -13,15 +13,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  const group = await prisma.group.findFirst({
-    where: { id: groupId, clubId: club.id },
-  })
-
-  if (!group) {
+  const existing = await getGroup(club, groupId)
+  if (!existing) {
     throw createError({ statusCode: 404, statusMessage: 'Gruppe nicht gefunden' })
   }
 
-  await prisma.group.delete({ where: { id: groupId } })
-
+  await deleteGroup(club, groupId)
   return { ok: true }
 })

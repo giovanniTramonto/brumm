@@ -23,19 +23,8 @@ model Club {
   users             User[]
   sessions          Session[]
   invites           Invite[]
-  groups            Group[]
   documentTemplates DocumentTemplate[]
   managers          Manager[]
-}
-
-model Group {
-  id        String   @id @default(cuid())
-  clubId    String
-  name      String
-  email     String?
-  createdAt DateTime @default(now())
-
-  club Club @relation(fields: [clubId], references: [id])
 }
 
 model User {

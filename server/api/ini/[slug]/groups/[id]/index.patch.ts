@@ -1,4 +1,4 @@
-import { prisma } from '~/server/utils/prisma'
+import { getGroup, updateGroup } from '~/server/utils/groupData'
 import { formatZodError, updateGroupSchema } from '~/server/utils/schemas'
 
 export default defineEventHandler(async (event) => {
@@ -14,11 +14,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  const group = await prisma.group.findFirst({
-    where: { id: groupId, clubId: club.id },
-  })
-
-  if (!group) {
+  const existing = await getGroup(club, groupId)
+  if (!existing) {
     throw createError({ statusCode: 404, statusMessage: 'Gruppe nicht gefunden' })
   }
 
@@ -28,14 +25,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const { name, email } = parsed.data
-
-  const updated = await prisma.group.update({
-    where: { id: groupId },
-    data: {
-      ...(name ? { name: name.trim() } : {}),
-      ...(email !== undefined ? { email: email || null } : {}),
-    },
+  const group = await updateGroup(club, groupId, {
+    ...(name ? { name } : {}),
+    ...(email !== undefined ? { email: email || null } : {}),
   })
 
-  return { group: updated }
+  return { group }
 })

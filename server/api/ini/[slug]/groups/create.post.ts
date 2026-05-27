@@ -1,4 +1,4 @@
-import { prisma } from '~/server/utils/prisma'
+import { createGroup } from '~/server/utils/groupData'
 import { createGroupSchema, formatZodError } from '~/server/utils/schemas'
 
 export default defineEventHandler(async (event) => {
@@ -15,14 +15,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const { name, email } = parsed.data
-
-  const group = await prisma.group.create({
-    data: {
-      clubId: club.id,
-      name: name.trim(),
-      email: email || null,
-    },
-  })
-
+  const group = await createGroup(club, { name, email: email || null })
   return { group }
 })

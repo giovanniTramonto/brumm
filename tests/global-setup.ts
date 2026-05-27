@@ -21,7 +21,6 @@ export default async function globalSetup() {
     prisma.userEmail.deleteMany(),
     prisma.user.deleteMany(),
     prisma.documentTemplate.deleteMany(),
-    prisma.group.deleteMany(),
     prisma.manager.deleteMany(),
     prisma.club.deleteMany(),
   ])

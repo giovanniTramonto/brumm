@@ -1,3 +1,4 @@
+import { getAllGroups } from '~/server/utils/groupData'
 import { getAllManagerData } from '~/server/utils/managerData'
 import { getAllMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
@@ -28,7 +29,7 @@ export default defineEventHandler(async (event) => {
       where: { userId: { in: userIds }, isUsed: false },
       select: { userId: true },
     }),
-    prisma.group.findMany({ where: { clubId: club.id } }),
+    getAllGroups(club),
   ])
   const groupMap = new Map(groups.map((g) => [g.id, g]))
   const pendingInviteUserIds = new Set(pendingInvites.map((i) => i.userId))
@@ -74,10 +75,7 @@ export default defineEventHandler(async (event) => {
         groupId: md.groupId,
         careType: md.careType,
         surcharges: md.surcharges,
-        group: (() => {
-          const g = md.groupId ? groupMap.get(md.groupId) : undefined
-          return g ? { id: g.id, clubId: g.clubId, name: g.name, email: g.email, createdAt: g.createdAt.toISOString() } : null
-        })(),
+        group: md.groupId ? (groupMap.get(md.groupId) ?? null) : null,
         storageRef: md.storageRef,
         deactivatedAt: md.deactivatedAt,
         contractEnd: md.contractEnd,
