@@ -7,15 +7,11 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const confirmation = ref('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-const clubName = computed(() => authStore.currentClub?.name ?? '')
-const isConfirmed = computed(() => confirmation.value === clubName.value)
 
 async function onDelete() {
-  if (!isConfirmed.value) return
   isLoading.value = true
   error.value = null
   try {
@@ -52,26 +48,9 @@ async function onDelete() {
         <strong>Achtung:</strong> Diese Aktion kann nicht rückgängig gemacht werden.
       </div>
 
-      <div>
-        <label class="label">
-          Gib <strong>{{ clubName }}</strong> ein, um zu bestätigen:
-        </label>
-        <input
-          v-model="confirmation"
-          type="text"
-          class="input mt-1"
-          :placeholder="clubName"
-          autocomplete="off"
-        />
-      </div>
-
       <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
 
-      <button
-        class="btn-danger w-full"
-        :disabled="!isConfirmed || isLoading"
-        @click="onDelete"
-      >
+      <button class="btn-danger w-full" :disabled="isLoading" @click="onDelete">
         {{ isLoading ? "Wird gelöscht…" : "Verein endgültig löschen" }}
       </button>
     </div>

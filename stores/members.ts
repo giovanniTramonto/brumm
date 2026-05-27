@@ -21,7 +21,14 @@ export const useMembersStore = defineStore('members', () => {
       hasAnyMemberManager.value = data.hasAnyMemberManager
       memberManagerNames.value = data.memberManagerNames
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Fehler beim Laden'
+      const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
+      const sm = d?.statusMessage
+      const m = d?.message
+      error.value = sm
+        ? m && m !== sm
+          ? `${sm} (${m})`
+          : sm
+        : 'Fehler beim Laden'
     } finally {
       isLoading.value = false
     }

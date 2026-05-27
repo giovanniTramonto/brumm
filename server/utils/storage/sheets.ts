@@ -196,19 +196,39 @@ export async function removeMemberFromSheet(params: {
   })
 }
 
+function isDriveUnavailable(err: unknown): boolean {
+  const e = err as { response?: { status?: number }; message?: string }
+  return (
+    e?.response?.status === 404 || (e?.message?.includes('Missing required parameters') ?? false)
+  )
+}
+
+function throwDriveNotFound(originalErr?: unknown): never {
+  const originalMessage = (originalErr as { message?: string })?.message
+  throw createError({
+    statusCode: 503,
+    statusMessage: 'Die Google-Ablage wurde nicht gefunden.',
+    message: originalMessage,
+  })
+}
+
 export async function getAllMembersFromSheet(params: {
   tokens: OAuthTokens
   membersSheetId: string
 }): Promise<MemberData[]> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.membersSheetId,
-    range: 'A:T',
-  })
-
-  const rows = response.data.values ?? []
-  return rows.slice(1).map((row) => rowToMemberData(row as string[]))
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: params.membersSheetId,
+      range: 'A:T',
+    })
+    const rows = response.data.values ?? []
+    return rows.slice(1).map((row) => rowToMemberData(row as string[]))
+  } catch (err) {
+    if (isDriveUnavailable(err)) throwDriveNotFound(err)
+    throw err
+  }
 }
 
 export async function getMemberFromSheet(params: {
@@ -218,16 +238,19 @@ export async function getMemberFromSheet(params: {
 }): Promise<MemberData | null> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: params.membersSheetId,
-    range: 'A:T',
-  })
-
-  const rows = response.data.values ?? []
-  const dataRow = rows.slice(1).find((row) => row[0] === params.userId)
-  if (!dataRow) return null
-
-  return rowToMemberData(dataRow as string[])
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: params.membersSheetId,
+      range: 'A:T',
+    })
+    const rows = response.data.values ?? []
+    const dataRow = rows.slice(1).find((row) => row[0] === params.userId)
+    if (!dataRow) return null
+    return rowToMemberData(dataRow as string[])
+  } catch (err) {
+    if (isDriveUnavailable(err)) throwDriveNotFound(err)
+    throw err
+  }
 }
 
 export async function findUserIdByEmail(params: {
