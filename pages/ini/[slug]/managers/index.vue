@@ -16,7 +16,7 @@ onMounted(async () => {
   <div>
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-900">Vorstand</h1>
-      <NuxtLink :to="`/ini/${slug}/management/create`" class="btn-primary">
+      <NuxtLink :to="`/ini/${slug}/managers/create`" class="btn-primary">
         Vorstand hinzufügen
       </NuxtLink>
     </div>
@@ -41,7 +41,7 @@ onMounted(async () => {
               </span>
             </p>
           </div>
-          <NuxtLink :to="`/ini/${slug}/management/${m.id}`" class="btn-secondary text-sm">
+          <NuxtLink :to="`/ini/${slug}/managers/${m.id}`" class="btn-secondary text-sm">
             Bearbeiten
           </NuxtLink>
         </li>

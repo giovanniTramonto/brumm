@@ -41,8 +41,8 @@ useHead({ title: 'Über Brumm' })
       </p>
     </section>
 
-    <section class="mt-8" aria-labelledby="datenschutz">
-      <h2 id="datenschutz" class="text-xl font-semibold text-gray-900">Datenschutz &amp; DSGVO</h2>
+    <section class="mt-8" aria-labelledby="privacy">
+      <h2 id="privacy" class="text-xl font-semibold text-gray-900">Datenschutz &amp; DSGVO</h2>
       <p class="mt-4 text-gray-500 leading-relaxed">
         Brumm speichert keine personenbezogenen Mitgliederdaten auf eigenen Servern. Es gibt kein Tracking, keine Analytics, keine Weitergabe an Dritte. Technische Daten (Login-Sessions, Vereinskonfiguration) liegen verschlüsselt in einer europäischen Datenbank. Der Quellcode ist öffentlich einsehbar (Source Available) —
         <a

@@ -38,9 +38,9 @@
 /ini/{slug}/groups
 /ini/{slug}/groups/create
 /ini/{slug}/groups/{id}
-/ini/{slug}/management
-/ini/{slug}/management/create
-/ini/{slug}/management/{id}
+/ini/{slug}/managers
+/ini/{slug}/managers/create
+/ini/{slug}/managers/{id}
 /ini/{slug}/calculations
 /ini/{slug}/settings
 /ini/{slug}/settings/delete
@@ -85,7 +85,7 @@ Der Slug `/ini` ist reserviert und kann nicht als Vereinsslug vergeben werden.
 - **E-Mail-Cascade**: Wird `email1` oder `email2` eines Kindes geändert, werden alle anderen Kinder im gleichen Verein mit derselben alten E-Mail automatisch mitaktualisiert. Damit bleibt der Guardian-Email-Filter in der Kinderliste konsistent (MEMBER sieht alle eigenen Kinder). Gilt sowohl für `canManageMembers`-Updates als auch für MEMBER-Selbst-Updates
 - **Storage-Init**: `initUserStorage` schreibt nur noch Drive-Ordner und Einzel-Sheet (kein Members-Sheet-Write mehr). Der Members-Sheet-Eintrag wird ausschließlich über `saveMemberData` geschrieben, um Duplikate zu vermeiden
 - **Rate Limiting**: `server/middleware/rateLimit.ts` begrenzt `/api/login/lookup`, `/api/register` und Magic-Link-Endpunkte auf 5 Anfragen/Minute pro IP (in-memory Map mit TTL). Überschreitung → 429 mit deutscher Fehlermeldung
-- **Öffentliche Seiten**: `/`, `/login`, `/register`, `/about`, `/guide`, `/impressum`, `/datenschutz` verwenden `layout: 'public'` (`layouts/public.vue`). Dort: Skip-Link, Header mit Nav (aktive Seite via `route.path`), Bären-SVG-Logo, Beta-Badge, Footer mit Impressum/Datenschutz. `error.vue` (root) behandelt 404 und generische Fehler ohne Layout-Abhängigkeit
+- **Öffentliche Seiten**: `/`, `/login`, `/register`, `/about`, `/guide`, `/legal`, `/privacy` verwenden `layout: 'public'` (`layouts/public.vue`). Dort: Skip-Link, Header mit Nav (aktive Seite via `route.path`), Bären-SVG-Logo, Beta-Badge, Footer mit Links zu `/legal` (Impressum) und `/privacy` (Datenschutz). `error.vue` (root) behandelt 404 und generische Fehler ohne Layout-Abhängigkeit
 - **Verein löschen** (`DELETE /api/ini/{slug}/settings/delete`): Löscht in einer Prisma-Transaktion: Sessions, MagicLinks, Invites, MemberDocuments, UserEmails, Users, DocumentTemplates, Groups, Managers, Club. Seitenroute liegt in `pages/ini/[slug]/settings/index.vue` (Einstellungen) und `pages/ini/[slug]/settings/delete.vue` (Löschen) — `settings/index.vue` statt `settings.vue` damit beide Routen unabhängig funktionieren
 - **Netlify**: `NETLIFY_NEXT_PLUGIN_SKIP = "true"` in `netlify.toml` verhindert, dass der global installierte `@netlify/plugin-nextjs` beim Nuxt-Build fälschlicherweise ausgeführt wird
 

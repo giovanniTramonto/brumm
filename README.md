@@ -48,9 +48,9 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/groups                 → Gruppen verwalten (SUPERUSER)
 /ini/{slug}/groups/create         → Gruppe anlegen
 /ini/{slug}/groups/{id}           → Gruppe bearbeiten
-/ini/{slug}/management             → Vorstand verwalten (SUPERUSER)
-/ini/{slug}/management/create      → Vorstand hinzufügen
-/ini/{slug}/management/{id}        → Vorstand bearbeiten
+/ini/{slug}/managers             → Vorstand verwalten (SUPERUSER)
+/ini/{slug}/managers/create      → Vorstand hinzufügen
+/ini/{slug}/managers/{id}        → Vorstand bearbeiten
 /ini/{slug}/calculations           → Rechnung: Einnahmen, Personalschlüssel (SUPERUSER + MANAGER)
 /ini/{slug}/settings
 /ini/{slug}/settings/delete        → Verein löschen

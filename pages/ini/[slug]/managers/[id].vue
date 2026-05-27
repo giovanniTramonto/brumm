@@ -35,7 +35,7 @@ async function onSubmit() {
   error.value = null
   try {
     await managersStore.updateManager(slug, managerId, form)
-    await navigateTo(`/ini/${slug}/management`)
+    await navigateTo(`/ini/${slug}/managers`)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Fehler beim Speichern'
   } finally {
@@ -48,7 +48,7 @@ async function onDelete() {
   isDeleting.value = true
   try {
     await managersStore.deleteManager(slug, managerId)
-    await navigateTo(`/ini/${slug}/management`)
+    await navigateTo(`/ini/${slug}/managers`)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Fehler beim Löschen'
     isDeleting.value = false
@@ -59,7 +59,7 @@ async function onDelete() {
 <template>
   <div>
     <div class="mb-6 flex items-center gap-4">
-      <NuxtLink :to="`/ini/${slug}/management`" class="text-sm text-gray-500 hover:text-gray-700">← Zurück</NuxtLink>
+      <NuxtLink :to="`/ini/${slug}/managers`" class="text-sm text-gray-500 hover:text-gray-700">← Zurück</NuxtLink>
       <h1 class="text-2xl font-bold text-gray-900">{{ manager?.name ?? 'Vorstandsmitglied' }}</h1>
     </div>
 
@@ -92,7 +92,7 @@ async function onDelete() {
           <button type="submit" class="btn-primary" :disabled="isSubmitting">
             {{ isSubmitting ? 'Wird gespeichert …' : 'Speichern' }}
           </button>
-          <NuxtLink :to="`/ini/${slug}/management`" class="btn-secondary">Abbrechen</NuxtLink>
+          <NuxtLink :to="`/ini/${slug}/managers`" class="btn-secondary">Abbrechen</NuxtLink>
         </div>
         <button type="button" class="btn-danger" :disabled="isDeleting" @click="onDelete">
           {{ isDeleting ? 'Wird entfernt …' : 'Entfernen' }}
