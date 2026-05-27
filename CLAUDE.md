@@ -122,9 +122,18 @@ GOOGLE_CLIENT_SECRET  # Google OAuth 2.0 Client Secret
 
 ## Datenbank
 ```bash
-npm run db:push      # Schema auf Neon pushen (dev)
-npm run db:migrate   # Migration erstellen
-npm run db:generate  # Prisma Client generieren
+npm run db:push            # Schema auf Neon pushen
+npm run db:push:local      # Schema auf lokale Docker-DB pushen (.env.local)
+npm run db:migrate         # Migration erstellen (Neon)
+npm run db:migrate:local   # Migration erstellen (Docker)
+npm run db:generate        # Prisma Client generieren
+```
+
+Lokale DB via Docker:
+```bash
+docker compose up -d       # PostgreSQL starten (brumm:brumm@localhost:5432/brumm)
+docker compose down        # stoppen (Daten bleiben erhalten)
+docker compose down -v     # stoppen + Daten löschen
 ```
 
 ## Dev
