@@ -33,6 +33,12 @@ const hasSuperUserEmail = computed(() => {
   return (!!e1 && superUserEmails.value.has(e1)) || (!!e2 && superUserEmails.value.has(e2))
 })
 
+const hasNonSuperUserEmail = computed(() => {
+  const e1 = form.email1.trim().toLowerCase()
+  const e2 = form.email2.trim().toLowerCase()
+  return (!!e1 && !superUserEmails.value.has(e1)) || (!!e2 && !superUserEmails.value.has(e2))
+})
+
 const form = reactive({
   firstName: '',
   lastName: '',
@@ -116,7 +122,8 @@ async function onSubmit() {
 
     <form v-else class="card space-y-4" @submit.prevent="onSubmit">
       <div v-if="hasSuperUserEmail" class="rounded-md bg-blue-50 p-3 text-sm text-blue-700">
-        Sie sind Erziehungsberechtigter dieses Kindes. Es wird keine Opt-In Email an Sie gesendet.
+        Sie sind Erziehungsberechtigter dieses Kindes. Das Kind wird beim Anlegen sofort
+        bestätigt.
       </div>
       <h1 class="text-2xl font-bold text-gray-900">Kind anlegen</h1>
       <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>

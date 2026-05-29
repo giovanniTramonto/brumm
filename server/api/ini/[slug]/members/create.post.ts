@@ -50,6 +50,7 @@ export default defineEventHandler(async (event) => {
 
   const superUserEmailSet = new Set(superUserEmails.map((e) => e.email.toLowerCase()))
   const inviteEmails = emails.filter((e) => !superUserEmailSet.has(e))
+  const hasSuperUserEmail = emails.some((e) => superUserEmailSet.has(e))
   const parentAlreadyRegistered =
     !!existingUserEmail && inviteEmails.includes(existingUserEmail.email.toLowerCase())
 
@@ -81,6 +82,8 @@ export default defineEventHandler(async (event) => {
     deactivatedAt: null,
     deactivatedBy: null,
     contractEnd: contractEnd || null,
+    lastEditedAt: null,
+    lastEditedBy: null,
   }
 
   try {
@@ -107,8 +110,40 @@ export default defineEventHandler(async (event) => {
   }
 
   let emailError: string | null = null
+  const childName = `${firstName} ${lastName}`
 
-  if (sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered) {
+  if (hasSuperUserEmail) {
+    await prisma.invite.create({
+      data: {
+        clubId: club.id,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        isUsed: true,
+      },
+    })
+
+    if (sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered) {
+      const magicLink = await prisma.magicLink.create({
+        data: {
+          userId: user.id,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        },
+      })
+      try {
+        for (const to of inviteEmails) {
+          await sendInviteEmail({
+            to,
+            clubName: club.name,
+            clubSlug: club.slug,
+            token: magicLink.token,
+            childName,
+          })
+        }
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : 'Unbekannter Fehler'
+      }
+    }
+  } else if (sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered) {
     const invite = await prisma.invite.create({
       data: {
         clubId: club.id,
@@ -116,8 +151,6 @@ export default defineEventHandler(async (event) => {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     })
-
-    const childName = `${firstName} ${lastName}`
     try {
       for (const to of inviteEmails) {
         await sendInviteEmail({
