@@ -19,7 +19,7 @@ const navItems = computed(() => {
     items.push({ label: 'Vorstand', to: `${base}/managers` })
   }
   if (authStore.currentUser.role === 'SUPERUSER' || authStore.currentUser.role === 'MANAGER') {
-    items.push({ label: 'Rechnung', to: `${base}/calculations` })
+    items.push({ label: 'Berechnung', to: `${base}/calculations` })
   }
   if (authStore.currentUser.role === 'SUPERUSER') {
     items.push({ label: 'Einstellungen', to: `${base}/settings` })

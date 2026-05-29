@@ -13,7 +13,10 @@ export const useGroupsStore = defineStore('groups', () => {
       const data = await $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`)
       groups.value = data.groups
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Fehler beim Laden'
+      const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
+      const sm = d?.statusMessage
+      const m = d?.message
+      error.value = sm ? (m && m !== sm ? `${sm} (${m})` : sm) : 'Fehler beim Laden'
     } finally {
       isLoading.value = false
     }

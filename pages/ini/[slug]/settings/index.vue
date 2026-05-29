@@ -50,13 +50,20 @@ const reconnected = route.query.reconnected === '1'
         >
           Jetzt einrichten
         </NuxtLink>
-        <NuxtLink
-          v-if="authStore.currentClub?.isSetupDone"
-          :to="`/ini/${slug}/onboarding`"
-          class="btn-secondary inline-block text-sm"
-        >
-          Datenspeicher ändern
-        </NuxtLink>
+        <template v-if="authStore.currentClub?.isSetupDone">
+          <NuxtLink
+            :to="`/ini/${slug}/onboarding`"
+            class="btn-secondary inline-block text-sm"
+          >
+            Datenspeicher ändern
+          </NuxtLink>
+          <a
+            :href="`/api/ini/${slug}/auth/google`"
+            class="btn-secondary inline-block text-sm"
+          >
+            Google neu verbinden
+          </a>
+        </template>
       </div>
     </div>
 

@@ -406,23 +406,16 @@ export async function createRootFolderStructure(params: {
 }> {
   const drive = getDriveClientFromTokens(params.tokens)
 
-  const createFolder = async (name: string, parentId?: string): Promise<string> => {
-    const result = await drive.files.create({
-      supportsAllDrives: true,
-      requestBody: {
-        name,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: parentId ? [parentId] : undefined,
-      },
-      fields: 'id',
-    })
-    const id = result.data.id
-    if (!id) throw new Error(`Failed to create folder: ${name}`)
-    return id
-  }
-
-  const rootFolderId = await createFolder('brumm', params.parentId)
-  const memberFolderId = await createFolder('members', rootFolderId)
+  const rootFolderId = await getOrCreateFolder({
+    drive,
+    name: 'brumm',
+    parentId: params.parentId ?? 'root',
+  })
+  const memberFolderId = await getOrCreateFolder({
+    drive,
+    name: 'members',
+    parentId: rootFolderId,
+  })
 
   return { rootFolderId, memberFolderId }
 }

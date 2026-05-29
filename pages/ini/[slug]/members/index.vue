@@ -84,12 +84,10 @@ const filteredMembers = computed(() => {
 
     <div v-if="membersStore.isLoading" class="py-12 text-gray-500">Brumm, brumm …</div>
 
-    <div v-else-if="membersStore.error" class="rounded-md bg-red-50 p-4 text-sm text-red-700">
-      {{ membersStore.error }}
-    </div>
+    <StoreError v-else-if="membersStore.error" :error="membersStore.error" :slug="slug" />
 
-    <div v-else-if="filteredMembers.length === 0" class="py-12 text-gray-500">
-      Keine Kinder gefunden.
+    <div v-else-if="filteredMembers.length === 0" class="card">
+      <p class="text-sm text-gray-500">Keine Kinder gefunden.</p>
     </div>
 
     <div v-else class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5">

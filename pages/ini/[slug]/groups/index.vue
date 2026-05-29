@@ -40,8 +40,10 @@ async function onDeleteGroup(group: Group) {
 
     <div v-if="groupsStore.isLoading" class="py-12 text-gray-500">Brumm, brumm …</div>
 
-    <div v-else-if="groupsStore.groups.length === 0" class="py-12 text-gray-500">
-      Noch keine Gruppen vorhanden.
+    <StoreError v-else-if="groupsStore.error" :error="groupsStore.error" :slug="slug" />
+
+    <div v-else-if="groupsStore.groups.length === 0" class="card">
+      <p class="text-sm text-gray-500">Noch keine Gruppen vorhanden.</p>
     </div>
 
     <div v-else class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5">

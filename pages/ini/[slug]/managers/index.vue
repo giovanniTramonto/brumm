@@ -25,6 +25,8 @@ onMounted(async () => {
       Brumm, brumm …
     </div>
 
+    <StoreError v-else-if="managersStore.error" :error="managersStore.error" :slug="slug" />
+
     <div v-else class="card">
       <ul v-if="managersStore.managers.length > 0" role="list" class="divide-y divide-gray-100">
         <li
