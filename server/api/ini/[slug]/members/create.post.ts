@@ -50,7 +50,8 @@ export default defineEventHandler(async (event) => {
 
   const superUserEmailSet = new Set(superUserEmails.map((e) => e.email.toLowerCase()))
   const inviteEmails = emails.filter((e) => !superUserEmailSet.has(e))
-  const parentAlreadyRegistered = !!existingUserEmail
+  const parentAlreadyRegistered =
+    !!existingUserEmail && inviteEmails.includes(existingUserEmail.email.toLowerCase())
 
   const user = await prisma.user.create({
     data: {
