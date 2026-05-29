@@ -27,7 +27,7 @@
 /register
 /admin
 /ini/{slug}/login
-/ini/{slug}/onboarding
+/ini/{slug}/settings/onboarding
 /ini/{slug}/dashboard
 /ini/{slug}/addresses
 /ini/{slug}/members

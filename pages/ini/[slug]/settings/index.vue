@@ -45,14 +45,14 @@ const reconnected = route.query.reconnected === '1'
       <div class="flex gap-2 pt-2">
         <NuxtLink
           v-if="!authStore.currentClub?.isSetupDone"
-          :to="`/ini/${slug}/onboarding`"
+          :to="`/ini/${slug}/settings/onboarding`"
           class="btn-primary inline-block text-sm"
         >
           Jetzt einrichten
         </NuxtLink>
         <template v-if="authStore.currentClub?.isSetupDone">
           <NuxtLink
-            :to="`/ini/${slug}/onboarding`"
+            :to="`/ini/${slug}/settings/onboarding`"
             class="btn-secondary inline-block text-sm"
           >
             Datenspeicher ändern

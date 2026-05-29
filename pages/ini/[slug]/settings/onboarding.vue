@@ -25,7 +25,7 @@ const googleAuthUrl = computed(() => {
 <template>
   <div class="max-w-lg space-y-6">
     <NuxtLink :to="`/ini/${slug}/settings`" class="text-sm text-gray-500 hover:text-gray-900">
-      ← Zurück zu Einstellungen
+      ← Zurück
     </NuxtLink>
 
     <div class="card">

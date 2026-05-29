@@ -27,12 +27,11 @@ async function onSubmit() {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center gap-4">
-      <NuxtLink :to="`/ini/${slug}/managers`" class="text-sm text-gray-500 hover:text-gray-700">← Zurück</NuxtLink>
-      <h1 class="text-2xl font-bold text-gray-900">Vorstand hinzufügen</h1>
-    </div>
+    <NuxtLink :to="`/ini/${slug}/managers`" class="mb-6 block text-sm text-gray-500 hover:text-gray-700">← Zurück</NuxtLink>
 
     <form class="card max-w-lg" @submit.prevent="onSubmit">
+      <h1 class="mb-6 text-2xl font-bold text-gray-900">Vorstand hinzufügen</h1>
+
       <div v-if="error" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">
         {{ error }}
       </div>

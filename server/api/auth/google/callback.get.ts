@@ -20,7 +20,10 @@ export default defineEventHandler(async (event) => {
   if (errorParam) {
     const slug = state?.slug
     if (slug) {
-      return sendRedirect(event, `/ini/${slug}/onboarding?error=${encodeURIComponent(errorParam)}`)
+      return sendRedirect(
+        event,
+        `/ini/${slug}/settings/onboarding?error=${encodeURIComponent(errorParam)}`,
+      )
     }
     throw createError({ statusCode: 403, statusMessage: errorParam })
   }
@@ -38,13 +41,16 @@ export default defineEventHandler(async (event) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Token-Austausch fehlgeschlagen'
     console.error('[google/callback] getToken error:', err)
-    return sendRedirect(event, `/ini/${state.slug}/onboarding?error=${encodeURIComponent(message)}`)
+    return sendRedirect(
+      event,
+      `/ini/${state.slug}/settings/onboarding?error=${encodeURIComponent(message)}`,
+    )
   }
 
   if (!tokens.refresh_token) {
     return sendRedirect(
       event,
-      `/ini/${state.slug}/onboarding?error=${encodeURIComponent('Kein Refresh Token erhalten. Bitte erneut verbinden.')}`,
+      `/ini/${state.slug}/settings/onboarding?error=${encodeURIComponent('Kein Refresh Token erhalten. Bitte erneut verbinden.')}`,
     )
   }
 
@@ -80,8 +86,11 @@ export default defineEventHandler(async (event) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unbekannter Fehler'
     console.error('[google/callback] setupClubStorage error:', err)
-    return sendRedirect(event, `/ini/${state.slug}/onboarding?error=${encodeURIComponent(message)}`)
+    return sendRedirect(
+      event,
+      `/ini/${state.slug}/settings/onboarding?error=${encodeURIComponent(message)}`,
+    )
   }
 
-  return sendRedirect(event, `/ini/${state.slug}/onboarding?success=1`)
+  return sendRedirect(event, `/ini/${state.slug}/settings/onboarding?success=1`)
 })

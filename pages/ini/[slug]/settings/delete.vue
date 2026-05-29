@@ -10,7 +10,6 @@ const authStore = useAuthStore()
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-
 async function onDelete() {
   isLoading.value = true
   error.value = null
@@ -31,7 +30,7 @@ async function onDelete() {
   <div class="max-w-lg">
     <div class="mb-6">
       <NuxtLink :to="`/ini/${slug}/settings`" class="text-sm text-gray-500 hover:text-gray-900">
-        ← Zurück zu Einstellungen
+        ← Zurück
       </NuxtLink>
     </div>
 

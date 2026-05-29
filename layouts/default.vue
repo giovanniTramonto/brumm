@@ -54,8 +54,12 @@ async function onLogout() {
                 <NuxtLink
                   v-else
                   :to="item.to"
-                  class="block rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  active-class="bg-primary-50 text-primary-700"
+                  :class="[
+                    'block rounded-md px-3 py-2 text-sm font-medium',
+                    route.path.startsWith(item.to)
+                      ? 'bg-primary-50 text-primary-700'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ]"
                 >{{ item.label }}</NuxtLink>
               </li>
             </ul>

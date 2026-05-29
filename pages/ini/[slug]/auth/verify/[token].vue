@@ -21,7 +21,7 @@ onMounted(async () => {
     } else if (authStore.currentClub?.isSetupDone) {
       target = `/ini/${slug}/dashboard`
     } else {
-      target = `/ini/${slug}/onboarding`
+      target = `/ini/${slug}/settings/onboarding`
     }
     await navigateTo(target)
   } catch (err: unknown) {
