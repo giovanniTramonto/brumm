@@ -23,7 +23,7 @@ const navLinks = [
             </svg>
             Brumm
           </NuxtLink>
-          <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">Beta-Version</span>
+          <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700">Pilotphase</span>
         </div>
         <nav aria-label="Hauptnavigation" class="flex items-center gap-6 text-sm">
           <NuxtLink
