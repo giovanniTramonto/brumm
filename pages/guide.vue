@@ -16,7 +16,10 @@ useHead({ title: 'Anleitung – Brumm' })
       <p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">Einmalige Einrichtung (nur Admin)</p>
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
         <li>Kita unter <strong class="text-gray-700">/register</strong> registrieren – du erhältst einen Einrichtungs-Link per E-Mail.</li>
-        <li>Im Onboarding einen Cloud-Account verbinden (z.B. Google), damit Brumm Daten in eurem Cloud-Speicher ablegen kann.</li>
+        <li>
+          Im Onboarding Google-Account verbinden und die ID der Geteilten Ablage eingeben.
+          <NuxtLink to="/faq#google-workspace" class="text-primary-600 hover:underline">→ Google Workspace einrichten</NuxtLink>
+        </li>
         <li>Unter <strong class="text-gray-700">Vorstand</strong> Vorstandsmitglieder hinzufügen, die ebenfalls Kinder verwalten dürfen.</li>
       </ol>
       <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Laufender Betrieb</p>
@@ -24,7 +27,7 @@ useHead({ title: 'Anleitung – Brumm' })
         <li>Unter <strong class="text-gray-700">Kinder</strong> neue Kinder anlegen. Optional: Einladungslink per E-Mail an die Eltern versenden.</li>
         <li>Sobald Eltern ihre Vertragsunterlagen eingereicht haben, das Kind freischalten.</li>
         <li>Unter <strong class="text-gray-700">Gruppen</strong> Betreuungsgruppen anlegen und Kindern zuweisen.</li>
-        <li>Unter <strong class="text-gray-700">Rechnung</strong> monatliche Kostenerstattungen und den Personalschlüssel einsehen.</li>
+        <li>Unter <strong class="text-gray-700">Berechnung</strong> monatliche Kostenerstattungen und den Personalschlüssel einsehen.</li>
       </ol>
     </section>
 
@@ -34,7 +37,7 @@ useHead({ title: 'Anleitung – Brumm' })
       <p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">Alle Vorstandsmitglieder</p>
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
         <li>Du erhältst einen Anmelde-Link per E-Mail – kein Passwort nötig.</li>
-        <li>Unter <strong class="text-gray-700">Rechnung</strong> siehst du die monatlichen Kostenerstattungen und den Personalschlüssel.</li>
+        <li>Unter <strong class="text-gray-700">Berechnung</strong> siehst du die monatlichen Kostenerstattungen und den Personalschlüssel.</li>
       </ol>
       <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Mit Mitgliederverwaltung</p>
       <p class="mt-1 text-sm text-gray-500">Nur wenn der Admin diese Berechtigung aktiviert hat.</p>

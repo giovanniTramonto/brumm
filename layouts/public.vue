@@ -48,6 +48,7 @@ const navLinks = [
       <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 text-xs text-gray-400">
         <span>© {{ new Date().getFullYear() }} Brumm</span>
         <nav aria-label="Rechtliches" class="flex gap-4">
+          <NuxtLink to="/faq" class="hover:text-gray-600">FAQ</NuxtLink>
           <NuxtLink to="/legal" class="hover:text-gray-600">Impressum</NuxtLink>
           <NuxtLink to="/privacy" class="hover:text-gray-600">Datenschutz</NuxtLink>
         </nav>
