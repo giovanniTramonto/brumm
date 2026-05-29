@@ -15,12 +15,12 @@ export default {
       colors: {
         admin: '#d5e4eb',
         ini: {
-          DEFAULT: '#dde2b0',
-          200: '#eaedca',
-          300: '#c4cb8a',
-          500: '#a8b058',
-          700: '#7a8a32',
-          800: '#4f5e1a',
+          DEFAULT: '#bdd792',
+          200: '#dcedc4',
+          300: '#aacb7e',
+          500: '#8ab55a',
+          700: '#608030',
+          800: '#3d5218',
         },
         member: {
           DEFAULT: '#ffdd76',
