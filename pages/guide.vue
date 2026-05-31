@@ -7,7 +7,7 @@ useHead({ title: 'Anleitung – Brumm' })
   <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
     <h1 class="text-3xl font-bold text-gray-900">Anleitung</h1>
     <p class="mt-4 text-gray-500 leading-relaxed">
-      Brumm hat vier Rollen – Admin, Vorstand, Team und Eltern. Aktuell verfügbar sind Admin, Vorstand und Eltern. Je nach Rolle sieht die App anders aus und erlaubt unterschiedliche Aktionen.
+      Brumm hat vier Rollen – Admin, Vorstand, Team und Eltern. Je nach Rolle sieht die App anders aus und erlaubt unterschiedliche Aktionen.
     </p>
 
     <section class="mt-12" aria-labelledby="role-superuser">
