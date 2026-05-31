@@ -12,6 +12,10 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        tablet: '768px',
+        desktop: '1024px',
+      },
       colors: {
         admin: '#d5e4eb',
         ini: {
