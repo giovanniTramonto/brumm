@@ -5,22 +5,22 @@ useHead({ title: 'Über Brumm' })
 
 <template>
   <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
-    <section aria-labelledby="was-ist-brumm">
-      <h1 id="was-ist-brumm" class="text-3xl font-bold text-gray-900">Was ist Brumm?</h1>
+    <section aria-labelledby="what-is-brumm">
+      <h1 id="what-is-brumm" class="text-3xl font-bold text-gray-900">Was ist Brumm?</h1>
       <p class="mt-6 text-gray-500 leading-relaxed">
         Brumm ist eine Verwaltungssoftware speziell für Berliner Elterninitiativ-Kindertagesstätten. Berliner Kita-Abläufe automatisieren – Bär? Auto? Brumm, brumm.
       </p>
     </section>
 
-    <section class="mt-8" aria-labelledby="fuer-wen">
-      <h2 id="fuer-wen" class="text-xl font-semibold text-gray-900">Kita verwalten, nebenbei</h2>
+    <section class="mt-8" aria-labelledby="manage-on-the-side">
+      <h2 id="manage-on-the-side" class="text-xl font-semibold text-gray-900">Kita verwalten, nebenbei</h2>
       <p class="mt-4 text-gray-500 leading-relaxed">
         Elterninitiativ-Kitas stemmen viel Verwaltung mit wenig Zeit. Brumm nimmt einen Großteil davon ab: Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen – alles an einem Ort, ohne Papierkram. Berliner Besonderheiten wie KitaFöG-Kostensätze, ndH-Zuschläge und die Personalschlüsselberechnung nach Senatsvorgaben sind bereits eingebaut.
       </p>
     </section>
 
-    <section class="mt-8" aria-labelledby="daten">
-      <h2 id="daten" class="text-xl font-semibold text-gray-900">Daten bleiben beim Verein</h2>
+    <section class="mt-8" aria-labelledby="data-ownership">
+      <h2 id="data-ownership" class="text-xl font-semibold text-gray-900">Daten bleiben beim Verein</h2>
       <p class="mt-4 text-gray-500 leading-relaxed">
         Alle persönlichen Daten – Mitgliederinformationen, Vertragsunterlagen, Dokumente – werden ausschließlich in einem Cloud-Ordner des Vereins gespeichert, nicht auf Brumm-Servern. Der Verein behält jederzeit die volle Kontrolle. Aktuell wird Google Drive unterstützt; weitere Anbieter sollen demnächst folgen.
       </p>
