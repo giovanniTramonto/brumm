@@ -4,7 +4,7 @@ const route = useRoute()
 const navLinks = [
   { to: '/about', label: 'Über Brumm' },
   { to: '/guide', label: 'Anleitung' },
-  { to: '/login', label: 'Login' },
+  { to: '/login', label: 'Anmelden' },
 ]
 
 const isMenuOpen = ref(false)

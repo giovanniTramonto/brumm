@@ -56,7 +56,7 @@ async function onSubmit() {
               {{ error }}
             </div>
             <button type="submit" class="btn-primary w-full" :disabled="isLoading">
-              {{ isLoading ? "Wird gesendet…" : "Magic Link senden" }}
+              {{ isLoading ? "Wird gesendet…" : "Anmelde-Link senden" }}
             </button>
           </form>
         </template>

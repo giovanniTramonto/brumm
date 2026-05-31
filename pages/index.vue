@@ -10,7 +10,7 @@ useHead({ title: 'Brumm – Verwaltungssoftware für Elterninitiativ-Kitas' })
       Die Verwaltungssoftware für Berliner Elterninitiativ-Kindertagesstätten.
     </p>
     <div class="mt-10 flex justify-center gap-4">
-      <NuxtLink to="/login" class="btn-primary">Anmelden</NuxtLink>
+      <NuxtLink to="/login" class="btn-primary">Jetzt anmelden</NuxtLink>
       <NuxtLink to="/register" class="btn-secondary">Kita registrieren</NuxtLink>
     </div>
   </main>

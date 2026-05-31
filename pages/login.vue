@@ -78,7 +78,7 @@ async function sendMagicLink(slug: string) {
               {{ error }}
             </div>
             <button type="submit" class="btn-primary w-full" :disabled="isLoading">
-              {{ isLoading ? 'Wird gesucht…' : 'Magic Link senden' }}
+              {{ isLoading ? 'Wird gesucht…' : 'Anmelde-Link senden' }}
             </button>
           </form>
         </template>
