@@ -4,21 +4,18 @@ useHead({ title: 'Über Brumm' })
 </script>
 
 <template>
-  <main id="main-content" class="mx-auto max-w-5xl px-6 py-24">
+  <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
     <section aria-labelledby="was-ist-brumm">
       <h1 id="was-ist-brumm" class="text-3xl font-bold text-gray-900">Was ist Brumm?</h1>
-      <p class="mt-6 text-gray-600 leading-relaxed">
-        Berliner Kita-Abläufe automatisieren – kindgerecht ausgedrückt: Bär?, Auto? – <span class="font-semibold text-gray-900">Brumm, brumm …</span>
-      </p>
-      <p class="mt-4 text-gray-500 leading-relaxed">
-        Brumm ist eine Verwaltungssoftware speziell für Elterninitiativ-Kindertagesstätten. Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen – alles an einem Ort, ohne Papierkram.
+      <p class="mt-6 text-gray-500 leading-relaxed">
+        Brumm ist eine Verwaltungssoftware speziell für Berliner Elterninitiativ-Kindertagesstätten. Berliner Kita-Abläufe automatisieren – Bär? Auto? Brumm, brumm.
       </p>
     </section>
 
     <section class="mt-8" aria-labelledby="fuer-wen">
-      <h2 id="fuer-wen" class="text-xl font-semibold text-gray-900">Für wen ist Brumm?</h2>
+      <h2 id="fuer-wen" class="text-xl font-semibold text-gray-900">Die Kita verwalten, nebenbei</h2>
       <p class="mt-4 text-gray-500 leading-relaxed">
-        Brumm ist gemacht für Elterninitiativ-Kindertagesstätten in Berlin. Die Software kennt die Berliner Besonderheiten: KitaFöG-Kostensätze, ndH-Zuschläge, Personalschlüsselberechnung nach Senatsvorgaben – alles ist bereits eingebaut.
+        Elterninitiativ-Kitas stemmen viel Verwaltung mit wenig Zeit. Brumm nimmt einen Großteil davon ab: Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen – alles an einem Ort, ohne Papierkram. Berliner Besonderheiten wie KitaFöG-Kostensätze, ndH-Zuschläge und die Personalschlüsselberechnung nach Senatsvorgaben sind bereits eingebaut.
       </p>
     </section>
 

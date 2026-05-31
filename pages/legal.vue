@@ -4,7 +4,7 @@ useHead({ title: 'Impressum – Brumm' })
 </script>
 
 <template>
-  <main id="main-content" class="mx-auto max-w-5xl px-6 py-24">
+  <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
     <h1 class="text-3xl font-bold text-gray-900">Impressum</h1>
 
     <p class="mt-6 text-gray-600">

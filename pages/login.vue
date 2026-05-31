@@ -53,14 +53,12 @@ async function sendMagicLink(slug: string) {
 </script>
 
 <template>
-  <main id="main-content" class="flex flex-grow flex-col items-center bg-gray-50 px-4 py-16">
+  <main id="main-content" class="flex flex-grow flex-col items-center bg-gray-50 px-4 py-12 tablet:py-16">
     <div class="w-full max-w-md">
-      <div class="mb-8 text-center">
-        <h1 class="text-2xl font-bold text-gray-900">Anmelden</h1>
-      </div>
-
+      <h1 class="sr-only">Anmelden</h1>
       <div class="card" aria-live="polite" aria-atomic="true">
         <template v-if="step === 'email'">
+          <h2 class="mb-6 text-xl font-semibold text-gray-900">Anmelden</h2>
           <p class="mb-4 text-sm text-gray-600">
             Gib deine E-Mail-Adresse ein. Wir senden dir einen Anmelde-Link.
           </p>

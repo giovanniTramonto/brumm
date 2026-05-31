@@ -4,7 +4,7 @@ useHead({ title: 'Anleitung – Brumm' })
 </script>
 
 <template>
-  <main id="main-content" class="mx-auto max-w-5xl px-6 py-24">
+  <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
     <h1 class="text-3xl font-bold text-gray-900">Anleitung</h1>
     <p class="mt-4 text-gray-500 leading-relaxed">
       Brumm hat vier Rollen – Admin, Vorstand, Team und Eltern. Aktuell verfügbar sind Admin, Vorstand und Eltern. Je nach Rolle sieht die App anders aus und erlaubt unterschiedliche Aktionen.
@@ -15,9 +15,9 @@ useHead({ title: 'Anleitung – Brumm' })
       <p class="mt-2 text-sm text-gray-500">Hat vollen Zugriff auf alle Bereiche.</p>
       <p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">Einmalige Einrichtung (nur Admin)</p>
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
-        <li>Kita unter <strong class="text-gray-700">/register</strong> registrieren – du erhältst einen Einrichtungs-Link per E-Mail.</li>
+        <li>Kita unter <NuxtLink to="/register" class="text-primary-600 hover:underline font-medium">/register</NuxtLink> registrieren – du erhältst einen Einrichtungs-Link per E-Mail.</li>
         <li>
-          Im Onboarding Google-Account verbinden und die ID der Geteilten Ablage eingeben.
+          Im Onboarding Datenspeicher verbinden (aktuell wird ausschließlich Google Workspace unterstützt) und die ID der Geteilten Ablage (Shared Drive) eingeben.
           <NuxtLink to="/faq#google-workspace" class="text-primary-600 hover:underline">→ Google Workspace einrichten</NuxtLink>
         </li>
         <li>Unter <strong class="text-gray-700">Vorstand</strong> Vorstandsmitglieder hinzufügen, die ebenfalls Kinder verwalten dürfen.</li>
@@ -49,7 +49,7 @@ useHead({ title: 'Anleitung – Brumm' })
 
     <section class="mt-12" aria-labelledby="role-member">
       <h2 id="role-member" class="text-xl font-semibold text-gray-900">Eltern</h2>
-      <p class="mt-2 text-sm text-gray-500">Sehen ausschließlich ihre eigenen Kinder.</p>
+      <p class="mt-2 text-sm text-gray-500">Seht ausschließlich eure eigenen Kinder.</p>
       <ol class="mt-4 space-y-3 text-gray-500 list-decimal pl-5">
         <li>Ihr erhaltet einen Einladungslink per E-Mail, sobald euer Kind in Brumm angelegt wurde.</li>
         <li>Nach dem Klick auf den Link seid ihr eingeloggt und seht das Dashboard mit euren Kindern.</li>
@@ -57,6 +57,11 @@ useHead({ title: 'Anleitung – Brumm' })
         <li>Sobald alle Unterlagen vollständig sind, klickt ihr auf <strong class="text-gray-700">Einreichen</strong> – der Vorstand wird benachrichtigt und schaltet euer Kind frei.</li>
         <li>Nach der Freischaltung sind eure Angaben schreibgeschützt. Änderungen nur über den Vorstand.</li>
       </ol>
+    </section>
+
+    <section class="mt-12" aria-labelledby="role-team">
+      <h2 id="role-team" class="text-xl font-semibold text-gray-900">Team <span class="text-sm font-normal text-gray-400">– In Kürze</span></h2>
+      <p class="mt-2 text-sm text-gray-500">Die Team-Rolle ist in Planung und wird in einer kommenden Version verfügbar sein.</p>
     </section>
   </main>
 </template>

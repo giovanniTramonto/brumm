@@ -58,7 +58,7 @@ async function onSubmit() {
 </script>
 
 <template>
-  <main id="main-content" class="flex flex-grow flex-col items-center bg-gray-50 px-4 py-16">
+  <main id="main-content" class="flex flex-grow flex-col items-center bg-gray-50 px-4 py-12 tablet:py-16">
     <div class="w-full max-w-md">
       <h1 class="sr-only">Kita registrieren</h1>
       <div class="card" aria-live="polite" aria-atomic="true">

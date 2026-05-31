@@ -4,8 +4,8 @@ useHead({ title: 'Datenschutzerklärung – Brumm' })
 </script>
 
 <template>
-  <main id="main-content" class="mx-auto max-w-5xl px-6 py-24">
-    <h1 class="text-3xl font-bold text-gray-900 text-center">Datenschutzerklärung</h1>
+  <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
+    <h1 class="text-3xl font-bold text-gray-900">Datenschutzerklärung</h1>
 
     <section class="mt-10 space-y-4 text-gray-600">
       <h2 class="text-xl font-semibold text-gray-900">§ 1 Allgemeine Informationen</h2>
