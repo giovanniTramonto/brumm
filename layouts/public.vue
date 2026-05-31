@@ -39,10 +39,10 @@ watch(
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-white">
+  <div class="flex min-h-screen flex-col bg-white pt-16">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-700 focus:ring-2 focus:ring-primary-500">Zum Inhalt springen</a>
 
-    <header class="relative border-b border-gray-100">
+    <header class="fixed top-0 left-0 right-0 z-20 border-b border-gray-100 bg-white">
       <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
         <div class="flex items-center gap-2">
           <NuxtLink to="/" class="flex items-center gap-2 text-lg font-semibold text-primary-700" aria-label="Brumm – zur Startseite">
@@ -99,6 +99,13 @@ watch(
         </button>
       </div>
     </header>
+
+    <div
+      v-if="isMenuOpen"
+      class="tablet:hidden fixed inset-0 top-16 z-[9] bg-black/20"
+      aria-hidden="true"
+      @click="isMenuOpen = false"
+    />
 
     <slot />
 
