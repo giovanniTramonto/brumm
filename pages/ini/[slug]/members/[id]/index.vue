@@ -396,6 +396,7 @@ async function onSave() {
         careType: canManageMembers.value ? form.careType || undefined : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
+        lastEditedAt: member.value?.lastEditedAt ?? null,
       },
     })
     const refreshed = await $fetch<{ member: Member; isOwnChild: boolean }>(

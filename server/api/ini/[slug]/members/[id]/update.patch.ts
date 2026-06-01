@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
     careType,
     surcharges,
     contractEnd,
+    lastEditedAt: expectedLastEditedAt,
   } = parsed.data
 
   const newEmail1 = email1.toLowerCase()
@@ -98,7 +99,7 @@ export default defineEventHandler(async (event) => {
   updates.lastEditedAt = new Date().toISOString()
   updates.lastEditedBy = await resolveEditorName(currentUser, existing, club)
 
-  await updateMemberData(memberId, updates, club)
+  await updateMemberData(memberId, updates, club, expectedLastEditedAt)
 
   // Cascade email changes to sibling members (other children of the same guardian)
   const email1Changed = existing.email1 !== newEmail1

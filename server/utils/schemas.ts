@@ -46,6 +46,7 @@ export const updateMemberSchema = z.object({
   careType: z.string().optional(),
   surcharges: z.array(z.string()).optional(),
   contractEnd: contractEndField,
+  lastEditedAt: z.string().optional().nullable(),
 })
 
 export const createGroupSchema = z.object({

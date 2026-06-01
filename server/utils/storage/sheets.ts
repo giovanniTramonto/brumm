@@ -81,48 +81,6 @@ export async function createMembersSheet(params: {
   return sheetId
 }
 
-export async function createMemberSheet(params: {
-  tokens: OAuthTokens
-  memberFolderId: string
-  memberData: MemberData
-}): Promise<string> {
-  const drive = getDriveClientFromTokens(params.tokens)
-  const sheets = getSheetsClientFromTokens(params.tokens)
-
-  const { memberData } = params
-
-  const file = await drive.files.create({
-    supportsAllDrives: true,
-    requestBody: {
-      name: memberData.storageRef,
-      mimeType: 'application/vnd.google-apps.spreadsheet',
-      parents: [params.memberFolderId],
-    },
-    fields: 'id',
-  })
-
-  const sheetId = file.data.id
-  if (!sheetId) throw new Error('Failed to create member sheet')
-
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: sheetId,
-    range: 'A1',
-    valueInputOption: 'RAW',
-    requestBody: {
-      values: [
-        ['Feld', 'Wert'],
-        ['storageRef', memberData.storageRef],
-        ['Vorname', memberData.firstName],
-        ['Nachname', memberData.lastName],
-        ['Geburtsdatum', memberData.birthDate],
-      ],
-    },
-  })
-  await protectSheet({ tokens: params.tokens, spreadsheetId: sheetId })
-
-  return sheetId
-}
-
 export async function writeMemberToSheet(params: {
   tokens: OAuthTokens
   membersSheetId: string
@@ -284,6 +242,7 @@ export async function updateMemberInSheet(params: {
   membersSheetId: string
   userId: string
   updates: Partial<MemberData>
+  expectedLastEditedAt?: string | null
 }): Promise<void> {
   const sheets = getSheetsClientFromTokens(params.tokens)
 
@@ -295,6 +254,18 @@ export async function updateMemberInSheet(params: {
   const rows = response.data.values ?? []
   const rowIndex = rows.findIndex((row, i) => i > 0 && row[0] === params.userId)
   if (rowIndex === -1) return
+
+  if (
+    params.expectedLastEditedAt !== undefined &&
+    params.expectedLastEditedAt !== null &&
+    (rows[rowIndex][18] ?? '') !== params.expectedLastEditedAt
+  ) {
+    throw createError({
+      statusCode: 409,
+      statusMessage:
+        'Dieses Kind wurde zwischenzeitlich von jemand anderem gespeichert. Bitte Seite neu laden.',
+    })
+  }
 
   const existing = rowToMemberData(rows[rowIndex] as string[])
   const merged: MemberData = { ...existing, ...params.updates }

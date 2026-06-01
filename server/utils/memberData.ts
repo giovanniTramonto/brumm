@@ -153,6 +153,7 @@ export async function updateMemberData(
   userId: string,
   updates: Partial<MemberData>,
   club: ClubForData,
+  expectedLastEditedAt?: string | null,
 ): Promise<void> {
   if (!club.isSetupDone) {
     const user = await prisma.user.findUnique({ where: { id: userId } })
@@ -168,6 +169,6 @@ export async function updateMemberData(
   const tokens = getTokens(club.oauthToken)
   const membersSheetId = getMembersSheetId(club.storageConfig)
   await withGoogleErrorHandling(() =>
-    updateMemberInSheet({ tokens, membersSheetId, userId, updates }),
+    updateMemberInSheet({ tokens, membersSheetId, userId, updates, expectedLastEditedAt }),
   )
 }
