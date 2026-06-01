@@ -1,5 +1,5 @@
 import type { MemberData, OAuthTokens } from '~/types'
-import { getDriveClientFromTokens, getSheetsClientFromTokens } from '../googleAuth'
+import { getDriveClientFromTokens, getSheetsClientFromTokens, protectSheet } from '../googleAuth'
 
 const MASTER_SHEET_HEADERS = [
   'userId',
@@ -76,6 +76,7 @@ export async function createMembersSheet(params: {
     valueInputOption: 'RAW',
     requestBody: { values: [MASTER_SHEET_HEADERS] },
   })
+  await protectSheet({ tokens: params.tokens, spreadsheetId: sheetId })
 
   return sheetId
 }
@@ -117,6 +118,7 @@ export async function createMemberSheet(params: {
       ],
     },
   })
+  await protectSheet({ tokens: params.tokens, spreadsheetId: sheetId })
 
   return sheetId
 }

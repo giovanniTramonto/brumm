@@ -1,5 +1,5 @@
 import type { GroupData, OAuthTokens } from '~/types'
-import { getDriveClientFromTokens, getSheetsClientFromTokens } from '../googleAuth'
+import { getDriveClientFromTokens, getSheetsClientFromTokens, protectSheet } from '../googleAuth'
 
 const HEADERS = ['groupId', 'name', 'email']
 
@@ -37,6 +37,7 @@ export async function createGroupsSheet(params: {
     valueInputOption: 'RAW',
     requestBody: { values: [HEADERS] },
   })
+  await protectSheet({ tokens: params.tokens, spreadsheetId: sheetId })
 
   return sheetId
 }

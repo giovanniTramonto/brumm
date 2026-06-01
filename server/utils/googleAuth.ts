@@ -21,6 +21,32 @@ export function getSheetsClientFromTokens(tokens: OAuthTokens) {
   return google.sheets({ version: 'v4', auth })
 }
 
+export async function protectSheet(params: { tokens: OAuthTokens; spreadsheetId: string }) {
+  const sheets = getSheetsClientFromTokens(params.tokens)
+  try {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: params.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            addProtectedRange: {
+              protectedRange: {
+                range: { sheetId: 0 },
+                description: 'Verwaltet von Brumm – bitte nicht manuell bearbeiten.',
+                warningOnly: true,
+              },
+            },
+          },
+        ],
+      },
+    })
+  } catch (err) {
+    const message = (err as { message?: string })?.message ?? ''
+    if (message.includes('already has sheet protection')) return
+    throw err
+  }
+}
+
 export async function withGoogleErrorHandling<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn()

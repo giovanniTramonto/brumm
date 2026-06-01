@@ -1,5 +1,5 @@
 import type { ManagerData, OAuthTokens } from '~/types'
-import { getDriveClientFromTokens, getSheetsClientFromTokens } from '../googleAuth'
+import { getDriveClientFromTokens, getSheetsClientFromTokens, protectSheet } from '../googleAuth'
 
 const HEADERS = ['managerId', 'storageId', 'name', 'email']
 
@@ -38,6 +38,7 @@ export async function createManagersSheet(params: {
     valueInputOption: 'RAW',
     requestBody: { values: [HEADERS] },
   })
+  await protectSheet({ tokens: params.tokens, spreadsheetId: sheetId })
 
   return sheetId
 }
