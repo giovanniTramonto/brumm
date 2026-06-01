@@ -1197,7 +1197,7 @@ async function onSubmit() {
           </p>
 
           <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates -->
-          <ul v-if="filteredDocuments.length > 0" class="mt-2 divide-y divide-gray-100">
+          <ul v-if="filteredDocuments.length > 0 && member.isActive" class="mt-2 divide-y divide-gray-100">
             <li
               v-for="doc in filteredDocuments"
               :key="doc.id"
