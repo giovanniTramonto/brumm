@@ -3,12 +3,7 @@ import { createGroupSchema, formatZodError } from '~/server/utils/schemas'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
-  const currentUser = event.context.user
-
-  if (currentUser.role !== 'SUPERUSER') {
-    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
-  }
-
+  // TODO: remove – temporarily open for all roles
   const parsed = createGroupSchema.safeParse(await readBody(event))
   if (!parsed.success) {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
