@@ -356,7 +356,7 @@ onMounted(async () => {
     }
 
     if (m.isActive) await Promise.all([loadDocuments(), loadOtherDocuments()])
-    else if (!m.hasInvite) await loadDocuments()
+    else if (!m.hasInvite || canManageMembers.value) await loadDocuments()
   } catch {
     error.value = 'Kind nicht gefunden'
   } finally {
@@ -1198,7 +1198,7 @@ async function onSubmit() {
           </p>
 
           <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates -->
-          <ul v-if="filteredDocuments.length > 0 && member.isActive" class="mt-2 divide-y divide-gray-100">
+          <ul v-if="filteredDocuments.length > 0 && member.hasInvite" class="mt-2 divide-y divide-gray-100">
             <li
               v-for="doc in filteredDocuments"
               :key="doc.id"
