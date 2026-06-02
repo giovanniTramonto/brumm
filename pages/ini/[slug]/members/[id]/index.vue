@@ -374,7 +374,8 @@ async function onSave() {
     form.email1.trim().toLowerCase() !== (member.value?.email1 ?? '').toLowerCase()
   const email2Changed =
     (form.email2.trim().toLowerCase() || null) !== (member.value?.email2?.toLowerCase() ?? null)
-  if (email1Changed || email2Changed) {
+  const willSendEmailNotification = member.value?.hasInvite || member.value?.isActive
+  if ((email1Changed || email2Changed) && willSendEmailNotification) {
     if (
       !confirm(
         'Die E-Mail-Adresse wurde geändert.\nDie betroffenen Adressen erhalten automatisch einen Hinweis.\n\nSpeichern und E-Mail-Hinweis versenden?',

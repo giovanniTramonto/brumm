@@ -138,14 +138,20 @@ export default defineEventHandler(async (event) => {
   const addedEmails = newEmails.filter((e) => !oldEmailSet.has(e))
   const childName = `${existing.firstName} ${existing.lastName}`
 
-  await Promise.allSettled([
-    ...removedEmails.map((to) =>
-      sendEmailRemovedNotification({ to, clubName: club.name, childName }),
-    ),
-    ...addedEmails.map((to) =>
-      sendEmailAddedNotification({ to, clubName: club.name, childName, clubSlug: club.slug }),
-    ),
-  ])
+  const anyInvite = await prisma.invite.findFirst({ where: { userId: memberId } })
+  const hasInvite = !!anyInvite
+  const sendEmailNotifications = hasInvite || user.isActive
+
+  if (sendEmailNotifications) {
+    await Promise.allSettled([
+      ...removedEmails.map((to) =>
+        sendEmailRemovedNotification({ to, clubName: club.name, childName }),
+      ),
+      ...addedEmails.map((to) =>
+        sendEmailAddedNotification({ to, clubName: club.name, childName, clubSlug: club.slug }),
+      ),
+    ])
+  }
 
   return { ok: true }
 })
