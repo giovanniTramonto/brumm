@@ -30,7 +30,7 @@ async function onDeleteGroup(group: Group) {
     <div class="mb-6 flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-900">Gruppen</h1>
       <NuxtLink
-        v-if="true /* TODO: restore SUPERUSER check */"
+        v-if="authStore.currentUser?.role === 'SUPERUSER'"
         :to="`/ini/${slug}/groups/create`"
         class="btn-primary"
       >
@@ -58,7 +58,7 @@ async function onDeleteGroup(group: Group) {
           <tr v-for="group in groupsStore.groups" :key="group.id" class="hover:bg-gray-50">
             <td class="px-4 py-3 font-medium text-gray-900">{{ group.name }}</td>
             <td class="px-4 py-3 text-right">
-              <div v-if="true /* TODO: restore SUPERUSER check */" class="flex justify-end gap-2">
+              <div v-if="authStore.currentUser?.role === 'SUPERUSER'" class="flex justify-end gap-2">
                 <NuxtLink :to="`/ini/${slug}/groups/${group.id}`" class="btn-secondary py-1 text-xs">
                   Bearbeiten
                 </NuxtLink>
