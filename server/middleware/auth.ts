@@ -1,6 +1,7 @@
 import { prisma } from '~/server/utils/prisma'
 
 const PUBLIC_ROUTES = [
+  /^\/api\/health$/,
   /^\/api\/register$/,
   /^\/api\/admin\//,
   /^\/api\/login\/lookup$/,
