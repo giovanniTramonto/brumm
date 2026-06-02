@@ -44,7 +44,6 @@ export default defineEventHandler(async (event) => {
   })
 
   if (userEmail && userEmail.user.clubId === club.id) {
-    console.log(`[magic-link] UserEmail found in Neon: ${normalizedEmail}`)
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
     const magicLink = await prisma.magicLink.create({
       data: { userId: userEmail.userId, expiresAt },
@@ -55,10 +54,8 @@ export default defineEventHandler(async (event) => {
       clubSlug: club.slug,
       token: magicLink.token,
     })
-    console.log(`[magic-link] Email sent to: ${normalizedEmail}`)
     return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
   }
-  console.log(`[magic-link] Not found in Neon UserEmail: ${normalizedEmail}`)
 
   // Second: search in Sheets (setup done) or localData (setup not done)
   let userId: string | null = null
