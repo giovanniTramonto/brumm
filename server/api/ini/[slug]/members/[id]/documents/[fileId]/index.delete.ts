@@ -1,4 +1,3 @@
-import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { deleteDriveFile } from '~/server/utils/storage/googleDrive'
 import type { OAuthTokens } from '~/types'

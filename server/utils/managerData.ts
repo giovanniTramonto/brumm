@@ -67,8 +67,9 @@ export async function getManagerData(
   }
 
   const config = await ensureManagersStorage(club)
+  if (!config.managersSheetId) return null
   const tokens = getTokens(club.oauthToken)
-  return getManagerFromSheet({ tokens, managersSheetId: config.managersSheetId!, managerId })
+  return getManagerFromSheet({ tokens, managersSheetId: config.managersSheetId, managerId })
 }
 
 export async function getAllManagerData(club: ClubForData): Promise<ManagerData[]> {
