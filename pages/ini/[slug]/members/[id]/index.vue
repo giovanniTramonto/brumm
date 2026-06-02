@@ -84,6 +84,7 @@ const localAllSubmitted = computed(() =>
   memberDocTemplates.value.every((t) => {
     if (t.documentType === 'read') return !!readMap[t.id]
     if (t.documentType === 'upload' && t.hasFile) return !!t.submission
+    if (t.documentType === 'submit') return !!t.submission
     return true
   }),
 )
@@ -107,7 +108,7 @@ const filteredDocuments = computed(() => {
 
 function isDone(t: TemplateEntry): boolean {
   if (t.documentType === 'read') return !!readMap[t.id]
-  if (t.documentType === 'upload') return !!t.submission
+  if (t.documentType === 'upload' || t.documentType === 'submit') return !!t.submission
   return true
 }
 
@@ -984,7 +985,7 @@ async function onSubmit() {
                   >
                 </template>
 
-                <template v-else-if="t.documentType === 'upload'">
+                <template v-else-if="t.documentType === 'upload' || t.documentType === 'submit'">
                   <span
                     v-if="t.submission?.filename"
                     class="max-w-[160px] truncate text-xs text-gray-500"
@@ -1016,7 +1017,7 @@ async function onSubmit() {
                     >{{ uploadErrors[t.id] }}</span
                   >
                   <a
-                    v-if="t.hasFile"
+                    v-if="t.documentType === 'upload' && t.hasFile"
                     :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
                     class="btn-secondary py-1 text-xs"
                     target="_blank"
@@ -1181,7 +1182,7 @@ async function onSubmit() {
                     >
                   </template>
 
-                  <template v-if="t.documentType === 'upload'">
+                  <template v-if="t.documentType === 'upload' || t.documentType === 'submit'">
                     <span
                       v-if="t.submission?.filename"
                       class="max-w-[160px] truncate text-xs text-gray-500"

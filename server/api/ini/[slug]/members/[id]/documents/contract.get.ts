@@ -57,6 +57,8 @@ export default defineEventHandler(async (event) => {
     submission: submissionMap.get(t.id) ?? null,
   }))
 
-  const uploadRequired = result.filter((t) => t.documentType === 'upload' && t.hasFile)
+  const uploadRequired = result.filter(
+    (t) => (t.documentType === 'upload' && t.hasFile) || t.documentType === 'submit',
+  )
   return { templates: result, allSubmitted: uploadRequired.every((t) => t.submission !== null) }
 })

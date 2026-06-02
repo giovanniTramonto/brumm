@@ -222,10 +222,14 @@ async function onDelete(template: Template) {
             </div>
 
             <div class="flex items-center gap-2">
-              <span v-if="template.driveFileName" class="whitespace-nowrap text-xs text-gray-500">
-                {{ template.driveFileName }}
-              </span>
-              <span v-else class="text-xs text-gray-400">Keine Vorlage</span>
+              <button
+                v-if="editingId !== template.id"
+                class="btn-secondary py-1 text-xs"
+                :aria-label="`'${template.name}' umbenennen`"
+                @click="startEdit(template)"
+              >
+                Umbenennen
+              </button>
 
               <select
                 :id="`doc-type-${template.id}`"
@@ -237,31 +241,30 @@ async function onDelete(template: Template) {
                 <option value="" disabled>Art wählen …</option>
                 <option value="read">Nur lesen</option>
                 <option value="upload">Ausfüllen</option>
+                <option value="submit">Einreichen</option>
               </select>
 
-              <label
-                class="btn-secondary cursor-pointer py-1 text-xs"
-                :class="{ 'opacity-50': uploadingId === template.id }"
-                :aria-label="`${template.driveFileId ? 'Ersetzen' : 'Hochladen'}: ${template.name}`"
-              >
-                {{ uploadingId === template.id ? '…' : template.driveFileId ? 'Ersetzen' : 'Hochladen' }}
-                <input
-                  type="file"
-                  accept=".pdf,.docx"
-                  class="hidden"
-                  :disabled="uploadingId === template.id"
-                  @change="onUploadFile(template, $event)"
-                />
-              </label>
+              <template v-if="template.documentType !== 'submit'">
+                <span v-if="template.driveFileName" class="whitespace-nowrap text-xs text-gray-500">
+                  {{ template.driveFileName }}
+                </span>
+                <span v-else class="whitespace-nowrap text-xs text-gray-400">Keine Vorlage</span>
 
-              <button
-                v-if="editingId !== template.id"
-                class="btn-secondary py-1 text-xs"
-                :aria-label="`'${template.name}' umbenennen`"
-                @click="startEdit(template)"
-              >
-                Umbenennen
-              </button>
+                <label
+                  class="btn-secondary cursor-pointer py-1 text-xs"
+                  :class="{ 'opacity-50': uploadingId === template.id }"
+                  :aria-label="`${template.driveFileId ? 'Ersetzen' : 'Hochladen'}: ${template.name}`"
+                >
+                  {{ uploadingId === template.id ? '…' : template.driveFileId ? 'Ersetzen' : 'Hochladen' }}
+                  <input
+                    type="file"
+                    accept=".pdf,.docx"
+                    class="hidden"
+                    :disabled="uploadingId === template.id"
+                    @change="onUploadFile(template, $event)"
+                  />
+                </label>
+              </template>
 
               <button
                 class="btn-danger py-1 text-xs"
@@ -287,7 +290,17 @@ async function onDelete(template: Template) {
               aria-label="Name der neuen Vorlage"
               @keyup.enter="onCreate"
             />
-            <label class="btn-secondary cursor-pointer text-sm" aria-label="Datei auswählen (PDF oder DOCX)">
+            <select v-model="newDocumentType" class="input w-36 shrink-0 text-sm" aria-label="Art der neuen Vorlage">
+              <option value="" disabled>Art wählen …</option>
+              <option value="read">Nur lesen</option>
+              <option value="upload">Ausfüllen</option>
+              <option value="submit">Einreichen</option>
+            </select>
+            <label
+              v-if="newDocumentType !== 'submit'"
+              class="btn-secondary cursor-pointer text-sm"
+              aria-label="Datei auswählen (PDF oder DOCX)"
+            >
               {{ newFile ? newFile.name : 'PDF / DOCX' }}
               <input
                 id="new-file-input"
@@ -297,12 +310,11 @@ async function onDelete(template: Template) {
                 @change="onNewFileSelected"
               />
             </label>
-            <select v-model="newDocumentType" class="input w-36 shrink-0 text-sm" aria-label="Art der neuen Vorlage">
-              <option value="" disabled>Art wählen …</option>
-              <option value="read">Nur lesen</option>
-              <option value="upload">Ausfüllen</option>
-            </select>
-            <button class="btn-primary text-sm" :disabled="!newName.trim() || !newDocumentType || !newFile || isCreating" @click="onCreate">
+            <button
+              class="btn-primary text-sm"
+              :disabled="!newName.trim() || !newDocumentType || (newDocumentType !== 'submit' && !newFile) || isCreating"
+              @click="onCreate"
+            >
               {{ isCreating ? 'Wird angelegt…' : 'Anlegen' }}
             </button>
           </div>

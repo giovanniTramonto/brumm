@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const name = namePart?.data?.toString('utf-8')?.trim()
   const documentType = typePart?.data?.toString('utf-8')?.trim()
   if (!name) throw createError({ statusCode: 400, statusMessage: 'Name fehlt' })
-  if (documentType !== 'read' && documentType !== 'upload') {
+  if (documentType !== 'read' && documentType !== 'upload' && documentType !== 'submit') {
     throw createError({ statusCode: 400, statusMessage: 'Typ fehlt' })
   }
 

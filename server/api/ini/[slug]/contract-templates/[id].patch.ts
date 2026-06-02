@@ -27,7 +27,11 @@ export default defineEventHandler(async (event) => {
     data.name = body.name.trim()
   }
   if (body.documentType !== undefined) {
-    if (body.documentType !== 'read' && body.documentType !== 'upload') {
+    if (
+      body.documentType !== 'read' &&
+      body.documentType !== 'upload' &&
+      body.documentType !== 'submit'
+    ) {
       throw createError({ statusCode: 400, statusMessage: 'Ungültiger Typ' })
     }
     data.documentType = body.documentType
