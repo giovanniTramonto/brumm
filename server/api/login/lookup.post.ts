@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
     where: { email },
     include: { user: { include: { club: true } } },
   })
+  console.log(`[lookup] email=${email} userEmails=${userEmails.length}`)
   for (const ue of userEmails) {
     const { slug, name } = ue.user.club
     found.set(slug, { slug, name })
@@ -65,5 +66,6 @@ export default defineEventHandler(async (event) => {
       }),
   )
 
+  console.log(`[lookup] result clubs=${[...found.keys()].join(',')}`)
   return { clubs: [...found.values()] }
 })
