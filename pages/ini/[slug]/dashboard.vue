@@ -63,6 +63,9 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
         </div>
       </template>
       <p v-else class="text-sm text-gray-500">Kein Kind angemeldet.</p>
+      <NuxtLink :to="`/ini/${slug}/members`" class="mt-4 inline-block text-sm font-medium text-primary-700 hover:text-primary-900">
+        Kinder & Unterlagen →
+      </NuxtLink>
     </div>
 
     <div v-if="pendingCount > 0 && authStore.currentUser?.role === 'SUPERUSER'" class="mt-6">

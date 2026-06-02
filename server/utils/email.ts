@@ -130,7 +130,7 @@ export async function sendActivationEmail(params: {
     to: params.to,
     subject: `${params.childName} wurde freigeschaltet – ${params.clubName}`,
     html: `
-      <h2>Freischaltung bestätigt</h2>
+      <h2>Anmeldung fertig!</h2>
       <p><strong>${params.childName}</strong> wurde erfolgreich bei <strong>${params.clubName}</strong> freigeschaltet.</p>
       <p>Wir freuen uns auf eine schöne gemeinsame Zeit!</p>
       <p>Alle Infos zum Kind und der Kita findest du unter: <a href="${params.profileUrl}">${params.profileUrl}</a></p>
