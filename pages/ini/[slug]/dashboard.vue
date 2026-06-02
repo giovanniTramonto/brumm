@@ -40,14 +40,7 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       </div>
     </div>
 
-    <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="card mt-6">
-      <h2 class="mb-3 text-sm font-medium text-gray-900">Aktuell</h2>
-      <NuxtLink :to="`/ini/${slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
-        Adressliste →
-      </NuxtLink>
-    </div>
-
-    <div v-else class="card mt-4">
+    <div v-if="authStore.currentUser?.role === 'MEMBER'" class="card mt-6">
       <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
       <p v-if="membersStore.isLoading" class="text-sm text-gray-500">Daten werden geladen…</p>
       <template v-else-if="membersStore.members.length > 0">
@@ -63,7 +56,7 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
             <p class="mt-1">
               Die Betreuung kann erst beginnen, wenn alle Vertragsunterlagen eingereicht wurden.
               <NuxtLink :to="`/ini/${slug}/members/${child.id}`" class="font-medium underline hover:no-underline">
-                Hier können Sie die Unterlagen hochladen.
+                Hier kannst du die Unterlagen hochladen.
               </NuxtLink>
             </p>
           </div>
@@ -82,6 +75,13 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
           Zur Kinderliste →
         </NuxtLink>
       </div>
+    </div>
+
+    <div class="card mt-6">
+      <h2 class="mb-3 text-sm font-medium text-gray-900">Aktuell</h2>
+      <NuxtLink :to="`/ini/${slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
+        Adressliste →
+      </NuxtLink>
     </div>
   </div>
 </template>

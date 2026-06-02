@@ -1,17 +1,31 @@
 <script setup lang="ts">
-import { useMembersStore } from '~/stores/members'
-
 definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string
-const membersStore = useMembersStore()
+
+type Address = {
+  firstName: string
+  lastName: string
+  guardian1Name: string | null
+  guardian2Name: string | null
+  email1: string
+  email2: string | null
+  phone1: string | null
+  phone2: string | null
+}
+
+const addresses = ref<Address[]>([])
+const isLoading = ref(true)
 
 onMounted(async () => {
-  await membersStore.fetchMembers(slug)
+  try {
+    const data = await $fetch<{ addresses: Address[] }>(`/api/ini/${slug}/addresses`)
+    addresses.value = data.addresses
+  } finally {
+    isLoading.value = false
+  }
 })
-
-const activeMembers = computed(() => membersStore.members.filter((m) => m.isActive))
 </script>
 
 <template>
@@ -21,7 +35,7 @@ const activeMembers = computed(() => membersStore.members.filter((m) => m.isActi
       <h1 class="text-2xl font-bold text-gray-900">Adressliste</h1>
     </div>
 
-    <div v-if="membersStore.isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
+    <div v-if="isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
       Brumm, brumm …
     </div>
 
@@ -34,7 +48,7 @@ const activeMembers = computed(() => membersStore.members.filter((m) => m.isActi
           </tr>
         </thead>
         <tbody>
-          <template v-for="m in activeMembers" :key="m.id">
+          <template v-for="m in addresses" :key="`${m.firstName}-${m.lastName}`">
             <tr class="border-t border-gray-100">
               <td :rowspan="m.guardian2Name || m.email2 ? 2 : 1" class="py-4 pr-8 w-1/5 font-medium text-gray-900 whitespace-nowrap align-middle">
                 {{ m.firstName }} {{ m.lastName }}
@@ -59,7 +73,7 @@ const activeMembers = computed(() => membersStore.members.filter((m) => m.isActi
           </template>
         </tbody>
       </table>
-      <p v-if="activeMembers.length === 0" class="mt-4 text-sm text-gray-500">
+      <p v-if="addresses.length === 0" class="mt-4 text-sm text-gray-500">
         Keine aktiven Kinder vorhanden.
       </p>
     </div>
