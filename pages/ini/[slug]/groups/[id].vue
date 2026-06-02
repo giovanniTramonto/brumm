@@ -31,7 +31,8 @@ async function onSubmit() {
     await groupsStore.updateGroup(slug, groupId, { name: form.name.trim() || undefined })
     await navigateTo(`/ini/${slug}/groups`)
   } catch (err) {
-    error.value = (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
+    error.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
   } finally {
     isSubmitting.value = false
   }

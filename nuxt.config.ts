@@ -33,15 +33,27 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin. Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen.' },
+        {
+          name: 'description',
+          content:
+            'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin. Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen.',
+        },
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: 'Brumm' },
         { property: 'og:url', content: 'https://brumm.berlin' },
         { property: 'og:title', content: 'Brumm – Verwaltungssoftware für Elterninitiativ-Kitas' },
-        { property: 'og:description', content: 'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin. Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen.' },
+        {
+          property: 'og:description',
+          content:
+            'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin. Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen.',
+        },
         { name: 'twitter:card', content: 'summary' },
         { name: 'twitter:title', content: 'Brumm – Verwaltungssoftware für Elterninitiativ-Kitas' },
-        { name: 'twitter:description', content: 'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin.' },
+        {
+          name: 'twitter:description',
+          content:
+            'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin.',
+        },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },

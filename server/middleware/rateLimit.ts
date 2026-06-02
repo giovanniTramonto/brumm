@@ -1,7 +1,4 @@
-const RATE_LIMITED_PATHS = [
-  '/api/login/lookup',
-  '/api/register',
-]
+const RATE_LIMITED_PATHS = ['/api/clubs', '/api/register']
 const MAGIC_LINK_PATTERN = /^\/api\/ini\/[^/]+\/auth\/magic-link$/
 
 const WINDOW_MS = 60_000
@@ -32,6 +29,9 @@ export default defineEventHandler((event) => {
   entry.count++
 
   if (entry.count > MAX_REQUESTS) {
-    throw createError({ statusCode: 429, statusMessage: 'Zu viele Anfragen. Bitte warte kurz und versuche es erneut.' })
+    throw createError({
+      statusCode: 429,
+      statusMessage: 'Zu viele Anfragen. Bitte warte kurz und versuche es erneut.',
+    })
   }
 })

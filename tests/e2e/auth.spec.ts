@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { PrismaClient } from '@prisma/client'
 
-const TEST_DB_URL = process.env.DATABASE_URL ?? (() => { throw new Error('DATABASE_URL fehlt') })()
+const TEST_DB_URL =
+  process.env.DATABASE_URL ??
+  (() => {
+    throw new Error('DATABASE_URL fehlt')
+  })()
 const SLUG = 'test-kita'
 const SUPERUSER_EMAIL = 'admin@test.de'
 
@@ -12,7 +16,7 @@ test.afterAll(async () => {
 })
 
 test('SUPERUSER Login via Magic Link', async ({ page }) => {
-  await page.goto(`/ini/${SLUG}/login`)
+  await page.goto(`/login/${SLUG}`)
   await page.fill('input[type="email"]', SUPERUSER_EMAIL)
   await page.click('button[type="submit"]')
 

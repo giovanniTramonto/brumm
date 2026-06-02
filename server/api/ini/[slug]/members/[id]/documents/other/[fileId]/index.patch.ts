@@ -55,7 +55,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Keine Datei hochgeladen' })
   }
   if (filePart.data.length > MAX_UPLOAD_SIZE_BYTES) {
-    throw createError({ statusCode: 413, statusMessage: `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})` })
+    throw createError({
+      statusCode: 413,
+      statusMessage: `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`,
+    })
   }
 
   const tokens = club.oauthToken as OAuthTokens

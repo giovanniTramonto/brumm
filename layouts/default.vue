@@ -8,9 +8,7 @@ const slug = computed(() => route.params.slug as string | undefined)
 const navItems = computed(() => {
   if (!slug.value || !authStore.currentUser) return []
   const base = `/ini/${slug.value}`
-  const items: { label: string; to: string; disabled?: boolean }[] = [
-    { label: 'Dashboard', to: `${base}/dashboard` },
-  ]
+  const items: { label: string; to: string; disabled?: boolean }[] = []
   items.push({ label: 'Kinder', to: `${base}/members` })
   if (authStore.currentUser.role !== 'MEMBER') {
     items.push({ label: 'Gruppen', to: `${base}/groups` })
@@ -30,7 +28,7 @@ const navItems = computed(() => {
 async function onLogout() {
   if (!slug.value) return
   await authStore.logout(slug.value)
-  await navigateTo(`/ini/${slug.value}/login`)
+  await navigateTo(`/login/${slug.value}`)
 }
 </script>
 
@@ -40,9 +38,9 @@ async function onLogout() {
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
           <div class="flex items-center gap-8">
-            <span class="text-lg font-semibold text-primary-700" aria-hidden="true">
+            <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-lg font-semibold text-primary-700">
               {{ authStore.currentClub?.name ?? "Brumm" }}
-            </span>
+            </NuxtLink>
             <ul class="hidden list-none gap-1 sm:flex" role="list">
               <li v-for="item in navItems" :key="item.to">
                 <span

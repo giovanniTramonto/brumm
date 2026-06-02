@@ -68,8 +68,8 @@ watch(
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
-            :aria-current="route.path === link.to ? 'page' : undefined"
-            :class="route.path === link.to ? 'text-gray-900 font-medium' : 'text-gray-600 hover:text-gray-900'"
+            :aria-current="route.path.startsWith(link.to) ? 'page' : undefined"
+            :class="route.path.startsWith(link.to) ? 'text-gray-900 font-medium' : 'text-gray-600 hover:text-gray-900'"
           >{{ link.label }}</NuxtLink>
           <NuxtLink
             to="/register"

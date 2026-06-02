@@ -19,7 +19,16 @@ export default defineEventHandler(async (event) => {
   const [user, pendingInvite, anyInvite, currentUserEmails] = await Promise.all([
     prisma.user.findFirst({
       where: { id: memberId, clubId: club.id },
-      select: { id: true, clubId: true, role: true, isActive: true, storageId: true, isMemberManager: true, createdAt: true, hasSubmittedDocuments: true },
+      select: {
+        id: true,
+        clubId: true,
+        role: true,
+        isActive: true,
+        storageId: true,
+        isMemberManager: true,
+        createdAt: true,
+        hasSubmittedDocuments: true,
+      },
     }),
     prisma.invite.findFirst({ where: { userId: memberId, isUsed: false } }),
     prisma.invite.findFirst({ where: { userId: memberId } }),

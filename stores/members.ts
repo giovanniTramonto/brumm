@@ -24,11 +24,7 @@ export const useMembersStore = defineStore('members', () => {
       const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
       const sm = d?.statusMessage
       const m = d?.message
-      error.value = sm
-        ? m && m !== sm
-          ? `${sm} (${m})`
-          : sm
-        : 'Fehler beim Laden'
+      error.value = sm ? (m && m !== sm ? `${sm} (${m})` : sm) : 'Fehler beim Laden'
     } finally {
       isLoading.value = false
     }

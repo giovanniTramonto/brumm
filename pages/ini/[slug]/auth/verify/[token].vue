@@ -42,7 +42,7 @@ onMounted(async () => {
       </div>
       <div v-else-if="error" class="max-w-sm space-y-4">
         <p class="text-lg font-medium text-red-700">{{ error }}</p>
-        <NuxtLink :to="`/ini/${slug}/login`" class="btn-primary inline-block">
+        <NuxtLink :to="`/login/${slug}`" class="btn-primary inline-block">
           Erneut anmelden
         </NuxtLink>
       </div>

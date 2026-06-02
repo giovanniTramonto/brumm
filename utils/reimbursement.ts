@@ -1,11 +1,6 @@
 import type { Member } from '~/types'
 
-export type CareTypeKey =
-  | 'full_extended'
-  | 'full'
-  | 'part'
-  | 'half_with_meal'
-  | 'half_without_meal'
+export type CareTypeKey = 'full_extended' | 'full' | 'part' | 'half_with_meal' | 'half_without_meal'
 
 export const CARE_TYPE_OPTIONS: { key: CareTypeKey; label: string }[] = [
   { key: 'full_extended', label: 'Ganztags erweitert' },
@@ -148,7 +143,9 @@ export interface StaffingResult {
 }
 
 export function calculateStaffing(members: Member[], year: number, month: number): StaffingResult {
-  const activeMembers = members.filter((m) => m.isActive && isContractActive(m.contractEnd, year, month))
+  const activeMembers = members.filter(
+    (m) => m.isActive && isContractActive(m.contractEnd, year, month),
+  )
   const periodIndex = month <= 7 ? 0 : 1
 
   let positions = 0
@@ -183,7 +180,10 @@ export interface AnnualReimbursementResult {
   year: number
 }
 
-export function calculateAnnualReimbursement(members: Member[], year: number): AnnualReimbursementResult {
+export function calculateAnnualReimbursement(
+  members: Member[],
+  year: number,
+): AnnualReimbursementResult {
   const months = Array.from({ length: 12 }, (_, i) => calculateReimbursement(members, year, i + 1))
   return { total: months.reduce((sum, m) => sum + m.total, 0), months, year }
 }
@@ -222,7 +222,9 @@ export function calculateReimbursement(
   year: number,
   month: number,
 ): ReimbursementResult {
-  const activeMembers = members.filter((m) => m.isActive && isContractActive(m.contractEnd, year, month))
+  const activeMembers = members.filter(
+    (m) => m.isActive && isContractActive(m.contractEnd, year, month),
+  )
   const periodIndex = getTimePeriodIndex(month)
 
   let baseTotal = 0

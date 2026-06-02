@@ -23,7 +23,9 @@ async function send(...args: Parameters<Resend['emails']['send']>): Promise<void
   const [params] = args
   const recipients = filterRecipients(params.to as string | string[])
   if (!recipients) {
-    console.log(`[DEV] E-Mail nicht gesendet (kein Empfänger in Whitelist): ${JSON.stringify(params.to)}`)
+    console.log(
+      `[DEV] E-Mail nicht gesendet (kein Empfänger in Whitelist): ${JSON.stringify(params.to)}`,
+    )
     return
   }
   const resend = getResend()
@@ -173,7 +175,7 @@ export async function sendManagerAddedEmail(params: {
   clubName: string
   clubSlug: string
 }): Promise<void> {
-  const loginLink = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/login`
+  const loginLink = `${process.env.APP_URL ?? ''}/login/${params.clubSlug}`
   await send({
     from: FROM_ADDRESS,
     to: params.to,
@@ -243,7 +245,7 @@ export async function sendEmailAddedNotification(params: {
   childName: string
   clubSlug: string
 }): Promise<void> {
-  const loginLink = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/login`
+  const loginLink = `${process.env.APP_URL ?? ''}/login/${params.clubSlug}`
   await send({
     from: FROM_ADDRESS,
     to: params.to,
