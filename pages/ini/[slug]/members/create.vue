@@ -3,6 +3,8 @@ import { useAuthStore } from '~/stores/auth'
 import type { Group } from '~/types'
 import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
+const SURCHARGE_OPTIONS = [{ key: 'ndhs', label: 'NdHS' }]
+
 definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
@@ -52,6 +54,7 @@ const form = reactive({
   groupId: '',
   careType: '',
   contractEnd: '',
+  surcharges: [] as string[],
   sendInvite: true,
 })
 
@@ -80,6 +83,7 @@ async function onSubmit() {
       groupId: form.groupId || undefined,
       careType: form.careType || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
+      surcharges: form.surcharges.length > 0 ? form.surcharges : undefined,
       sendInvite: form.sendInvite,
     }
     const res = await $fetch<{ user: { id: string }; emailError: string | null }>(
@@ -162,6 +166,25 @@ async function onSubmit() {
             {{ opt.label }}
           </option>
         </select>
+      </div>
+
+      <div>
+        <label class="label">Zuschläge</label>
+        <div class="mt-1 flex flex-wrap gap-4">
+          <label
+            v-for="opt in SURCHARGE_OPTIONS"
+            :key="opt.key"
+            class="flex items-center gap-2 text-sm text-gray-700"
+          >
+            <input
+              v-model="form.surcharges"
+              type="checkbox"
+              :value="opt.key"
+              class="h-4 w-4 rounded border-gray-300"
+            />
+            {{ opt.label }}
+          </label>
+        </div>
       </div>
 
       <div>
