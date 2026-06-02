@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { joinWithAnd } from '~/utils/string'
 
 function getResend(): Resend {
   const key = process.env.RESEND_API_KEY
@@ -227,14 +228,15 @@ export async function sendMemberRemovedEmail(params: {
 export async function sendEmailRemovedNotification(params: {
   to: string
   clubName: string
-  childName: string
+  childNames: string[]
 }): Promise<void> {
+  const nameList = joinWithAnd(params.childNames.map((n) => `<strong>${n}</strong>`))
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `Ihre E-Mail-Adresse wurde geändert – ${params.clubName}`,
+    subject: `E-Mail-Adresse geändert – ${params.clubName}`,
     html: `
-      <p>Diese E-Mail-Adresse ist ab sofort nicht mehr als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> hinterlegt.</p>
+      <p>Diese E-Mail-Adresse ist ab sofort nicht mehr als Kontaktadresse für ${nameList} beim <strong>${params.clubName}</strong> hinterlegt.</p>
       <p>Falls diese Änderung nicht von dir veranlasst wurde oder du Fragen hast, wende dich bitte direkt an den Vereinsadmin.</p>
     `,
   })
@@ -243,17 +245,18 @@ export async function sendEmailRemovedNotification(params: {
 export async function sendEmailAddedNotification(params: {
   to: string
   clubName: string
-  childName: string
+  childNames: string[]
   clubSlug: string
 }): Promise<void> {
   const loginLink = `${process.env.APP_URL ?? ''}/login/${params.clubSlug}`
+  const nameList = joinWithAnd(params.childNames.map((n) => `<strong>${n}</strong>`))
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `Ihre E-Mail-Adresse wurde eingetragen – ${params.clubName}`,
+    subject: `E-Mail-Adresse eingetragen – ${params.clubName}`,
     html: `
-      <p>Diese E-Mail-Adresse wurde als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> eingetragen.</p>
-      <p>Du kannst dich ab sofort mit dieser Adresse im Elternportal anmelden:</p>
+      <p>Diese E-Mail-Adresse wurde als Kontaktadresse für ${nameList} beim <strong>${params.clubName}</strong> eingetragen.</p>
+      <p>Du kannst dich ab sofort mit dieser Adresse anmelden:</p>
       <p><a href="${loginLink}">${loginLink}</a></p>
       <p>Falls diese Änderung nicht von dir veranlasst wurde oder du Fragen hast, wende dich bitte direkt an den Vereinsadmin.</p>
     `,

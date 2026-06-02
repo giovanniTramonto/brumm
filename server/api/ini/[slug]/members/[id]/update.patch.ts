@@ -104,6 +104,7 @@ export default defineEventHandler(async (event) => {
   // Cascade email changes to sibling members (other children of the same guardian)
   const email1Changed = existing.email1 !== newEmail1
   const email2Changed = (existing.email2 ?? null) !== (newEmail2 ?? null)
+  const affectedSiblingNames: string[] = []
   if (email1Changed || email2Changed) {
     const siblingUsers = await prisma.user.findMany({
       where: { clubId: club.id, role: 'MEMBER', id: { not: memberId } },
@@ -113,21 +114,20 @@ export default defineEventHandler(async (event) => {
         siblingUsers.map((u) => u.id),
         club,
       )
+      const affectedSiblings = siblingDataList.filter(
+        (md) =>
+          (email1Changed && md.email1 === existing.email1) ||
+          (email2Changed && existing.email2 && md.email2 === existing.email2),
+      )
+      for (const s of affectedSiblings) affectedSiblingNames.push(`${s.firstName} ${s.lastName}`)
       await Promise.allSettled(
-        siblingDataList
-          .filter(
-            (md) =>
-              (email1Changed && md.email1 === existing.email1) ||
-              (email2Changed && existing.email2 && md.email2 === existing.email2),
-          )
-          .map((sibling) => {
-            const siblingUpdates: Record<string, string | null> = {}
-            if (email1Changed && sibling.email1 === existing.email1)
-              siblingUpdates.email1 = newEmail1
-            if (email2Changed && existing.email2 && sibling.email2 === existing.email2)
-              siblingUpdates.email2 = newEmail2
-            return updateMemberData(sibling.userId, siblingUpdates, club)
-          }),
+        affectedSiblings.map((sibling) => {
+          const siblingUpdates: Record<string, string | null> = {}
+          if (email1Changed && sibling.email1 === existing.email1) siblingUpdates.email1 = newEmail1
+          if (email2Changed && existing.email2 && sibling.email2 === existing.email2)
+            siblingUpdates.email2 = newEmail2
+          return updateMemberData(sibling.userId, siblingUpdates, club)
+        }),
       )
     }
   }
@@ -136,7 +136,7 @@ export default defineEventHandler(async (event) => {
   const newEmails = [newEmail1, ...(newEmail2 ? [newEmail2] : [])]
   const removedEmails = [...oldEmailSet].filter((e) => !newEmails.includes(e))
   const addedEmails = newEmails.filter((e) => !oldEmailSet.has(e))
-  const childName = `${existing.firstName} ${existing.lastName}`
+  const childNames = [`${existing.firstName} ${existing.lastName}`, ...affectedSiblingNames]
 
   const anyInvite = await prisma.invite.findFirst({ where: { userId: memberId } })
   const hasInvite = !!anyInvite
@@ -145,10 +145,10 @@ export default defineEventHandler(async (event) => {
   if (sendEmailNotifications) {
     await Promise.allSettled([
       ...removedEmails.map((to) =>
-        sendEmailRemovedNotification({ to, clubName: club.name, childName }),
+        sendEmailRemovedNotification({ to, clubName: club.name, childNames }),
       ),
       ...addedEmails.map((to) =>
-        sendEmailAddedNotification({ to, clubName: club.name, childName, clubSlug: club.slug }),
+        sendEmailAddedNotification({ to, clubName: club.name, childNames, clubSlug: club.slug }),
       ),
     ])
   }
