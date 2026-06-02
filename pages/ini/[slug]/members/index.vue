@@ -40,7 +40,7 @@ const filteredMembers = computed(() => {
       <h1 class="text-2xl font-bold text-gray-900">Kinder</h1>
       <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="flex gap-3">
         <NuxtLink
-          v-if="authStore.currentUser?.role === 'SUPERUSER'"
+          v-if="canManageMembers"
           :to="`/ini/${slug}/contract-templates`"
           class="btn-secondary"
         >
