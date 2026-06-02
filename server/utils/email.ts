@@ -90,9 +90,9 @@ export async function sendInviteEmail(params: {
     subject: `Einladung: ${params.childName} bei ${params.clubName}`,
     html: `
       <h2>Willkommen bei ${params.clubName}!</h2>
-      <p>Ihr Kind <strong>${params.childName}</strong> wurde angemeldet.</p>
-      <p>Bitte beachten Sie: Die Betreuung kann erst beginnen, wenn alle erforderlichen Vertragsunterlagen vollständig eingereicht wurden.</p>
-      <p>Bitte klicken Sie auf den folgenden Link, um Ihr Profil einzurichten und die Unterlagen hochzuladen. Der Link ist 7 Tage gültig.</p>
+      <p>Dein Kind <strong>${params.childName}</strong> wurde angemeldet.</p>
+      <p>Bitte beachte: Die Betreuung kann erst beginnen, wenn alle erforderlichen Vertragsunterlagen vollständig eingereicht wurden.</p>
+      <p>Klicke auf den folgenden Link, um dein Profil einzurichten und die Unterlagen hochzuladen. Der Link ist 7 Tage gültig.</p>
       <p><a href="${link}">Profil einrichten</a></p>
     `,
   })
@@ -122,6 +122,7 @@ export async function sendActivationEmail(params: {
   to: string[]
   clubName: string
   childName: string
+  profileUrl: string
 }): Promise<void> {
   await send({
     from: FROM_ADDRESS,
@@ -131,6 +132,7 @@ export async function sendActivationEmail(params: {
       <h2>Freischaltung bestätigt</h2>
       <p><strong>${params.childName}</strong> wurde erfolgreich bei <strong>${params.clubName}</strong> freigeschaltet.</p>
       <p>Wir freuen uns auf eine schöne gemeinsame Zeit!</p>
+      <p>Alle Infos zum Kind und der Kita findest du unter: <a href="${params.profileUrl}">${params.profileUrl}</a></p>
     `,
   })
 }
@@ -232,9 +234,8 @@ export async function sendEmailRemovedNotification(params: {
     to: params.to,
     subject: `Ihre E-Mail-Adresse wurde geändert – ${params.clubName}`,
     html: `
-      <p>Guten Tag,</p>
-      <p>diese E-Mail-Adresse ist ab sofort nicht mehr als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> hinterlegt.</p>
-      <p>Falls diese Änderung nicht von Ihnen veranlasst wurde oder Sie Fragen haben, wenden Sie sich bitte direkt an den Vereinsadmin.</p>
+      <p>Diese E-Mail-Adresse ist ab sofort nicht mehr als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> hinterlegt.</p>
+      <p>Falls diese Änderung nicht von dir veranlasst wurde oder du Fragen hast, wende dich bitte direkt an den Vereinsadmin.</p>
     `,
   })
 }
@@ -251,11 +252,10 @@ export async function sendEmailAddedNotification(params: {
     to: params.to,
     subject: `Ihre E-Mail-Adresse wurde eingetragen – ${params.clubName}`,
     html: `
-      <p>Guten Tag,</p>
-      <p>diese E-Mail-Adresse wurde als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> eingetragen.</p>
-      <p>Sie können sich ab sofort mit dieser Adresse im Elternportal anmelden:</p>
+      <p>Diese E-Mail-Adresse wurde als Kontaktadresse für <strong>${params.childName}</strong> beim <strong>${params.clubName}</strong> eingetragen.</p>
+      <p>Du kannst dich ab sofort mit dieser Adresse im Elternportal anmelden:</p>
       <p><a href="${loginLink}">${loginLink}</a></p>
-      <p>Falls diese Änderung nicht von Ihnen veranlasst wurde oder Sie Fragen haben, wenden Sie sich bitte direkt an den Vereinsadmin.</p>
+      <p>Falls diese Änderung nicht von dir veranlasst wurde oder du Fragen hast, wende dich bitte direkt an den Vereinsadmin.</p>
     `,
   })
 }

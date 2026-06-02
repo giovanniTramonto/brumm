@@ -40,10 +40,12 @@ export default defineEventHandler(async (event) => {
   const md = await getMemberData(memberId, club)
   if (md) {
     const emails = [md.email1, ...(md.email2 ? [md.email2] : [])]
+    const slug = getRouterParam(event, 'slug')
     await sendActivationEmail({
       to: emails,
       clubName: club.name,
       childName: `${md.firstName} ${md.lastName}`,
+      profileUrl: `${process.env.APP_URL}/ini/${slug}/dashboard`,
     })
   }
 
