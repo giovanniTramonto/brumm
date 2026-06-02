@@ -20,6 +20,8 @@ const error = ref<string | null>(null)
 const isSubmitting = ref(false)
 const saveError = ref<string | null>(null)
 const isDeactivating = ref(false)
+const isReactivating = ref(false)
+const isDisabling = ref(false)
 const isResendingInvite = ref(false)
 const isCancellingInvite = ref(false)
 const inviteActionError = ref<string | null>(null)
@@ -61,7 +63,12 @@ const isUploadingContractDoc = ref(false)
 const contractUploadError = ref<string | null>(null)
 
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
-const memberFormReadonly = computed(() => isMember.value && !!member.value?.isActive)
+
+const isFormLocked = computed(() => {
+  if (!member.value) return false
+  if (isMember.value) return !!member.value.isActive
+  return (member.value.isActive && !member.value.isDisabled) || !!member.value.deactivatedAt
+})
 const canManageMembers = computed(() => {
   const user = authStore.currentUser
   return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
@@ -83,6 +90,7 @@ const localAllSubmitted = computed(() =>
 
 const visibleTemplates = computed(() => {
   if (!member.value) return memberDocTemplates.value
+  if (canManageMembers.value) return memberDocTemplates.value
   const frozen = member.value.isActive || !!member.value.deactivatedAt
   if (!frozen) return memberDocTemplates.value
   return memberDocTemplates.value.filter((t) => t.submission !== null)
@@ -315,11 +323,9 @@ onMounted(async () => {
       canManageMembers.value
         ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`)
         : Promise.resolve(null),
-      isMember.value || canManageMembers.value
-        ? $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
-            `/api/ini/${slug}/members/${memberId}/documents/contract`,
-          ).catch(() => null)
-        : Promise.resolve(null),
+      $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
+        `/api/ini/${slug}/members/${memberId}/documents/contract`,
+      ).catch(() => null),
     ])
 
     member.value = memberData.member
@@ -344,7 +350,7 @@ onMounted(async () => {
 
     const isConfirmed = !m.isActive && !m.deactivatedAt && !m.hasPendingInvite
 
-    if (templatesData && (canManageMembers.value || isConfirmed)) {
+    if (templatesData) {
       memberDocTemplates.value = templatesData.templates
       allSubmitted.value = templatesData.allSubmitted
       for (const t of templatesData.templates) {
@@ -352,7 +358,6 @@ onMounted(async () => {
           readMap[t.id] = true
         }
       }
-      isLoadingTemplates.value = false
     }
 
     if (m.isActive) await Promise.all([loadDocuments(), loadOtherDocuments()])
@@ -425,8 +430,6 @@ async function onActivate() {
   await loadDocuments()
 }
 
-const isReactivating = ref(false)
-
 async function onReactivate() {
   if (!member.value) return
   isReactivating.value = true
@@ -434,19 +437,44 @@ async function onReactivate() {
     await $fetch(`/api/ini/${slug}/members/${member.value.id}/reactivate`, {
       method: 'POST',
     })
-    member.value = { ...member.value, isActive: true, deactivatedAt: null }
+    member.value = { ...member.value, isActive: true, isDisabled: false, deactivatedAt: null }
     await loadDocuments()
+  } catch (err: unknown) {
+    inviteActionError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isReactivating.value = false
   }
 }
 
+async function onToggleDisabled() {
+  if (!member.value) return
+  isDisabling.value = true
+  try {
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/toggle-disabled`, { method: 'POST' })
+    member.value = { ...member.value, isDisabled: !member.value.isDisabled }
+  } catch (err: unknown) {
+    inviteActionError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    isDisabling.value = false
+  }
+}
+
 async function onDeactivate() {
-  if (!member.value || !confirm('Vertrag abmelden? Automatische Löschung nach einem Jahr.')) return
+  if (!member.value || !confirm('Kind abmelden?')) return
   isDeactivating.value = true
   try {
-    await membersStore.deactivateMember(slug, member.value.id)
-    await navigateTo(`/ini/${slug}/members`)
+    await $fetch(`/api/ini/${slug}/members/${member.value.id}/deactivate`, { method: 'POST' })
+    member.value = {
+      ...member.value,
+      isActive: false,
+      isDisabled: false,
+      deactivatedAt: new Date().toISOString(),
+    }
+  } catch (err: unknown) {
+    inviteActionError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isDeactivating.value = false
   }
@@ -471,7 +499,7 @@ async function onResendInvite() {
 async function onDeleteMember() {
   if (
     !member.value ||
-    !confirm('Kind entfernen? Alle Daten werden gelöscht. Die Eltern erhalten eine Email.')
+    !confirm('Kind wirklich dauerhaft entfernen? Die Eltern erhalten eine E-Mail.')
   )
     return
   inviteActionError.value = null
@@ -562,23 +590,27 @@ async function onSubmit() {
             role="status"
             class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
             :class="
-              member.isActive
+              member.isActive && !member.isDisabled
                 ? 'bg-green-100 text-green-800'
-                : member.deactivatedAt
-                  ? 'bg-gray-100 text-gray-600'
-                  : member.hasPendingInvite
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-blue-100 text-blue-800'
+                : member.isActive && member.isDisabled
+                  ? 'bg-orange-100 text-orange-700'
+                  : member.deactivatedAt
+                    ? 'bg-gray-100 text-gray-600'
+                    : member.hasPendingInvite
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-blue-100 text-blue-800'
             "
           >
             {{
-              member.isActive
+              member.isActive && !member.isDisabled
                 ? "Aktiv"
-                : member.deactivatedAt
-                  ? "Abgemeldet"
-                  : member.hasPendingInvite
-                    ? "Ausstehend"
-                    : "Bestätigt"
+                : member.isActive && member.isDisabled
+                  ? "Inaktiv"
+                  : member.deactivatedAt
+                    ? "Abgemeldet"
+                    : member.hasPendingInvite
+                      ? "Ausstehend"
+                      : "Bestätigt"
             }}
           </span>
         </div>
@@ -605,7 +637,7 @@ async function onSubmit() {
                 v-model="form.firstName"
                 type="text"
                 class="input mt-1"
-                :readonly="member.isActive || !!member.deactivatedAt"
+                :readonly="isFormLocked"
                 :required="!member.isActive"
               />
             </div>
@@ -616,7 +648,7 @@ async function onSubmit() {
                 v-model="form.lastName"
                 type="text"
                 class="input mt-1"
-                :readonly="member.isActive || !!member.deactivatedAt"
+                :readonly="isFormLocked"
                 :required="!member.isActive"
               />
             </div>
@@ -629,7 +661,7 @@ async function onSubmit() {
               v-model="form.birthDate"
               type="date"
               class="input mt-1"
-              :readonly="member.isActive || !!member.deactivatedAt"
+              :readonly="isFormLocked"
               :required="!member.isActive"
             />
           </div>
@@ -640,7 +672,7 @@ async function onSubmit() {
               id="field-groupId"
               v-model="form.groupId"
               class="input mt-1"
-              :disabled="memberFormReadonly"
+              :disabled="isFormLocked"
             >
               <option value="">Keine Gruppe</option>
               <option v-for="group in groups" :key="group.id" :value="group.id">
@@ -655,6 +687,7 @@ async function onSubmit() {
               id="field-careType"
               v-model="form.careType"
               class="input mt-1"
+              :disabled="isFormLocked"
             >
               <option value="">Nicht angegeben</option>
               <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
@@ -676,6 +709,7 @@ async function onSubmit() {
                   type="checkbox"
                   :value="opt.key"
                   class="h-4 w-4 rounded border-gray-300"
+                  :disabled="isFormLocked"
                 />
                 {{ opt.label }}
               </label>
@@ -691,7 +725,7 @@ async function onSubmit() {
               class="input mt-1"
               placeholder="YYYY"
               maxlength="4"
-              :readonly="memberFormReadonly"
+              :readonly="isFormLocked"
             />
           </div>
 
@@ -704,7 +738,7 @@ async function onSubmit() {
               v-model="form.guardian1Name"
               type="text"
               class="input mt-1"
-              :readonly="memberFormReadonly || !!member.deactivatedAt"
+              :readonly="isFormLocked"
               :required="!member.isActive"
             />
           </div>
@@ -716,7 +750,7 @@ async function onSubmit() {
                 v-model="form.email1"
                 type="email"
                 class="input mt-1"
-                :readonly="memberFormReadonly || !!member.deactivatedAt"
+                :readonly="isFormLocked"
                 :required="!member.isActive"
               />
             </div>
@@ -727,7 +761,7 @@ async function onSubmit() {
                 v-model="form.phone1"
                 type="tel"
                 class="input mt-1"
-                :readonly="memberFormReadonly || !!member.deactivatedAt"
+                :readonly="isFormLocked"
               />
             </div>
           </div>
@@ -741,7 +775,7 @@ async function onSubmit() {
               v-model="form.guardian2Name"
               type="text"
               class="input mt-1"
-              :readonly="memberFormReadonly || !!member.deactivatedAt"
+              :readonly="isFormLocked"
             />
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -752,7 +786,7 @@ async function onSubmit() {
                 v-model="form.email2"
                 type="email"
                 class="input mt-1"
-                :readonly="memberFormReadonly || !!member.deactivatedAt"
+                :readonly="isFormLocked"
               />
             </div>
             <div>
@@ -762,12 +796,12 @@ async function onSubmit() {
                 v-model="form.phone2"
                 type="tel"
                 class="input mt-1"
-                :readonly="memberFormReadonly || !!member.deactivatedAt"
+                :readonly="isFormLocked"
               />
             </div>
           </div>
 
-          <div v-if="!memberFormReadonly" class="flex gap-2">
+          <div v-if="!isFormLocked" class="flex gap-2">
             <button
               type="submit"
               class="btn-primary text-sm"
@@ -1274,52 +1308,71 @@ async function onSubmit() {
         </div>
 
         <div v-if="!isMember" class="space-y-2 border-t pt-4">
+          <p v-if="member.deactivatedAt" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
+            Kind wurde abgemeldet. Automatische Löschung nach 1 Jahr.
+          </p>
           <div class="flex justify-end gap-3">
-            <button
-              v-if="!member.isActive && !member.deactivatedAt"
-              class="btn-primary text-sm"
-              :disabled="(!member.hasSubmittedDocuments && member.hasInvite) || !canManageMembers"
-              @click="onActivate"
-            >
-              Freischalten
-            </button>
-            <button
-              v-if="
-                !member.isActive &&
-                !member.deactivatedAt &&
-                member.hasPendingInvite
-              "
-              class="btn-secondary text-sm"
-              :disabled="isResendingInvite || !canManageMembers"
-              @click="onResendInvite"
-            >
-              {{
-                isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden"
-              }}
-            </button>
-            <button
-              v-if="member.isActive"
-              class="btn-secondary text-sm"
-              :disabled="isDeactivating || !canManageMembers"
-              @click="onDeactivate"
-            >
-              {{ isDeactivating ? "Wird abgemeldet…" : "Vertrag abmelden" }}
-            </button>
-            <button
-              v-if="member.deactivatedAt"
-              class="btn-secondary text-sm"
-              :disabled="isReactivating || !canManageMembers"
-              @click="onReactivate"
-            >
-              {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung aufheben" }}
-            </button>
-            <button
-              class="btn-danger text-sm"
-              :disabled="isCancellingInvite || !canManageMembers"
-              @click="onDeleteMember"
-            >
-              Kind entfernen
-            </button>
+            <!-- Vor Freischaltung: Freischalten + Einladung + Kind entfernen -->
+            <template v-if="!member.isActive && !member.deactivatedAt">
+              <button
+                class="btn-primary text-sm"
+                :disabled="(!member.hasSubmittedDocuments && member.hasInvite) || !canManageMembers"
+                @click="onActivate"
+              >
+                Freischalten
+              </button>
+              <button
+                v-if="member.hasPendingInvite"
+                class="btn-secondary text-sm"
+                :disabled="isResendingInvite || !canManageMembers"
+                @click="onResendInvite"
+              >
+                {{ isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden" }}
+              </button>
+              <button
+                class="btn-danger text-sm"
+                :disabled="isCancellingInvite || !canManageMembers"
+                @click="onDeleteMember"
+              >
+                Kind entfernen
+              </button>
+            </template>
+
+            <!-- Aktiv oder Inaktiv: Deaktivieren/Aktivieren + Abmelden -->
+            <template v-else-if="member.isActive">
+              <button
+                class="btn-secondary text-sm"
+                :disabled="isDisabling || !canManageMembers"
+                @click="onToggleDisabled"
+              >
+                {{ isDisabling ? "Wird gespeichert…" : member.isDisabled ? "Aktivieren" : "Deaktivieren" }}
+              </button>
+              <button
+                class="btn-secondary text-sm"
+                :disabled="isDeactivating || !canManageMembers"
+                @click="onDeactivate"
+              >
+                {{ isDeactivating ? "Wird abgemeldet…" : "Abmelden" }}
+              </button>
+            </template>
+
+            <!-- Abgemeldet: Abmeldung rückgängig + Löschen -->
+            <template v-else-if="member.deactivatedAt">
+              <button
+                class="btn-secondary text-sm"
+                :disabled="isReactivating || !canManageMembers"
+                @click="onReactivate"
+              >
+                {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung rückgängig" }}
+              </button>
+              <button
+                class="btn-danger text-sm"
+                :disabled="isCancellingInvite || !canManageMembers"
+                @click="onDeleteMember"
+              >
+                Sofort löschen
+              </button>
+            </template>
           </div>
           <p v-if="inviteActionError" class="text-sm text-red-700">
             {{ inviteActionError }}

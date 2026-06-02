@@ -37,6 +37,7 @@ model User {
   localData               Json?
   isMemberManager         Boolean  @default(false)
   hasSubmittedDocuments   Boolean  @default(false)
+  isDisabled              Boolean  @default(false)
 
   createdAt DateTime @default(now())
 

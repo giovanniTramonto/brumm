@@ -71,6 +71,7 @@ export default async function handler() {
 
   const inactiveUsers = await prisma.user.findMany({
     where: {
+      role: 'MEMBER',
       isActive: false,
       storageId: { not: null },
     },
@@ -113,14 +114,9 @@ export default async function handler() {
       await prisma.session.deleteMany({ where: { userId: user.id } })
       await prisma.magicLink.deleteMany({ where: { userId: user.id } })
       await prisma.invite.deleteMany({ where: { userId: user.id } })
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          localData: Prisma.DbNull,
-          storageId: null,
-        },
-      })
+      await prisma.memberDocument.deleteMany({ where: { memberId: user.id } })
+      await prisma.userEmail.deleteMany({ where: { userId: user.id } })
+      await prisma.user.delete({ where: { id: user.id } })
 
       console.log(`Bereinigt: user.id=${user.id}`)
     } catch (err) {
@@ -186,11 +182,9 @@ export default async function handler() {
         await prisma.session.deleteMany({ where: { userId } })
         await prisma.magicLink.deleteMany({ where: { userId } })
         await prisma.invite.deleteMany({ where: { userId } })
-
-        await prisma.user.update({
-          where: { id: userId },
-          data: { storageId: null },
-        })
+        await prisma.memberDocument.deleteMany({ where: { memberId: userId } })
+        await prisma.userEmail.deleteMany({ where: { userId } })
+        await prisma.user.delete({ where: { id: userId } })
 
         sheetCleaned++
         console.log(`Bereinigt (Sheet): user.id=${userId}`)

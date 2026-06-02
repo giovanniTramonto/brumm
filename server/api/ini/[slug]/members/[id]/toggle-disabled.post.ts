@@ -17,38 +17,30 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  const member = await prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: { id: memberId, clubId: club.id },
   })
 
-  if (!member) {
+  if (!user) {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  if (!member.isActive) {
-    throw createError({ statusCode: 409, statusMessage: 'Mitglied bereits inaktiv' })
+  if (!user.isActive) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Nur aktive Mitglieder können deaktiviert werden',
+    })
   }
 
-  const deactivatedAt = new Date().toISOString()
+  const now = new Date().toISOString()
+  const newDisabled = !user.isDisabled
 
   const updated = await prisma.user.update({
     where: { id: memberId },
-    data: { isActive: false, isDisabled: false },
+    data: { isDisabled: newDisabled },
   })
 
-  await prisma.session.deleteMany({ where: { userId: memberId } })
-
-  await updateMemberData(
-    memberId,
-    {
-      isActive: false,
-      deactivatedAt,
-      deactivatedBy: currentUser.id,
-      lastEditedAt: deactivatedAt,
-      lastEditedBy: 'Admin',
-    },
-    club,
-  )
+  await updateMemberData(memberId, { lastEditedAt: now, lastEditedBy: 'Admin' }, club)
 
   return { member: updated }
 })

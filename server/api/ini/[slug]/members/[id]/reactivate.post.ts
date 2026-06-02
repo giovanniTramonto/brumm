@@ -1,5 +1,4 @@
-import { sendReactivationEmail } from '~/server/utils/email'
-import { getMemberData, updateMemberData } from '~/server/utils/memberData'
+import { updateMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -25,23 +24,21 @@ export default defineEventHandler(async (event) => {
 
   const updated = await prisma.user.update({
     where: { id: memberId },
-    data: { isActive: true },
+    data: { isActive: true, isDisabled: false },
   })
 
+  const now = new Date().toISOString()
   await updateMemberData(
     memberId,
-    { isActive: true, deactivatedAt: undefined, deactivatedBy: undefined },
+    {
+      isActive: true,
+      deactivatedAt: undefined,
+      deactivatedBy: undefined,
+      lastEditedAt: now,
+      lastEditedBy: 'Admin',
+    },
     club,
   )
-
-  const md = await getMemberData(memberId, club)
-  if (md) {
-    await sendReactivationEmail({
-      to: [md.email1, ...(md.email2 ? [md.email2] : [])],
-      clubName: club.name,
-      childName: `${md.firstName} ${md.lastName}`,
-    })
-  }
 
   return { member: updated }
 })

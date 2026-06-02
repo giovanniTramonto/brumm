@@ -56,6 +56,7 @@ export interface User {
   clubId: string
   role: Role
   isActive: boolean
+  isDisabled: boolean
   isMemberManager: boolean
   storageId: string | null
   localData?: Record<string, unknown> | null
