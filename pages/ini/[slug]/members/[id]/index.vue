@@ -997,7 +997,7 @@ async function onSubmit() {
             <span
               v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments"
               class="text-xs text-amber-600"
-            >Noch nicht eingereicht</span>
+            >Noch nicht fertig eingereicht</span>
           </div>
 
           <div
