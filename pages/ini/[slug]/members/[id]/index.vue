@@ -626,8 +626,8 @@ async function onSubmit() {
           </span>
         </div>
 
-        <p v-if="canManageMembers && !member.hasInvite && member.status !== 'ACTIVE' && member.status !== 'INACTIVE'" class="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          Kind wurde ohne Einladung angelegt. Unterlagen können direkt hochgeladen werden.
+        <p v-if="canManageMembers && !member.hasInvite && member.status !== 'ACTIVE' && member.status !== 'INACTIVE'" class="text-xs text-gray-400">
+          Kind wurde ohne Einladung angelegt.
         </p>
 
         <!-- canManageMembers or own MEMBER: editable form -->
@@ -918,7 +918,8 @@ async function onSubmit() {
           <div class="border-t pt-4">
             <div class="mb-3 flex items-center gap-3">
               <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-              <span v-if="!localAllSubmitted" class="text-xs text-amber-600">Bitte vervollständige alle Unterlagen</span>
+              <span v-if="!member.hasInvite" class="text-xs text-amber-600">Die Unterlagen werden von der Kita hochgeladen</span>
+              <span v-else-if="!localAllSubmitted" class="text-xs text-amber-600">Bitte vervollständige alle Unterlagen</span>
             </div>
           </div>
 
@@ -989,7 +990,11 @@ async function onSubmit() {
           <div class="mb-3 flex items-center gap-3">
             <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
             <span
-              v-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments"
+              v-if="!member.hasInvite && member.status === 'REGISTERED'"
+              class="text-xs text-amber-600"
+            >Unterlagen können direkt hochgeladen werden</span>
+            <span
+              v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments"
               class="text-xs text-amber-600"
             >Noch nicht eingereicht</span>
           </div>
