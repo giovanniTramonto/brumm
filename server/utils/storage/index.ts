@@ -12,7 +12,7 @@ export async function initUserStorage(params: {
 
   const memberFolderId = await createMemberFolder({
     tokens,
-    parentFolderId: storageConfig.memberFolderId,
+    parentFolderId: storageConfig.membersFolderId,
     folderName: memberData.storageRef,
   })
 
@@ -31,7 +31,7 @@ export async function deleteMemberStorage(params: {
   const searchResult = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.memberFolderId}' in parents`,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${storageConfig.membersFolderId}' in parents`,
     fields: 'files(id)',
   })
 

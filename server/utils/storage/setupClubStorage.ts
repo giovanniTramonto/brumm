@@ -9,19 +9,19 @@ export async function setupClubStorage(params: {
   tokens: OAuthTokens
   parentId?: string
 }): Promise<GoogleDriveConfig> {
-  const { rootFolderId, memberFolderId } = await createRootFolderStructure({
+  const { rootFolderId, membersFolderId } = await createRootFolderStructure({
     tokens: params.tokens,
     parentId: params.parentId,
   })
 
   const [membersSheetId, { templatesFolderId }] = await Promise.all([
-    createMembersSheet({ tokens: params.tokens, memberFolderId, clubName: params.clubName }),
+    createMembersSheet({ tokens: params.tokens, membersFolderId, clubName: params.clubName }),
     createTemplatesStructure({ tokens: params.tokens, rootFolderId }),
   ])
 
   const storageConfig: GoogleDriveConfig = {
     rootFolderId,
-    memberFolderId,
+    membersFolderId,
     membersSheetId,
     templatesFolderId,
   }

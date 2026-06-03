@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
 
   // 1. Alten members-Ordner löschen (inkl. Sheet + Kind-Ordner)
   try {
-    await drive.files.delete({ fileId: storageConfig.memberFolderId, supportsAllDrives: true })
+    await drive.files.delete({ fileId: storageConfig.membersFolderId, supportsAllDrives: true })
   } catch {
     // Ordner bereits gelöscht oder nicht vorhanden
   }
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
   // 3. Neues members-Sheet im neuen Ordner anlegen
   const newMembersSheetId = await createMembersSheet({
     tokens,
-    memberFolderId: newMemberFolderId,
+    membersFolderId: newMemberFolderId,
     clubName: club.name,
   })
 
@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
     data: {
       storageConfig: {
         ...storageConfig,
-        memberFolderId: newMemberFolderId,
+        membersFolderId: newMemberFolderId,
         membersSheetId: newMembersSheetId,
         templatesFolderId,
       } as object,

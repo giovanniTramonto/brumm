@@ -75,14 +75,14 @@ export async function deleteMemberFolder(params: {
 
 export async function copyFileToMemberDocuments(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
   sourceFileId: string
   filename: string
 }): Promise<string | null> {
   const contractFolderId = await findContractFolderId({
     tokens: params.tokens,
-    memberFolderId: params.memberFolderId,
+    membersFolderId: params.membersFolderId,
     storageRef: params.storageRef,
   })
   if (!contractFolderId) return null
@@ -99,14 +99,14 @@ export async function copyFileToMemberDocuments(params: {
 
 export async function findMemberFolderId(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const drive = getDriveClientFromTokens(params.tokens)
   const result = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.memberFolderId}' in parents and trashed = false`,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
     fields: 'files(id)',
   })
   return result.data.files?.[0]?.id ?? null
@@ -183,7 +183,7 @@ export async function downloadDriveFile(params: {
 
 async function findDocumentsFolderId(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const drive = getDriveClientFromTokens(params.tokens)
@@ -191,7 +191,7 @@ async function findDocumentsFolderId(params: {
   const memberResult = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.memberFolderId}' in parents and trashed = false`,
+    q: `name = '${params.storageRef}' and mimeType = 'application/vnd.google-apps.folder' and '${params.membersFolderId}' in parents and trashed = false`,
     fields: 'files(id)',
   })
   const memberFolderId = memberResult.data.files?.[0]?.id
@@ -208,7 +208,7 @@ async function findDocumentsFolderId(params: {
 
 async function findContractFolderId(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const documentsFolderId = await findDocumentsFolderId(params)
@@ -226,7 +226,7 @@ async function findContractFolderId(params: {
 
 async function findOtherFolderId(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const documentsFolderId = await findDocumentsFolderId(params)
@@ -243,7 +243,7 @@ async function findOtherFolderId(params: {
 
 async function getOrCreateOtherFolder(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<string | null> {
   const drive = getDriveClientFromTokens(params.tokens)
@@ -259,7 +259,7 @@ async function getOrCreateOtherFolder(params: {
 
 export async function listOtherDocuments(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<Array<{ id: string; name: string; createdTime: string | null }>> {
   const folderId = await findOtherFolderId(params)
@@ -306,7 +306,7 @@ export async function updateDriveFile(params: {
 
 export async function uploadOtherDocument(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
   filename: string
   mimeType: string
@@ -314,7 +314,7 @@ export async function uploadOtherDocument(params: {
 }): Promise<{ id: string; name: string }> {
   const folderId = await getOrCreateOtherFolder({
     tokens: params.tokens,
-    memberFolderId: params.memberFolderId,
+    membersFolderId: params.membersFolderId,
     storageRef: params.storageRef,
   })
   if (!folderId) throw new Error('Other documents folder not found')
@@ -331,7 +331,7 @@ export async function uploadOtherDocument(params: {
 
 export async function listMemberDocuments(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
 }): Promise<Array<{ id: string; name: string; createdTime: string | null }>> {
   const folderId = await findContractFolderId(params)
@@ -355,7 +355,7 @@ export async function listMemberDocuments(params: {
 
 export async function uploadMemberDocument(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   storageRef: string
   filename: string
   mimeType: string
@@ -363,7 +363,7 @@ export async function uploadMemberDocument(params: {
 }): Promise<{ id: string; name: string }> {
   const folderId = await findContractFolderId({
     tokens: params.tokens,
-    memberFolderId: params.memberFolderId,
+    membersFolderId: params.membersFolderId,
     storageRef: params.storageRef,
   })
   if (!folderId) throw new Error('Contract folder not found')
@@ -409,7 +409,7 @@ export async function createRootFolderStructure(params: {
   parentId?: string
 }): Promise<{
   rootFolderId: string
-  memberFolderId: string
+  membersFolderId: string
 }> {
   const drive = getDriveClientFromTokens(params.tokens)
 
@@ -418,11 +418,11 @@ export async function createRootFolderStructure(params: {
     name: 'brumm',
     parentId: params.parentId ?? 'root',
   })
-  const memberFolderId = await getOrCreateFolder({
+  const membersFolderId = await getOrCreateFolder({
     drive,
     name: 'members',
     parentId: rootFolderId,
   })
 
-  return { rootFolderId, memberFolderId }
+  return { rootFolderId, membersFolderId }
 }

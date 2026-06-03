@@ -25,7 +25,7 @@ async function deleteFromDrive(tokens: OAuthTokens, folderId: string): Promise<v
 
 async function findAndDeleteMemberFolder(
   tokens: OAuthTokens,
-  memberFolderId: string,
+  membersFolderId: string,
   storageId: string,
 ): Promise<void> {
   const auth = getGoogleAuth(tokens)
@@ -33,7 +33,7 @@ async function findAndDeleteMemberFolder(
   const result = await drive.files.list({
     supportsAllDrives: true,
     includeItemsFromAllDrives: true,
-    q: `name contains '${storageId}' and mimeType = 'application/vnd.google-apps.folder' and '${memberFolderId}' in parents and trashed = false`,
+    q: `name contains '${storageId}' and mimeType = 'application/vnd.google-apps.folder' and '${membersFolderId}' in parents and trashed = false`,
     fields: 'files(id)',
   })
   const folder = result.data.files?.[0]
@@ -101,7 +101,7 @@ export default async function handler() {
       const oauthToken = user.club.oauthToken as unknown as OAuthTokens | null
 
       if (storageConfig && oauthToken && user.storageId) {
-        await findAndDeleteMemberFolder(oauthToken, storageConfig.memberFolderId, user.storageId)
+        await findAndDeleteMemberFolder(oauthToken, storageConfig.membersFolderId, user.storageId)
         await removeMemberFromSheet(oauthToken, storageConfig.membersSheetId, user.id)
       }
 

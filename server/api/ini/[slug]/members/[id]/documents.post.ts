@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
 
   const uploaded = await uploadMemberDocument({
     tokens,
-    memberFolderId: storageConfig.memberFolderId,
+    membersFolderId: storageConfig.membersFolderId,
     storageRef: md.storageRef,
     filename: filePart.filename,
     mimeType: filePart.type ?? 'application/octet-stream',

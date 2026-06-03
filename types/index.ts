@@ -4,7 +4,7 @@ export type MemberStatus = 'PENDING_INVITE' | 'REGISTERED' | 'ACTIVE' | 'INACTIV
 
 export interface GoogleDriveConfig {
   rootFolderId: string
-  memberFolderId: string
+  membersFolderId: string
   membersSheetId: string
   templatesFolderId?: string
   managersFolderId?: string

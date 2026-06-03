@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
 
   const documents = await listMemberDocuments({
     tokens,
-    memberFolderId: storageConfig.memberFolderId,
+    membersFolderId: storageConfig.membersFolderId,
     storageRef: md.storageRef,
   })
 

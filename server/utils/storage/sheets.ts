@@ -45,7 +45,7 @@ function rowToMemberData(row: string[]): MemberData {
 
 export async function createMembersSheet(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  membersFolderId: string
   clubName: string
 }): Promise<string> {
   const drive = getDriveClientFromTokens(params.tokens)
@@ -56,7 +56,7 @@ export async function createMembersSheet(params: {
     requestBody: {
       name: 'members',
       mimeType: 'application/vnd.google-apps.spreadsheet',
-      parents: [params.memberFolderId],
+      parents: [params.membersFolderId],
     },
     fields: 'id',
   })
