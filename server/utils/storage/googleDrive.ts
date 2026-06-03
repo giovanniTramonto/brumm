@@ -112,23 +112,30 @@ export async function findMemberFolderId(params: {
   return result.data.files?.[0]?.id ?? null
 }
 
+export async function createTemplatesStructure(params: {
+  tokens: OAuthTokens
+  rootFolderId: string
+}): Promise<{ templatesFolderId: string }> {
+  const templatesFolderId = await getOrCreateFolder({
+    drive: getDriveClientFromTokens(params.tokens),
+    name: 'contract-templates',
+    parentId: params.rootFolderId,
+  })
+  return { templatesFolderId }
+}
+
 export async function getOrCreateTemplateSubfolder(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  templatesFolderId: string
   ref: string
 }): Promise<string> {
   const drive = getDriveClientFromTokens(params.tokens)
-  const templatesFolderId = await getOrCreateFolder({
-    drive,
-    name: 'contract-templates',
-    parentId: params.memberFolderId,
-  })
-  return getOrCreateFolder({ drive, name: params.ref, parentId: templatesFolderId })
+  return getOrCreateFolder({ drive, name: params.ref, parentId: params.templatesFolderId })
 }
 
 export async function uploadTemplateFile(params: {
   tokens: OAuthTokens
-  memberFolderId: string
+  templatesFolderId: string
   ref: string
   filename: string
   mimeType: string
@@ -136,7 +143,7 @@ export async function uploadTemplateFile(params: {
 }): Promise<{ driveFileId: string }> {
   const folderId = await getOrCreateTemplateSubfolder({
     tokens: params.tokens,
-    memberFolderId: params.memberFolderId,
+    templatesFolderId: params.templatesFolderId,
     ref: params.ref,
   })
 

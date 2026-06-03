@@ -34,9 +34,11 @@ export default defineEventHandler(async (event) => {
   if (filePart?.data && filePart.filename && club.isSetupDone) {
     const tokens = club.oauthToken as OAuthTokens
     const storageConfig = club.storageConfig as GoogleDriveConfig
+    if (!storageConfig.templatesFolderId)
+      throw createError({ statusCode: 500, statusMessage: 'Templates-Ordner nicht konfiguriert' })
     const result = await uploadTemplateFile({
       tokens,
-      memberFolderId: storageConfig.memberFolderId,
+      templatesFolderId: storageConfig.templatesFolderId,
       ref,
       filename: filePart.filename,
       mimeType: filePart.type ?? 'application/octet-stream',

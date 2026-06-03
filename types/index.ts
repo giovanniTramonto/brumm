@@ -6,6 +6,7 @@ export interface GoogleDriveConfig {
   rootFolderId: string
   memberFolderId: string
   membersSheetId: string
+  templatesFolderId?: string
   managersFolderId?: string
   managersSheetId?: string
   groupsFolderId?: string

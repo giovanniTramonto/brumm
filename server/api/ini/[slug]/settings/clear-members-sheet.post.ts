@@ -1,5 +1,6 @@
 import { getDriveClientFromTokens } from '~/server/utils/googleAuth'
 import { prisma } from '~/server/utils/prisma'
+import { createTemplatesStructure } from '~/server/utils/storage/googleDrive'
 import { createMembersSheet } from '~/server/utils/storage/sheets'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
@@ -52,7 +53,17 @@ export default defineEventHandler(async (event) => {
     clubName: club.name,
   })
 
-  // 4. storageConfig in Neon aktualisieren
+  // 4. templatesFolderId anlegen falls noch nicht vorhanden
+  let templatesFolderId = storageConfig.templatesFolderId
+  if (!templatesFolderId) {
+    const result = await createTemplatesStructure({
+      tokens,
+      rootFolderId: storageConfig.rootFolderId,
+    })
+    templatesFolderId = result.templatesFolderId
+  }
+
+  // 5. storageConfig in Neon aktualisieren
   await prisma.club.update({
     where: { id: club.id },
     data: {
@@ -60,11 +71,12 @@ export default defineEventHandler(async (event) => {
         ...storageConfig,
         memberFolderId: newMemberFolderId,
         membersSheetId: newMembersSheetId,
+        templatesFolderId,
       } as object,
     },
   })
 
-  // 5. Alle MEMBER-Daten aus Neon löschen
+  // 6. Alle MEMBER-Daten aus Neon löschen (Templates bleiben erhalten)
   const members = await prisma.user.findMany({
     where: { clubId: club.id, role: 'MEMBER' },
     select: { id: true },
@@ -77,7 +89,6 @@ export default defineEventHandler(async (event) => {
   await prisma.memberDocument.deleteMany({ where: { memberId: { in: memberIds } } })
   await prisma.userEmail.deleteMany({ where: { userId: { in: memberIds } } })
   await prisma.user.deleteMany({ where: { clubId: club.id, role: 'MEMBER' } })
-  await prisma.documentTemplate.deleteMany({ where: { clubId: club.id } })
 
   return { ok: true }
 })

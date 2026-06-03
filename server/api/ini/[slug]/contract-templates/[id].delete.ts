@@ -27,9 +27,10 @@ export default defineEventHandler(async (event) => {
       const storageConfig = club.storageConfig as GoogleDriveConfig
       const drive = (await import('~/server/utils/googleAuth')).getDriveClientFromTokens(tokens)
       await drive.files.delete({ fileId: template.driveFileId, supportsAllDrives: true })
+      if (!storageConfig.templatesFolderId) throw new Error('Templates-Ordner nicht konfiguriert')
       const folderId = await getOrCreateTemplateSubfolder({
         tokens,
-        memberFolderId: storageConfig.memberFolderId,
+        templatesFolderId: storageConfig.templatesFolderId,
         ref: template.ref,
       })
       await drive.files.delete({ fileId: folderId, supportsAllDrives: true })
