@@ -916,10 +916,10 @@ async function onSubmit() {
         <!-- MEMBER: Bestätigt → template-based upload list -->
         <template v-else-if="isMember && member.status === 'REGISTERED'">
           <div class="border-t pt-4">
-            <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-            <p v-if="!localAllSubmitted" class="mb-3 rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
-              Bitte vervollständige alle erforderlichen Unterlagen.
-            </p>
+            <div class="mb-3 flex items-center gap-3">
+              <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
+              <span v-if="!localAllSubmitted" class="text-xs text-amber-600">Bitte vervollständige alle Unterlagen</span>
+            </div>
           </div>
 
           <div
