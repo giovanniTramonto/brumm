@@ -626,7 +626,7 @@ async function onSubmit() {
           </span>
         </div>
 
-        <p v-if="canManageMembers && !member.hasInvite && member.status !== 'ACTIVE' && member.status !== 'INACTIVE'" class="text-xs text-gray-400">
+        <p v-if="canManageMembers && !member.hasInvite && member.status !== 'ACTIVE' && member.status !== 'INACTIVE'" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
           Kind wurde ohne Einladung angelegt.
         </p>
 
@@ -932,10 +932,7 @@ async function onSubmit() {
             Brumm, brumm …
           </div>
 
-          <p
-            v-else-if="memberDocTemplates.length === 0"
-            class="text-sm text-gray-500"
-          >
+          <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
             Noch keine Vertragsunterlagen konfiguriert.
           </p>
 
@@ -960,6 +957,10 @@ async function onSubmit() {
               Unterlagen wurden erfolgreich eingereicht. Du erhältst eine E-Mail, sobald dein Kind freigeschaltet wurde.
             </p>
           </template>
+
+          <p v-if="!member.hasInvite" class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
+            Du erhältst eine E-Mail, sobald dein Kind freigeschaltet wurde.
+          </p>
 
         </template>
 
