@@ -510,7 +510,11 @@ async function onResendInvite() {
 async function onDeleteMember() {
   if (
     !member.value ||
-    !confirm('Kind wirklich dauerhaft entfernen? Die Eltern erhalten eine E-Mail.')
+    !confirm(
+      member.value.hasInvite
+        ? 'Kind wirklich dauerhaft entfernen? Die Eltern erhalten eine E-Mail.'
+        : 'Kind wirklich dauerhaft entfernen?',
+    )
   )
     return
   inviteActionError.value = null

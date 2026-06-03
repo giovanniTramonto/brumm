@@ -40,7 +40,8 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (memberData) {
+  const anyInvite = await prisma.invite.findFirst({ where: { userId: memberId } })
+  if (memberData && anyInvite) {
     const to = [memberData.email1, memberData.email2].filter(Boolean) as string[]
     const childName = `${memberData.firstName} ${memberData.lastName}`
     await Promise.allSettled(
