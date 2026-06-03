@@ -5,31 +5,6 @@ const authStore = useAuthStore()
 const route = useRoute()
 const slug = computed(() => route.params.slug as string | undefined)
 
-const canManageMembers = computed(() => {
-  const user = authStore.currentUser
-  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
-})
-
-const isResetting = ref(false)
-const isResetConfirming = ref(false)
-
-async function onResetStorage() {
-  if (!isResetConfirming.value) {
-    isResetConfirming.value = true
-    return
-  }
-  isResetting.value = true
-  try {
-    await $fetch(`/api/ini/${slug.value}/settings/reset-storage`, { method: 'POST' })
-    isResetConfirming.value = false
-    await navigateTo(`/ini/${slug.value}/dashboard`)
-  } catch {
-    isResetConfirming.value = false
-  } finally {
-    isResetting.value = false
-  }
-}
-
 const navItems = computed(() => {
   if (!slug.value || !authStore.currentUser) return []
   const base = `/ini/${slug.value}`
@@ -94,20 +69,6 @@ async function onLogout() {
               : authStore.currentUser?.role === 'TEAM' ? 'Team'
               : 'Mitglied'
             }}</span>
-            <template v-if="canManageMembers">
-              <button
-                class="btn-secondary text-sm text-red-600 hover:text-red-700"
-                :disabled="isResetting"
-                @click="onResetStorage"
-              >
-                {{ isResetConfirming ? 'Sicher?' : 'Reset' }}
-              </button>
-              <button
-                v-if="isResetConfirming"
-                class="text-sm text-gray-400 hover:text-gray-600"
-                @click="isResetConfirming = false"
-              >✕</button>
-            </template>
             <button class="btn-secondary text-sm" @click="onLogout">Abmelden</button>
           </div>
         </div>
