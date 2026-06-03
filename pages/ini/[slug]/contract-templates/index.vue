@@ -231,19 +231,6 @@ async function onDelete(template: Template) {
                 Umbenennen
               </button>
 
-              <select
-                :id="`doc-type-${template.id}`"
-                :aria-label="`Art für ${template.name}`"
-                class="input py-0.5 text-xs"
-                :value="template.documentType ?? ''"
-                @change="setDocumentType(template, ($event.target as HTMLSelectElement).value)"
-              >
-                <option value="" disabled>Art wählen …</option>
-                <option value="read">Nur lesen</option>
-                <option value="upload">Ausfüllen</option>
-                <option value="submit">Einreichen</option>
-              </select>
-
               <template v-if="template.documentType !== 'submit'">
                 <span v-if="template.driveFileName" class="whitespace-nowrap text-xs text-gray-500">
                   {{ template.driveFileName }}
@@ -265,6 +252,19 @@ async function onDelete(template: Template) {
                   />
                 </label>
               </template>
+
+              <select
+                :id="`doc-type-${template.id}`"
+                :aria-label="`Art für ${template.name}`"
+                class="input py-0.5 text-xs"
+                :value="template.documentType ?? ''"
+                @change="setDocumentType(template, ($event.target as HTMLSelectElement).value)"
+              >
+                <option value="" disabled>Art wählen …</option>
+                <option value="read">Nur lesen</option>
+                <option value="upload">Ausfüllen</option>
+                <option value="submit">Einreichen</option>
+              </select>
 
               <button
                 class="btn-danger py-1 text-xs"
