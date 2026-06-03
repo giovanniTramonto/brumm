@@ -34,7 +34,6 @@ export default defineEventHandler(async (event) => {
     data: {
       clubId: club.id,
       role: 'SUPERUSER',
-      isActive: true,
       emails: {
         create: [{ email: email.toLowerCase(), isPrimary: true }],
       },

@@ -20,7 +20,6 @@ async function findOrCreateManagerUser(managerId: string, clubId: string) {
       clubId,
       storageId: manager.storageId,
       role: 'MANAGER',
-      isActive: true,
       isMemberManager: manager.isMemberManager,
     },
   })

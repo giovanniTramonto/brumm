@@ -356,8 +356,6 @@ onMounted(async () => {
     form.surcharges = m.surcharges ?? []
     form.contractEnd = m.contractEnd ?? ''
 
-    const isConfirmed = m.status === 'REGISTERED'
-
     if (templatesData) {
       memberDocTemplates.value = templatesData.templates
       allSubmitted.value = templatesData.allSubmitted

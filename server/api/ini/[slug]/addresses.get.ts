@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
 
   const users = await prisma.user.findMany({
-    where: { clubId: club.id, role: 'MEMBER', isActive: true },
+    where: { clubId: club.id, role: 'MEMBER', status: { in: ['ACTIVE', 'INACTIVE'] } },
     select: { id: true },
   })
 

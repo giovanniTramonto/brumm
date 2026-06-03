@@ -29,7 +29,6 @@ export default defineEventHandler(async (event) => {
       clubId: club.id,
       storageId,
       role: 'MANAGER',
-      isActive: true,
       isMemberManager: isMemberManager ?? false,
     },
   })
