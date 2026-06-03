@@ -328,9 +328,7 @@ onMounted(async () => {
   try {
     const [memberData, groupsData, templatesData] = await Promise.all([
       $fetch<{ member: Member; isOwnChild: boolean }>(`/api/ini/${slug}/members/${memberId}`),
-      canManageMembers.value
-        ? $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`)
-        : Promise.resolve(null),
+      $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`),
       $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
         `/api/ini/${slug}/members/${memberId}/documents/contract`,
       ).catch(() => null),
@@ -339,7 +337,7 @@ onMounted(async () => {
     member.value = memberData.member
     isOwnChild.value = memberData.isOwnChild
     submitted.value = memberData.member.hasSubmittedDocuments
-    if (groupsData) groups.value = groupsData.groups
+    groups.value = groupsData.groups
 
     const m = memberData.member
     form.firstName = m.firstName
