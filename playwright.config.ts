@@ -9,7 +9,7 @@ function env(key: string): string {
 const BASE_URL = env('APP_URL')
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: './tests/specs',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

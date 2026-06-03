@@ -127,8 +127,9 @@ DEV_EMAIL_WHITELIST   # Optional: kommaseparierte Whitelist – nur diese Adress
 | Pinia Stores | `stores/` |
 | Types | `types/` |
 | Netlify Cleanup | `netlify/functions/cleanup.ts` |
-| E2E Tests | `tests/e2e/` |
-| Playwright Konfiguration | `playwright.config.ts` |
+| Test Specs (shared) | `tests/specs/` |
+| E2E Playwright Konfiguration | `playwright.config.ts` |
+| Smoke Playwright Konfiguration | `playwright.smoke.config.ts` |
 | Test DB Setup / Seed | `tests/global-setup.ts` |
 
 ## Datenbank
@@ -155,16 +156,33 @@ npm run clean          # löscht .nuxt, .output, dist (bei Cache-Problemen)
 
 Git Hooks (`lefthook.yml`):
 - `pre-commit`: Biome lint auf gestagte `.ts/.vue/.js`-Dateien
-- `pre-push`: E2E-Tests (`npm test`, Docker muss laufen)
+- `pre-push`: E2E-Tests (`npm run test:e2e`, Docker muss laufen)
 
-## Tests (E2E)
+## Tests
+Test-Specs liegen in `tests/specs/` und sind umgebungsagnostisch (nur Env-Vars, keine hardcodierten Werte). Beide Test-Suites verwenden dieselben Specs.
+
+### E2E (lokal)
 Playwright + Docker PostgreSQL. Docker muss laufen, `.env.test` wird automatisch geladen.
 
 ```bash
-docker compose up -d   # Test-DB starten (Port 5433)
-npm test               # E2E-Tests ausführen
-npm run test:ui        # Playwright UI-Modus
-npm run test:debug     # Debug-Modus
+docker compose up -d     # Test-DB starten (Port 5433)
+npm run test:e2e         # E2E-Tests ausführen
+npm run test:e2e:ui      # Playwright UI-Modus
+npm run test:e2e:debug   # Debug-Modus
 ```
 
 `.env.test` enthält `DEV_EMAIL_WHITELIST=__blocked__@test.local` → kein echter E-Mail-Versand in Tests.
+
+### Smoke (Netlify Test-Umgebung)
+Läuft gegen eine echte Netlify-Deployment-URL. Kein lokaler Server, kein DB-Reset. `.env.smoke` wird automatisch geladen (nicht ins Git eingecheckt, siehe `.env.smoke.example`).
+
+```bash
+npm run test:smoke   # Smoke Tests gegen Netlify ausführen
+```
+
+`.env.smoke` benötigt: `APP_URL`, `DATABASE_URL` (Neon der Test-App), `SMOKE_SLUG`, `SMOKE_EMAIL`.
+
+### Beide zusammen
+```bash
+npm test   # erst E2E, dann Smoke
+```

@@ -67,6 +67,28 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 
 `canManageMembers` = `SUPERUSER` oder `MANAGER` mit `isMemberManager`
 
+## Tests
+
+Test-Specs in `tests/specs/` laufen sowohl lokal (E2E) als auch gegen die Netlify-Test-Umgebung (Smoke).
+
+### E2E (lokal)
+```bash
+docker compose up -d   # Test-DB starten
+npm run test:e2e
+```
+
+### Smoke (Netlify)
+```bash
+cp .env.smoke.example .env.smoke
+# .env.smoke befüllen (APP_URL, DATABASE_URL, SMOKE_SLUG, SMOKE_EMAIL)
+npm run test:smoke
+```
+
+### Beide
+```bash
+npm test   # erst E2E, dann Smoke
+```
+
 ## Lizenz
 
 Business Source License 1.1 (BSL 1.1)

@@ -27,7 +27,7 @@ export default async function globalSetup() {
 
   // Seed: Verein ohne Drive-Setup (localData-Modus)
   const club = await prisma.club.create({
-    data: { slug: 'test-kita', name: 'Test Kita', isSetupDone: false },
+    data: { slug: 'test-kita', name: 'Test Kita', isSetupDone: true },
   })
 
   const superuser = await prisma.user.create({

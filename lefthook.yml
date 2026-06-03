@@ -7,4 +7,4 @@ pre-commit:
 pre-push:
   jobs:
     - name: e2e
-      run: npm test
+      run: npm run test:e2e
