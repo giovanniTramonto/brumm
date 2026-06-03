@@ -28,6 +28,7 @@ export const createMemberSchema = z.object({
   phone2: z.string().optional().or(z.literal('')),
   groupId: z.string().optional(),
   careType: z.string().optional(),
+  surcharges: z.array(z.string()).optional(),
   contractEnd: contractEndField,
   sendInvite: z.boolean().default(true),
 })

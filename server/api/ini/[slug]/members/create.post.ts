@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
     phone2,
     groupId,
     careType,
+    surcharges,
     contractEnd,
     sendInvite,
   } = parsed.data
@@ -80,7 +81,7 @@ export default defineEventHandler(async (event) => {
     phone2: phone2 || null,
     groupId: groupId ?? null,
     careType: careType || null,
-    surcharges: [],
+    surcharges: surcharges ?? [],
     contractEnd: contractEnd || null,
     lastEditedAt: null,
     lastEditedBy: null,
