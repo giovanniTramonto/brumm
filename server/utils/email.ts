@@ -92,9 +92,9 @@ export async function sendInviteEmail(params: {
     html: `
       <h2>Willkommen bei ${params.clubName}!</h2>
       <p>Dein Kind <strong>${params.childName}</strong> wurde angemeldet.</p>
-      <p>Bitte beachte: Die Betreuung kann erst beginnen, wenn alle erforderlichen Vertragsunterlagen vollständig eingereicht wurden.</p>
       <p>Klicke auf den folgenden Link, um dein Profil einzurichten und die Unterlagen hochzuladen. Der Link ist 7 Tage gültig.</p>
       <p><a href="${link}">Profil einrichten</a></p>
+      <p>Bitte beachte: Die Betreuung kann erst beginnen, wenn alle erforderlichen Vertragsunterlagen vollständig eingereicht wurden.</p> 
     `,
   })
 }
