@@ -17,7 +17,6 @@ model Club {
   storageConfig Json?
   oauthToken    Json?
   isSetupDone   Boolean  @default(false)
-  isHidden      Boolean  @default(false)
   membershipFee Float?
   createdAt        DateTime @default(now())
 
