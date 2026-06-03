@@ -1,4 +1,5 @@
 import { updateMemberData } from '~/server/utils/memberData'
+import { assertValidTransition } from '~/server/utils/memberStatus'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -25,19 +26,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  if (!user.isActive) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'Nur aktive Mitglieder können deaktiviert werden',
-    })
-  }
-
   const now = new Date().toISOString()
-  const newDisabled = !user.isDisabled
+  const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'
+  assertValidTransition(user.status, newStatus)
 
   const updated = await prisma.user.update({
     where: { id: memberId },
-    data: { isDisabled: newDisabled },
+    data: { status: newStatus },
   })
 
   await updateMemberData(memberId, { lastEditedAt: now, lastEditedBy: 'Admin' }, club)

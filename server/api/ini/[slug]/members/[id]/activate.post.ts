@@ -1,5 +1,6 @@
 import { sendActivationEmail } from '~/server/utils/email'
-import { getMemberData, updateMemberData } from '~/server/utils/memberData'
+import { getMemberData } from '~/server/utils/memberData'
+import { assertValidTransition } from '~/server/utils/memberStatus'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -26,16 +27,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  if (user.isActive) {
-    throw createError({ statusCode: 409, statusMessage: 'Mitglied bereits aktiv' })
-  }
+  assertValidTransition(user.status, 'ACTIVE')
 
   const updated = await prisma.user.update({
     where: { id: memberId },
-    data: { isActive: true },
+    data: { status: 'ACTIVE' },
   })
-
-  await updateMemberData(memberId, { isActive: true }, club)
 
   const md = await getMemberData(memberId, club)
   if (md) {

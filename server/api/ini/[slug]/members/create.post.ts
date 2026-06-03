@@ -54,11 +54,14 @@ export default defineEventHandler(async (event) => {
   const parentAlreadyRegistered =
     !!existingUserEmail && inviteEmails.includes(existingUserEmail.email.toLowerCase())
 
+  const willHavePendingInvite =
+    !hasSuperUserEmail && sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered
+
   const user = await prisma.user.create({
     data: {
       clubId: club.id,
       role: 'MEMBER',
-      isActive: false,
+      status: willHavePendingInvite ? 'PENDING_INVITE' : 'REGISTERED',
       storageId,
     },
   })
@@ -78,9 +81,6 @@ export default defineEventHandler(async (event) => {
     groupId: groupId ?? null,
     careType: careType || null,
     surcharges: [],
-    isActive: false,
-    deactivatedAt: null,
-    deactivatedBy: null,
     contractEnd: contractEnd || null,
     lastEditedAt: null,
     lastEditedBy: null,

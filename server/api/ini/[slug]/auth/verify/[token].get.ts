@@ -1,4 +1,5 @@
 import { getMemberData } from '~/server/utils/memberData'
+import { assertValidTransition } from '~/server/utils/memberStatus'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -68,8 +69,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Zugriff verweigert' })
   }
 
+  assertValidTransition(invite.user.status, 'REGISTERED')
+
   await prisma.session.deleteMany({ where: { userId: invite.userId } })
-  await prisma.invite.update({ where: { id: invite.id }, data: { isUsed: true } })
+  await Promise.all([
+    prisma.invite.update({ where: { id: invite.id }, data: { isUsed: true } }),
+    prisma.user.update({ where: { id: invite.userId }, data: { status: 'REGISTERED' } }),
+  ])
 
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   const session = await prisma.session.create({

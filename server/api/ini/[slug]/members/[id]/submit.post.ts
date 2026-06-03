@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if (user.isActive || md?.deactivatedAt) {
+  if (user.status === 'ACTIVE' || user.status === 'INACTIVE' || user.status === 'DEACTIVATED') {
     throw createError({ statusCode: 409, statusMessage: 'Einreichung nicht möglich' })
   }
 

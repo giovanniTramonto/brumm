@@ -33,7 +33,7 @@ export const useMembersStore = defineStore('members', () => {
   async function activateMember(slug: string, memberId: string): Promise<void> {
     await $fetch(`/api/ini/${slug}/members/${memberId}/activate`, { method: 'POST' })
     const index = members.value.findIndex((m) => m.id === memberId)
-    if (index !== -1) members.value[index] = { ...members.value[index], isActive: true }
+    if (index !== -1) members.value[index] = { ...members.value[index], status: 'ACTIVE' }
   }
 
   async function deactivateMember(slug: string, memberId: string): Promise<void> {
@@ -42,7 +42,7 @@ export const useMembersStore = defineStore('members', () => {
     if (index !== -1)
       members.value[index] = {
         ...members.value[index],
-        isActive: false,
+        status: 'DEACTIVATED',
         deactivatedAt: new Date().toISOString(),
       }
   }

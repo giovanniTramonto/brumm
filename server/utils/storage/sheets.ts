@@ -12,9 +12,6 @@ const MASTER_SHEET_HEADERS = [
   'email1',
   'email2',
   'groupId',
-  'isActive',
-  'deactivatedAt',
-  'deactivatedBy',
   'contractEnd',
   'phone1',
   'phone2',
@@ -36,16 +33,13 @@ function rowToMemberData(row: string[]): MemberData {
     email1: row[7] ?? '',
     email2: row[8] || null,
     groupId: row[9] || null,
-    isActive: row[10] === 'true',
-    deactivatedAt: row[11] || null,
-    deactivatedBy: row[12] || null,
-    contractEnd: row[13] || null,
-    phone1: row[14] || null,
-    phone2: row[15] || null,
-    surcharges: row[16] ? row[16].split(',').filter(Boolean) : [],
-    careType: row[17] || null,
-    lastEditedAt: row[18] || null,
-    lastEditedBy: row[19] || null,
+    contractEnd: row[10] || null,
+    phone1: row[11] || null,
+    phone2: row[12] || null,
+    surcharges: row[13] ? row[13].split(',').filter(Boolean) : [],
+    careType: row[14] || null,
+    lastEditedAt: row[15] || null,
+    lastEditedBy: row[16] || null,
   }
 }
 
@@ -100,9 +94,6 @@ export async function writeMemberToSheet(params: {
     data.email1,
     data.email2 ?? '',
     data.groupId ?? '',
-    String(data.isActive),
-    data.deactivatedAt ?? '',
-    data.deactivatedBy ?? '',
     data.contractEnd ?? '',
     data.phone1 ?? '',
     data.phone2 ?? '',
@@ -181,7 +172,7 @@ export async function getAllMembersFromSheet(params: {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: params.membersSheetId,
-      range: 'A:T',
+      range: 'A:Q',
     })
     const rows = response.data.values ?? []
     return rows.slice(1).map((row) => rowToMemberData(row as string[]))
@@ -201,7 +192,7 @@ export async function getMemberFromSheet(params: {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: params.membersSheetId,
-      range: 'A:T',
+      range: 'A:Q',
     })
     const rows = response.data.values ?? []
     const dataRow = rows.slice(1).find((row) => row[0] === params.userId)
@@ -222,7 +213,7 @@ export async function findUserIdByEmail(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.membersSheetId,
-    range: 'A:T',
+    range: 'A:Q',
   })
 
   const rows = response.data.values ?? []
@@ -248,7 +239,7 @@ export async function updateMemberInSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.membersSheetId,
-    range: 'A:T',
+    range: 'A:Q',
   })
 
   const rows = response.data.values ?? []
@@ -258,7 +249,7 @@ export async function updateMemberInSheet(params: {
   if (
     params.expectedLastEditedAt !== undefined &&
     params.expectedLastEditedAt !== null &&
-    (rows[rowIndex][18] ?? '') !== params.expectedLastEditedAt
+    (rows[rowIndex][15] ?? '') !== params.expectedLastEditedAt
   ) {
     throw createError({
       statusCode: 409,
@@ -281,9 +272,6 @@ export async function updateMemberInSheet(params: {
     merged.email1,
     merged.email2 ?? '',
     merged.groupId ?? '',
-    String(merged.isActive),
-    merged.deactivatedAt ?? '',
-    merged.deactivatedBy ?? '',
     merged.contractEnd ?? '',
     merged.phone1 ?? '',
     merged.phone2 ?? '',

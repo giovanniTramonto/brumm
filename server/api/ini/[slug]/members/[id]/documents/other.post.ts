@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   if (!md) {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
   }
-  if (!member.isActive) {
+  if (member.status !== 'ACTIVE' && member.status !== 'INACTIVE') {
     throw createError({ statusCode: 403, statusMessage: 'Nur für aktive Mitglieder verfügbar' })
   }
 

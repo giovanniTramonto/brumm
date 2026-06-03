@@ -114,16 +114,16 @@ const filteredMembers = computed(() => {
               <span v-if="member.careType" class="text-gray-600">
                 {{ CARE_TYPE_OPTIONS.find(o => o.key === member.careType)?.label ?? member.careType }}
               </span>
-              <span v-else-if="member.isActive && !member.isDisabled" class="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">fehlt</span>
+              <span v-else-if="member.status === 'ACTIVE'" class="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">fehlt</span>
               <span v-else class="text-gray-400">–</span>
             </td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ member.contractEnd ?? '–' }}</td>
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="member.isActive && !member.isDisabled ? 'bg-green-100 text-green-800' : member.isActive && member.isDisabled ? 'bg-orange-100 text-orange-700' : member.deactivatedAt ? 'bg-gray-100 text-gray-600' : member.hasPendingInvite ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
+                :class="member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : member.status === 'INACTIVE' ? 'bg-orange-100 text-orange-700' : member.status === 'DEACTIVATED' ? 'bg-gray-100 text-gray-600' : member.status === 'PENDING_INVITE' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
               >
-                {{ member.isActive && !member.isDisabled ? "Aktiv" : member.isActive && member.isDisabled ? "Inaktiv" : member.deactivatedAt ? "Abgemeldet" : member.hasPendingInvite ? "Ausstehend" : "Bestätigt" }}
+                {{ member.status === 'ACTIVE' ? "Aktiv" : member.status === 'INACTIVE' ? "Inaktiv" : member.status === 'DEACTIVATED' ? "Abgemeldet" : member.status === 'PENDING_INVITE' ? "Ausstehend" : "Bestätigt" }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">

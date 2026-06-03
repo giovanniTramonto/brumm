@@ -26,17 +26,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  if (user.isActive) {
+  if (user.status === 'ACTIVE' || user.status === 'INACTIVE') {
     throw createError({ statusCode: 409, statusMessage: 'Mitglied ist bereits aktiv' })
+  }
+
+  if (user.status === 'DEACTIVATED') {
+    throw createError({ statusCode: 409, statusMessage: 'Einladung wurde bereits storniert' })
   }
 
   const md = await getMemberData(memberId, club)
   if (!md) {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
-  }
-
-  if (md.deactivatedAt) {
-    throw createError({ statusCode: 409, statusMessage: 'Einladung wurde bereits storniert' })
   }
 
   await prisma.invite.deleteMany({

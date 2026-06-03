@@ -94,7 +94,7 @@ function isContractActive(contractEnd: string | null, year: number, month: numbe
 
 export function countContractActiveMembers(members: Member[], year: number, month: number): number {
   return members.filter(
-    (m) => m.isActive && !m.isDisabled && isContractActive(m.contractEnd, year, month),
+    (m) => m.status === 'ACTIVE' && isContractActive(m.contractEnd, year, month),
   ).length
 }
 
@@ -105,7 +105,7 @@ export function getAgeGroupBreakdown(
 ): { '01': number; '2': number; '3plus': number } {
   const counts = { '01': 0, '2': 0, '3plus': 0 }
   for (const m of members) {
-    if (!m.isActive || m.isDisabled || !isContractActive(m.contractEnd, year, month)) continue
+    if (m.status !== 'ACTIVE' || !isContractActive(m.contractEnd, year, month)) continue
     counts[getAgeGroup(m.birthDate, year, month)]++
   }
   return counts
@@ -146,7 +146,7 @@ export interface StaffingResult {
 
 export function calculateStaffing(members: Member[], year: number, month: number): StaffingResult {
   const activeMembers = members.filter(
-    (m) => m.isActive && !m.isDisabled && isContractActive(m.contractEnd, year, month),
+    (m) => m.status === 'ACTIVE' && isContractActive(m.contractEnd, year, month),
   )
   const periodIndex = month <= 7 ? 0 : 1
 
@@ -225,7 +225,7 @@ export function calculateReimbursement(
   month: number,
 ): ReimbursementResult {
   const activeMembers = members.filter(
-    (m) => m.isActive && !m.isDisabled && isContractActive(m.contractEnd, year, month),
+    (m) => m.status === 'ACTIVE' && isContractActive(m.contractEnd, year, month),
   )
   const periodIndex = getTimePeriodIndex(month)
 

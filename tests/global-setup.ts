@@ -31,7 +31,7 @@ export default async function globalSetup() {
   })
 
   const superuser = await prisma.user.create({
-    data: { clubId: club.id, role: 'SUPERUSER', isActive: true },
+    data: { clubId: club.id, role: 'SUPERUSER' },
   })
 
   await prisma.userEmail.create({

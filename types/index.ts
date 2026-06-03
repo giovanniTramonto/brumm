@@ -1,5 +1,6 @@
 export type Role = 'SUPERUSER' | 'TEAM' | 'MEMBER' | 'MANAGER'
 export type Storage = 'GOOGLE_DRIVE' | 'S3' | 'R2'
+export type MemberStatus = 'PENDING_INVITE' | 'REGISTERED' | 'ACTIVE' | 'INACTIVE' | 'DEACTIVATED'
 
 export interface GoogleDriveConfig {
   rootFolderId: string
@@ -55,10 +56,10 @@ export interface User {
   id: string
   clubId: string
   role: Role
-  isActive: boolean
-  isDisabled: boolean
+  status: MemberStatus
   isMemberManager: boolean
   storageId: string | null
+  deactivatedAt: string | null
   localData?: Record<string, unknown> | null
   createdAt: string
   emails?: UserEmail[]
@@ -79,9 +80,6 @@ export interface MemberData {
   groupId: string | null
   careType: string | null
   surcharges: string[]
-  isActive: boolean
-  deactivatedAt: string | null
-  deactivatedBy: string | null
   contractEnd: string | null
   lastEditedAt: string | null
   lastEditedBy: string | null
@@ -101,11 +99,9 @@ export interface Member extends User {
   careType: string | null
   surcharges: string[]
   storageRef: string
-  deactivatedAt: string | null
   contractEnd: string | null
   lastEditedAt: string | null
   lastEditedBy: string | null
-  hasPendingInvite: boolean
   hasInvite: boolean
   hasSubmittedDocuments: boolean
   group?: Group | null

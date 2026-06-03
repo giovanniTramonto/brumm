@@ -13,8 +13,14 @@ onMounted(async () => {
   await membersStore.fetchMembers(slug)
 })
 
-const activeCount = computed(() => membersStore.members.filter((m) => m.isActive).length)
-const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActive).length)
+const activeCount = computed(
+  () => membersStore.members.filter((m) => m.status === 'ACTIVE' || m.status === 'INACTIVE').length,
+)
+const pendingCount = computed(
+  () =>
+    membersStore.members.filter((m) => m.status === 'PENDING_INVITE' || m.status === 'REGISTERED')
+      .length,
+)
 </script>
 
 <template>
@@ -45,10 +51,10 @@ const pendingCount = computed(() => membersStore.members.filter((m) => !m.isActi
       <p v-if="membersStore.isLoading" class="text-sm text-gray-500">Daten werden geladen…</p>
       <template v-else-if="membersStore.members.length > 0">
         <div v-for="child in membersStore.members" :key="child.id" class="mb-2 last:mb-0">
-          <div v-if="child.isActive" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
+          <div v-if="child.status === 'ACTIVE' || child.status === 'INACTIVE'" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
             <strong>{{ child.firstName }} {{ child.lastName }}</strong> ist aktiv und für die Betreuung freigeschaltet.
           </div>
-          <div v-else-if="child.deactivatedAt" class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
+          <div v-else-if="child.status === 'DEACTIVATED'" class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
             <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde abgemeldet.
           </div>
           <div v-else class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">

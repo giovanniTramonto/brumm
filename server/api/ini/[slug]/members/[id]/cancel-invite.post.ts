@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  if (user.isActive) {
+  if (user.status === 'ACTIVE' || user.status === 'INACTIVE') {
     throw createError({
       statusCode: 409,
       statusMessage: 'Aktive Mitglieder können nicht so abgemeldet werden',

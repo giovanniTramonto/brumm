@@ -14,26 +14,21 @@ export default defineEventHandler(async (event) => {
       id: true,
       clubId: true,
       role: true,
-      isActive: true,
-      isDisabled: true,
+      status: true,
       storageId: true,
       isMemberManager: true,
       createdAt: true,
       hasSubmittedDocuments: true,
+      deactivatedAt: true,
     },
   })
 
   const userIds = users.map((u) => u.id)
-  const [memberDataList, pendingInvites, groups] = await Promise.all([
+  const [memberDataList, groups] = await Promise.all([
     getAllMemberData(userIds, club),
-    prisma.invite.findMany({
-      where: { userId: { in: userIds }, isUsed: false },
-      select: { userId: true },
-    }),
     getAllGroups(club),
   ])
   const groupMap = new Map(groups.map((g) => [g.id, g]))
-  const pendingInviteUserIds = new Set(pendingInvites.map((i) => i.userId))
 
   const memberDataMap = new Map(memberDataList.map((md) => [md.userId, md]))
 
@@ -60,8 +55,8 @@ export default defineEventHandler(async (event) => {
         id: u.id,
         clubId: u.clubId,
         role: u.role,
-        isActive: u.isActive,
-        isDisabled: u.isDisabled,
+        status: u.status,
+        deactivatedAt: u.deactivatedAt?.toISOString() ?? null,
         storageId: u.storageId,
         isMemberManager: u.isMemberManager,
         createdAt: u.createdAt.toISOString(),
@@ -79,9 +74,9 @@ export default defineEventHandler(async (event) => {
         surcharges: md.surcharges,
         group: md.groupId ? (groupMap.get(md.groupId) ?? null) : null,
         storageRef: md.storageRef,
-        deactivatedAt: md.deactivatedAt,
         contractEnd: md.contractEnd,
-        hasPendingInvite: pendingInviteUserIds.has(u.id),
+        lastEditedAt: md.lastEditedAt,
+        lastEditedBy: md.lastEditedBy,
         hasInvite: false,
         hasSubmittedDocuments: u.hasSubmittedDocuments,
       }

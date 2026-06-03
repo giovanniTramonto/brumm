@@ -16,22 +16,21 @@ export default defineEventHandler(async (event) => {
     currentUser.role === 'TEAM' ||
     (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
 
-  const [user, pendingInvite, anyInvite, currentUserEmails] = await Promise.all([
+  const [user, anyInvite, currentUserEmails] = await Promise.all([
     prisma.user.findFirst({
       where: { id: memberId, clubId: club.id },
       select: {
         id: true,
         clubId: true,
         role: true,
-        isActive: true,
-        isDisabled: true,
+        status: true,
         storageId: true,
         isMemberManager: true,
         createdAt: true,
         hasSubmittedDocuments: true,
+        deactivatedAt: true,
       },
     }),
-    prisma.invite.findFirst({ where: { userId: memberId, isUsed: false } }),
     prisma.invite.findFirst({ where: { userId: memberId } }),
     currentUser.role === 'SUPERUSER'
       ? prisma.userEmail.findMany({ where: { userId: currentUser.id }, select: { email: true } })
@@ -70,8 +69,8 @@ export default defineEventHandler(async (event) => {
     id: user.id,
     clubId: user.clubId,
     role: user.role,
-    isActive: user.isActive,
-    isDisabled: user.isDisabled,
+    status: user.status,
+    deactivatedAt: user.deactivatedAt?.toISOString() ?? null,
     storageId: user.storageId,
     isMemberManager: user.isMemberManager,
     createdAt: user.createdAt.toISOString(),
@@ -88,11 +87,9 @@ export default defineEventHandler(async (event) => {
     careType: md.careType,
     surcharges: md.surcharges,
     storageRef: md.storageRef,
-    deactivatedAt: md.deactivatedAt,
     contractEnd: md.contractEnd,
     lastEditedAt: md.lastEditedAt,
     lastEditedBy: md.lastEditedBy,
-    hasPendingInvite: !!pendingInvite,
     hasInvite: !!anyInvite,
     hasSubmittedDocuments: user.hasSubmittedDocuments,
   }

@@ -28,16 +28,16 @@ model Club {
 }
 
 model User {
-  id        String  @id @default(cuid())
+  id        String       @id @default(cuid())
   clubId    String
-  role      Role    @default(MEMBER)
-  isActive  Boolean @default(false)
+  role      Role         @default(MEMBER)
+  status    MemberStatus @default(REGISTERED)
   storageId String?
 
   localData               Json?
-  isMemberManager         Boolean  @default(false)
-  hasSubmittedDocuments   Boolean  @default(false)
-  isDisabled              Boolean  @default(false)
+  isMemberManager         Boolean   @default(false)
+  hasSubmittedDocuments   Boolean   @default(false)
+  deactivatedAt           DateTime?
 
   createdAt DateTime @default(now())
 
@@ -147,6 +147,14 @@ enum Role {
   TEAM
   MEMBER
   MANAGER
+}
+
+enum MemberStatus {
+  PENDING_INVITE
+  REGISTERED
+  ACTIVE
+  INACTIVE
+  DEACTIVATED
 }
 
 enum Storage {

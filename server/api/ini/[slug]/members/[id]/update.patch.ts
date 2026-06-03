@@ -140,7 +140,7 @@ export default defineEventHandler(async (event) => {
 
   const anyInvite = await prisma.invite.findFirst({ where: { userId: memberId } })
   const hasInvite = !!anyInvite
-  const sendEmailNotifications = hasInvite || user.isActive
+  const sendEmailNotifications = hasInvite || user.status === 'ACTIVE' || user.status === 'INACTIVE'
 
   if (sendEmailNotifications) {
     await Promise.allSettled([

@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const member = await prisma.user.findFirst({ where: { id: memberId, clubId: club.id } })
-  if (!member?.isActive) {
+  if (member?.status !== 'ACTIVE' && member?.status !== 'INACTIVE') {
     throw createError({ statusCode: 403, statusMessage: 'Nur für aktive Mitglieder verfügbar' })
   }
 
