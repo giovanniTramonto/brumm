@@ -54,24 +54,22 @@ const filteredMembers = computed(() => {
   )
   const dir = sortDir.value === 'asc' ? 1 : -1
   return [...filtered].sort((a, b) => {
-    if (sortKey.value === 'name') {
-      return (
-        dir * `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'de')
-      )
+    switch (sortKey.value) {
+      case 'name':
+        return (
+          dir * `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'de')
+        )
+      case 'group':
+        return dir * (a.group?.name ?? '').localeCompare(b.group?.name ?? '', 'de')
+      case 'careType':
+        return dir * (a.careType ?? '').localeCompare(b.careType ?? '', 'de')
+      case 'contractEnd':
+        return dir * (a.contractEnd ?? '').localeCompare(b.contractEnd ?? '')
+      case 'status':
+        return dir * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
+      default:
+        return 0
     }
-    if (sortKey.value === 'group') {
-      return dir * (a.group?.name ?? '').localeCompare(b.group?.name ?? '', 'de')
-    }
-    if (sortKey.value === 'careType') {
-      return dir * (a.careType ?? '').localeCompare(b.careType ?? '', 'de')
-    }
-    if (sortKey.value === 'contractEnd') {
-      return dir * (a.contractEnd ?? '').localeCompare(b.contractEnd ?? '')
-    }
-    if (sortKey.value === 'status') {
-      return dir * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
-    }
-    return 0
   })
 })
 </script>
