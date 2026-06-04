@@ -652,7 +652,7 @@ async function onSubmit() {
             {{ saveError }}
           </div>
 
-          <div :inert="isFormLocked">
+          <div :inert="isFormLocked" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="field-firstName" class="label">Vorname *</label>
