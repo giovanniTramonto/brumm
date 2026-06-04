@@ -88,6 +88,7 @@ export default defineEventHandler(async (event) => {
     surcharges: md.surcharges,
     storageRef: md.storageRef,
     contractEnd: md.contractEnd,
+    address: md.address,
     lastEditedAt: md.lastEditedAt,
     lastEditedBy: md.lastEditedBy,
     hasInvite: !!anyInvite,

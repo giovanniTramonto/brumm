@@ -71,6 +71,7 @@ export default defineEventHandler(async (event) => {
     careType,
     surcharges,
     contractEnd,
+    address,
     lastEditedAt: expectedLastEditedAt,
   } = parsed.data
 
@@ -90,6 +91,7 @@ export default defineEventHandler(async (event) => {
     groupId: groupId || null,
     careType: careType || null,
     contractEnd: contractEnd || null,
+    address: address || null,
   }
 
   if (canManageMembers && surcharges !== undefined) {

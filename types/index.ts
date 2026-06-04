@@ -84,6 +84,7 @@ export interface MemberData {
   contractEnd: string | null
   lastEditedAt: string | null
   lastEditedBy: string | null
+  address: string | null
 }
 
 export interface Member extends User {
@@ -103,6 +104,7 @@ export interface Member extends User {
   contractEnd: string | null
   lastEditedAt: string | null
   lastEditedBy: string | null
+  address: string | null
   hasInvite: boolean
   hasSubmittedDocuments: boolean
   group?: Group | null

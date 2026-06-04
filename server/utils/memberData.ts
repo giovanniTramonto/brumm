@@ -46,6 +46,7 @@ function localDataToMemberData(userId: string, localData: unknown): MemberData |
     contractEnd: (d.contractEnd as string | null) ?? null,
     lastEditedAt: (d.lastEditedAt as string | null) ?? null,
     lastEditedBy: (d.lastEditedBy as string | null) ?? null,
+    address: (d.address as string | null) ?? null,
   }
 }
 

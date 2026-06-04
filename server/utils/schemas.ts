@@ -30,6 +30,7 @@ export const createMemberSchema = z.object({
   careType: z.string().optional(),
   surcharges: z.array(z.string()).optional(),
   contractEnd: contractEndField,
+  address: z.string().optional().or(z.literal('')),
   sendInvite: z.boolean().default(true),
 })
 
@@ -47,6 +48,7 @@ export const updateMemberSchema = z.object({
   careType: z.string().optional(),
   surcharges: z.array(z.string()).optional(),
   contractEnd: contractEndField,
+  address: z.string().optional().or(z.literal('')),
   lastEditedAt: z.string().optional().nullable(),
 })
 

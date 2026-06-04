@@ -19,6 +19,7 @@ const MASTER_SHEET_HEADERS = [
   'careType',
   'lastEditedAt',
   'lastEditedBy',
+  'address',
 ]
 
 function rowToMemberData(row: string[]): MemberData {
@@ -40,6 +41,7 @@ function rowToMemberData(row: string[]): MemberData {
     careType: row[14] || null,
     lastEditedAt: row[15] || null,
     lastEditedBy: row[16] || null,
+    address: row[17] || null,
   }
 }
 
@@ -101,6 +103,7 @@ export async function writeMemberToSheet(params: {
     data.careType ?? '',
     data.lastEditedAt ?? '',
     data.lastEditedBy ?? '',
+    data.address ?? '',
   ]
 
   await sheets.spreadsheets.values.append({
@@ -172,7 +175,7 @@ export async function getAllMembersFromSheet(params: {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: params.membersSheetId,
-      range: 'A:Q',
+      range: 'A:R',
     })
     const rows = response.data.values ?? []
     return rows.slice(1).map((row) => rowToMemberData(row as string[]))
@@ -192,7 +195,7 @@ export async function getMemberFromSheet(params: {
   try {
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: params.membersSheetId,
-      range: 'A:Q',
+      range: 'A:R',
     })
     const rows = response.data.values ?? []
     const dataRow = rows.slice(1).find((row) => row[0] === params.userId)
@@ -213,7 +216,7 @@ export async function findUserIdByEmail(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.membersSheetId,
-    range: 'A:Q',
+    range: 'A:R',
   })
 
   const rows = response.data.values ?? []
@@ -239,7 +242,7 @@ export async function updateMemberInSheet(params: {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: params.membersSheetId,
-    range: 'A:Q',
+    range: 'A:R',
   })
 
   const rows = response.data.values ?? []
@@ -279,6 +282,7 @@ export async function updateMemberInSheet(params: {
     merged.careType ?? '',
     merged.lastEditedAt ?? '',
     merged.lastEditedBy ?? '',
+    merged.address ?? '',
   ]
 
   const sheetRow = rowIndex + 1

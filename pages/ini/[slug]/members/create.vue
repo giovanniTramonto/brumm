@@ -54,6 +54,7 @@ const form = reactive({
   groupId: '',
   careType: '',
   contractEnd: '',
+  address: '',
   surcharges: [] as string[],
   sendInvite: true,
 })
@@ -83,6 +84,7 @@ async function onSubmit() {
       groupId: form.groupId || undefined,
       careType: form.careType || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
+      address: form.address.trim() || undefined,
       surcharges: form.surcharges.length > 0 ? form.surcharges : undefined,
       sendInvite: form.sendInvite,
     }
@@ -220,6 +222,11 @@ async function onSubmit() {
           <label class="label">Telefon 2</label>
           <input v-model="form.phone2" type="tel" class="input mt-1" />
         </div>
+      </div>
+
+      <div>
+        <label class="label">Adresse</label>
+        <input v-model="form.address" type="text" class="input mt-1" />
       </div>
 
       <label v-if="!isSuperUserGuardian" class="flex items-center gap-2 text-sm text-gray-700">

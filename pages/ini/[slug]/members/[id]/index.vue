@@ -149,7 +149,8 @@ const hasChanges = computed(() => {
     (form.groupId || null) !== (m.groupId ?? null) ||
     (form.careType || null) !== (m.careType ?? null) ||
     form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
-    (form.contractEnd.trim() || null) !== (m.contractEnd ?? null)
+    (form.contractEnd.trim() || null) !== (m.contractEnd ?? null) ||
+    (form.address.trim() || null) !== (m.address ?? null)
   )
 })
 
@@ -167,6 +168,7 @@ const form = reactive({
   careType: '',
   surcharges: [] as string[],
   contractEnd: '',
+  address: '',
 })
 
 async function loadDocuments(silent = false) {
@@ -353,6 +355,7 @@ onMounted(async () => {
     form.careType = m.careType ?? ''
     form.surcharges = m.surcharges ?? []
     form.contractEnd = m.contractEnd ?? ''
+    form.address = m.address ?? ''
 
     if (templatesData) {
       memberDocTemplates.value = templatesData.templates
@@ -410,6 +413,7 @@ async function onSave() {
         careType: canManageMembers.value ? form.careType || undefined : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
+        address: form.address.trim() || undefined,
         lastEditedAt: member.value?.lastEditedAt ?? null,
       },
     })
@@ -820,6 +824,17 @@ async function onSubmit() {
             </div>
           </div>
 
+          <div>
+            <label for="field-address" class="label">Adresse</label>
+            <input
+              id="field-address"
+              v-model="form.address"
+              type="text"
+              class="input mt-1"
+              :readonly="isFormLocked"
+            />
+          </div>
+
           <div v-if="!isFormLocked" class="flex gap-2">
             <button
               type="submit"
@@ -999,7 +1014,7 @@ async function onSubmit() {
               class="text-xs text-amber-600"
             >Unterlagen können direkt hochgeladen werden</span>
             <span
-              v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments"
+              v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments && !isOwnChild"
               class="text-xs text-amber-600"
             >Noch nicht fertig eingereicht</span>
           </div>
@@ -1266,7 +1281,7 @@ async function onSubmit() {
             <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
               <button
                 class="btn-primary text-sm"
-                :disabled="(!member.hasSubmittedDocuments && member.hasInvite) || !canManageMembers"
+                :disabled="(!member.hasSubmittedDocuments && member.hasInvite && !isOwnChild) || !canManageMembers"
                 @click="onActivate"
               >
                 Freischalten
