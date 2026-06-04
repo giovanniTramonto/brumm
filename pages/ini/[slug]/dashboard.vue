@@ -11,10 +11,6 @@ const membersStore = useMembersStore()
 
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
 const isSuperUser = computed(() => authStore.currentUser?.role === 'SUPERUSER')
-const canManageDocuments = computed(() => {
-  const role = authStore.currentUser?.role
-  return role === 'SUPERUSER' || role === 'MANAGER'
-})
 
 const pendingCount = computed(
   () =>
@@ -51,6 +47,6 @@ onMounted(() => membersStore.fetchMembers(slug))
 
     <DashboardAktuell :slug="slug" />
 
-    <DashboardDocuments v-if="canManageDocuments" :slug="slug" />
+    <DashboardDocuments :slug="slug" />
   </div>
 </template>
