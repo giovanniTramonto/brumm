@@ -29,10 +29,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="mb-6 flex items-center gap-4">
-      <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-sm text-gray-500 hover:text-gray-700">← Zurück</NuxtLink>
-      <h1 class="text-2xl font-bold text-gray-900">Adressliste</h1>
+  <div class="max-w-3xl">
+    <div class="mb-6">
+      <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-sm text-gray-500 hover:text-gray-900">← Zurück</NuxtLink>
     </div>
 
     <div v-if="isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
@@ -40,6 +39,7 @@ onMounted(async () => {
     </div>
 
     <div v-else class="card overflow-x-auto">
+      <h1 class="mb-4 text-xl font-semibold text-gray-900">Adressliste</h1>
       <table class="min-w-full text-sm">
         <thead>
           <tr class="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
