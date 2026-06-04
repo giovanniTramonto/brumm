@@ -8,7 +8,7 @@ const membersStore = useMembersStore()
 <template>
   <div class="card mt-6">
     <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
-    <p v-if="membersStore.isLoading" class="text-sm text-gray-500">Daten werden geladen…</p>
+    <LoadingBrumm v-if="membersStore.isLoading" />
     <template v-else-if="membersStore.members.length > 0">
       <div v-for="child in membersStore.members" :key="child.id" class="mb-2 last:mb-0">
         <div v-if="child.status === 'ACTIVE' || child.status === 'INACTIVE'" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
