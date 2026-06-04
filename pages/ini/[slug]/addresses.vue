@@ -59,9 +59,7 @@ const groupedSections = computed(() => {
 
     <h1 class="mb-6 text-2xl font-bold text-gray-900">Adressliste</h1>
 
-    <div v-if="isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
-      Brumm, brumm …
-    </div>
+    <LoadingBrumm v-if="isLoading" />
 
     <template v-else-if="groupedSections && groupedSections.length > 0">
       <div v-for="section in groupedSections" :key="section.name" class="card overflow-x-auto mb-6">

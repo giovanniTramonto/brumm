@@ -184,7 +184,7 @@ async function onDelete(template: Template) {
       </NuxtLink>
     </div>
 
-    <div v-if="isLoading" role="status" aria-live="polite" class="py-12 text-gray-500">Brumm, brumm …</div>
+    <LoadingBrumm v-if="isLoading" />
 
     <template v-else>
       <div class="card space-y-4">

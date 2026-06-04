@@ -124,7 +124,7 @@ const filteredMembers = computed(() => {
       />
     </div>
 
-    <div v-if="membersStore.isLoading" class="py-12 text-gray-500">Brumm, brumm …</div>
+    <LoadingBrumm v-if="membersStore.isLoading" />
 
     <StoreError v-else-if="membersStore.error" :error="membersStore.error" :slug="slug" />
 

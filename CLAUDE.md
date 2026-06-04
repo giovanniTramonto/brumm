@@ -124,6 +124,7 @@ DEV_EMAIL_WHITELIST   # Optional: kommaseparierte Whitelist – nur diese Adress
 | Vereinsunterlagen (Lazy-Init, Upload) | `server/utils/clubDocuments.ts` |
 | Dashboard-Komponenten | `components/dashboard/` |
 | Sortierbarer Tabellen-Header (WCAG) | `components/SortableTableHeader.vue` |
+| Lade-Animation (hüpfendes Emoji, WCAG) | `components/LoadingBrumm.vue` |
 | Managerdaten (Sheets/localData) | `server/utils/managerData.ts` |
 | Storage Utils | `server/utils/storage/` |
 | E-Mail Utils | `server/utils/email.ts` |

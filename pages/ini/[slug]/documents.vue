@@ -126,7 +126,7 @@ async function onDelete(doc: Document) {
       <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-sm text-gray-500 hover:text-gray-900">← Zurück</NuxtLink>
     </div>
 
-    <div v-if="isLoading" role="status" aria-live="polite" class="py-12 text-gray-500">Brumm, brumm …</div>
+    <LoadingBrumm v-if="isLoading" />
 
     <template v-else>
       <div class="card space-y-4">

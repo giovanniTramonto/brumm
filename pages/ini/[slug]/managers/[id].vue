@@ -63,9 +63,7 @@ async function onDelete() {
       <h1 class="text-2xl font-bold text-gray-900">{{ manager?.name ?? 'Vorstandsmitglied' }}</h1>
     </div>
 
-    <div v-if="isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
-      Brumm, brumm …
-    </div>
+    <LoadingBrumm v-if="isLoading" />
 
     <form v-else class="card max-w-lg" @submit.prevent="onSubmit">
       <div v-if="error" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700" role="alert">

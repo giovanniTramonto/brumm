@@ -21,9 +21,7 @@ onMounted(async () => {
       </NuxtLink>
     </div>
 
-    <div v-if="managersStore.isLoading" class="text-sm text-gray-500" role="status" aria-live="polite">
-      Brumm, brumm …
-    </div>
+    <LoadingBrumm v-if="managersStore.isLoading" />
 
     <StoreError v-else-if="managersStore.error" :error="managersStore.error" :slug="slug" />
 

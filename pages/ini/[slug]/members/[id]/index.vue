@@ -591,7 +591,7 @@ async function onSubmit() {
       </NuxtLink>
     </div>
 
-    <div v-if="isLoading" class="py-12 text-sm text-gray-500">Brumm, brumm …</div>
+    <LoadingBrumm v-if="isLoading" />
     <div
       v-else-if="error"
       class="rounded-md bg-red-50 p-4 text-sm text-red-700"
@@ -842,9 +842,7 @@ async function onSubmit() {
         <template v-if="isMember && (member.status === 'ACTIVE' || member.status === 'INACTIVE')">
           <div class="border-t pt-4">
             <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-            <div v-if="isLoadingDocs" class="text-sm text-gray-500">
-              Brumm, brumm …
-            </div>
+            <LoadingBrumm v-if="isLoadingDocs" />
             <p v-else-if="documents.length === 0" class="text-sm text-gray-500">
               Keine Vertragsunterlagen hochgeladen.
             </p>
@@ -869,9 +867,7 @@ async function onSubmit() {
 
           <div class="border-t pt-4">
             <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
-            <div v-if="isLoadingOtherDocs" class="text-sm text-gray-500">
-              Brumm, brumm …
-            </div>
+            <LoadingBrumm v-if="isLoadingOtherDocs" />
             <template v-else>
               <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
                 <li
@@ -934,14 +930,7 @@ async function onSubmit() {
             </div>
           </div>
 
-          <div
-            v-if="isLoadingTemplates"
-            role="status"
-            aria-live="polite"
-            class="text-sm text-gray-500"
-          >
-            Brumm, brumm …
-          </div>
+          <LoadingBrumm v-if="isLoadingTemplates" />
 
           <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
             Noch keine Vertragsunterlagen konfiguriert.
@@ -1011,14 +1000,7 @@ async function onSubmit() {
             >Noch nicht fertig eingereicht</span>
           </div>
 
-          <div
-            v-if="isLoadingTemplates || isLoadingDocs"
-            role="status"
-            aria-live="polite"
-            class="text-sm text-gray-500"
-          >
-            Brumm, brumm …
-          </div>
+          <LoadingBrumm v-if="isLoadingTemplates || isLoadingDocs" />
 
           <!-- Aktiv oder Abgemeldet: nur hochgeladene Dateien anzeigen -->
           <template v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE' || member.status === 'DEACTIVATED'">
@@ -1210,9 +1192,7 @@ async function onSubmit() {
 
         <div v-if="canManageMembers && (member.status === 'ACTIVE' || member.status === 'INACTIVE')" class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
-          <div v-if="isLoadingOtherDocs" class="text-sm text-gray-500">
-            Brumm, brumm …
-          </div>
+          <LoadingBrumm v-if="isLoadingOtherDocs" />
           <template v-else>
             <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
               <li

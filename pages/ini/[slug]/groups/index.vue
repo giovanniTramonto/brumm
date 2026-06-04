@@ -38,7 +38,7 @@ async function onDeleteGroup(group: Group) {
       </NuxtLink>
     </div>
 
-    <div v-if="groupsStore.isLoading" class="py-12 text-gray-500">Brumm, brumm …</div>
+    <LoadingBrumm v-if="groupsStore.isLoading" />
 
     <StoreError v-else-if="groupsStore.error" :error="groupsStore.error" :slug="slug" />
 

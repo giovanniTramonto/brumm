@@ -46,7 +46,7 @@ async function onSubmit() {
       <h1 class="text-2xl font-bold text-gray-900">Gruppe bearbeiten</h1>
     </div>
 
-    <div v-if="isLoading" class="py-12 text-gray-500">Brumm, brumm …</div>
+    <LoadingBrumm v-if="isLoading" />
 
     <div v-else-if="error && !form.name" class="rounded-md bg-red-50 p-4 text-sm text-red-700">
       {{ error }}
