@@ -169,8 +169,8 @@ const form = reactive({
   contractEnd: '',
 })
 
-async function loadDocuments() {
-  isLoadingDocs.value = true
+async function loadDocuments(silent = false) {
+  if (!silent) isLoadingDocs.value = true
   try {
     const data = await $fetch<{ documents: DocumentEntry[] }>(
       `/api/ini/${slug}/members/${memberId}/documents`,
@@ -179,7 +179,7 @@ async function loadDocuments() {
   } catch {
     // ignore
   } finally {
-    isLoadingDocs.value = false
+    if (!silent) isLoadingDocs.value = false
   }
 }
 
@@ -260,7 +260,7 @@ async function onDeleteContractDocument(fileId: string) {
   if (!confirm('Datei unwiderruflich löschen?')) return
   try {
     await $fetch(`/api/ini/${slug}/members/${memberId}/documents/${fileId}`, { method: 'DELETE' })
-    await loadDocuments()
+    await loadDocuments(true)
   } catch {
     // ignore
   }
@@ -293,7 +293,7 @@ async function onUploadContractDocument(event: Event) {
     const body = new FormData()
     body.append('file', file, file.name)
     await $fetch(`/api/ini/${slug}/members/${memberId}/documents`, { method: 'POST', body })
-    await loadDocuments()
+    await loadDocuments(true)
   } catch (err: unknown) {
     contractUploadError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
@@ -1035,7 +1035,7 @@ async function onSubmit() {
           </template>
 
           <!-- No invite: direct upload by canManageMembers -->
-          <template v-else-if="!member.hasInvite && member.status !== 'ACTIVE' && member.status !== 'INACTIVE' && member.status !== 'DEACTIVATED'">
+          <template v-else-if="!member.hasInvite">
             <ul v-if="documents.length > 0" class="mb-3 divide-y divide-gray-100">
               <li
                 v-for="doc in documents"
@@ -1075,8 +1075,8 @@ async function onSubmit() {
             Keine Vertragsunterlagen konfiguriert.
           </p>
 
-          <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates -->
-          <ul v-if="filteredDocuments.length > 0 && member.hasInvite" class="mt-2 divide-y divide-gray-100">
+          <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates, shown alongside template list before activation -->
+          <ul v-if="filteredDocuments.length > 0 && member.hasInvite && member.status === 'REGISTERED'" class="mt-2 divide-y divide-gray-100">
             <li
               v-for="doc in filteredDocuments"
               :key="doc.id"
