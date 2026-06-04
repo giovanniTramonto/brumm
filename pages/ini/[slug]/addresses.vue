@@ -90,13 +90,13 @@ const groupedSections = computed(() => {
                   {{ m.address ?? '–' }}
                 </td>
                 <td class="pt-4 pb-1 pr-8 text-gray-700">{{ m.guardian1Name ?? '' }}</td>
-                <td class="pt-4 pb-1 pr-8 text-gray-700">{{ m.email1 }}</td>
-                <td class="pt-4 pb-1 text-gray-700">{{ m.phone1 ?? '' }}</td>
+                <td class="pt-4 pb-1 pr-8 text-gray-700"><a :href="`mailto:${m.email1}`" class="text-blue-600 hover:underline">{{ m.email1 }}</a></td>
+                <td class="pt-4 pb-1 text-gray-700"><a v-if="m.phone1" :href="`tel:${m.phone1}`" class="text-blue-600 hover:underline">{{ m.phone1 }}</a></td>
               </tr>
               <tr v-if="m.guardian2Name || m.email2">
                 <td class="pb-4 pr-8 text-gray-700">{{ m.guardian2Name ?? '' }}</td>
-                <td class="pb-4 pr-8 text-gray-700">{{ m.email2 ?? '' }}</td>
-                <td class="pb-4 text-gray-700">{{ m.phone2 ?? '' }}</td>
+                <td class="pb-4 pr-8 text-gray-700"><a v-if="m.email2" :href="`mailto:${m.email2}`" class="text-blue-600 hover:underline">{{ m.email2 }}</a></td>
+                <td class="pb-4 text-gray-700"><a v-if="m.phone2" :href="`tel:${m.phone2}`" class="text-blue-600 hover:underline">{{ m.phone2 }}</a></td>
               </tr>
             </template>
           </tbody>
