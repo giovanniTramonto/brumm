@@ -835,16 +835,6 @@ async function onSubmit() {
             />
           </div>
 
-          <div v-if="!isFormLocked" class="flex gap-2">
-            <button
-              type="submit"
-              class="btn-primary text-sm"
-              :disabled="isSubmitting || !hasChanges"
-            >
-              {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
-            </button>
-          </div>
-        </form>
 
         <!-- MEMBER: Aktiv → documents -->
         <template v-if="isMember && (member.status === 'ACTIVE' || member.status === 'INACTIVE')">
@@ -1206,6 +1196,7 @@ async function onSubmit() {
           </ul>
           <div v-if="isMember" class="flex items-center justify-end gap-3 border-t pt-4">
             <button
+              type="button"
               class="btn-primary text-sm"
               :disabled="!localAllSubmitted"
               @click="onSubmit"
@@ -1272,14 +1263,25 @@ async function onSubmit() {
           </template>
         </div>
 
-        <div v-if="!isMember" class="space-y-2 border-t pt-4">
+        <div v-if="canManageMembers || (isMember && !isFormLocked)" class="space-y-2 border-t pt-4">
           <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
             Kind wurde abgemeldet. Automatische Löschung nach 1 Jahr.
           </p>
-          <div class="flex justify-end gap-3">
+          <div class="flex items-center justify-between gap-3">
+            <button
+              v-if="!isFormLocked"
+              type="submit"
+              class="btn-primary text-sm"
+              :disabled="isSubmitting || !hasChanges"
+            >
+              {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
+            </button>
+            <div v-else />
+            <div v-if="canManageMembers" class="flex gap-3">
             <!-- Vor Freischaltung: Freischalten + Einladung + Kind entfernen -->
             <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
               <button
+                type="button"
                 class="btn-primary text-sm"
                 :disabled="(!member.hasSubmittedDocuments && member.hasInvite && !isOwnChild) || !canManageMembers"
                 @click="onActivate"
@@ -1288,6 +1290,7 @@ async function onSubmit() {
               </button>
               <button
                 v-if="member.status === 'PENDING_INVITE'"
+                type="button"
                 class="btn-secondary text-sm"
                 :disabled="isResendingInvite || !canManageMembers"
                 @click="onResendInvite"
@@ -1295,6 +1298,7 @@ async function onSubmit() {
                 {{ isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden" }}
               </button>
               <button
+                type="button"
                 class="btn-danger text-sm"
                 :disabled="isCancellingInvite || !canManageMembers"
                 @click="onDeleteMember"
@@ -1306,6 +1310,7 @@ async function onSubmit() {
             <!-- Aktiv oder Inaktiv: Deaktivieren/Aktivieren + Abmelden -->
             <template v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE'">
               <button
+                type="button"
                 class="btn-secondary text-sm"
                 :disabled="isDisabling || !canManageMembers"
                 @click="onToggleDisabled"
@@ -1313,6 +1318,7 @@ async function onSubmit() {
                 {{ isDisabling ? "Wird gespeichert…" : member.status === 'INACTIVE' ? "Aktivieren" : "Deaktivieren" }}
               </button>
               <button
+                type="button"
                 class="btn-secondary text-sm"
                 :disabled="isDeactivating || !canManageMembers"
                 @click="onDeactivate"
@@ -1324,6 +1330,7 @@ async function onSubmit() {
             <!-- Abgemeldet: Abmeldung rückgängig + Löschen -->
             <template v-else-if="member.status === 'DEACTIVATED'">
               <button
+                type="button"
                 class="btn-secondary text-sm"
                 :disabled="isReactivating || !canManageMembers"
                 @click="onReactivate"
@@ -1331,6 +1338,7 @@ async function onSubmit() {
                 {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung rückgängig" }}
               </button>
               <button
+                type="button"
                 class="btn-danger text-sm"
                 :disabled="isCancellingInvite || !canManageMembers"
                 @click="onDeleteMember"
@@ -1338,11 +1346,13 @@ async function onSubmit() {
                 Sofort löschen
               </button>
             </template>
+            </div>
           </div>
           <p v-if="inviteActionError" class="text-sm text-red-700">
             {{ inviteActionError }}
           </p>
         </div>
+        </form>
       </div>
 
       <FootnoteCard v-if="member?.lastEditedAt">
