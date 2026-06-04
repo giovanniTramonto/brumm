@@ -25,6 +25,8 @@ const navItems = computed(() => {
   return items
 })
 
+const { isMenuOpen } = useNavMenu(768)
+
 async function onLogout() {
   if (!slug.value) return
   await authStore.logout(slug.value)
@@ -34,14 +36,14 @@ async function onLogout() {
 
 <template>
   <div :class="authStore.currentUser?.role === 'MEMBER' ? 'bg-member' : 'bg-ini'" class="min-h-screen">
-    <nav v-if="authStore.currentUser" aria-label="Hauptnavigation" class="border-b border-gray-200 bg-white shadow-sm">
+    <nav v-if="authStore.currentUser" aria-label="Hauptnavigation" class="relative z-10 border-b border-gray-200 bg-white shadow-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
+        <div class="flex min-h-16 items-center justify-between py-4">
           <div class="flex items-center gap-8">
             <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-lg font-semibold text-primary-700">
               {{ authStore.currentClub?.name ?? "Brumm" }}
             </NuxtLink>
-            <ul class="hidden list-none gap-1 sm:flex" role="list">
+            <ul class="hidden list-none gap-1 tablet:flex" role="list">
               <li v-for="item in navItems" :key="item.to">
                 <span
                   v-if="item.disabled"
@@ -62,18 +64,63 @@ async function onLogout() {
               </li>
             </ul>
           </div>
-          <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-500">{{
+          <div class="flex items-center gap-3 pl-8">
+            <span class="hidden text-sm text-gray-500 tablet:inline">{{
               authStore.currentUser?.role === 'SUPERUSER' ? 'Admin'
               : authStore.currentUser?.role === 'MANAGER' ? 'Vorstand'
               : authStore.currentUser?.role === 'TEAM' ? 'Team'
               : 'Mitglied'
             }}</span>
-            <button class="btn-secondary text-sm" @click="onLogout">Abmelden</button>
+            <button class="btn-secondary hidden text-sm tablet:inline-flex" @click="onLogout">Abmelden</button>
+            <NavBurger
+              class="tablet:hidden"
+              :is-open="isMenuOpen"
+              controls="mobile-nav"
+              @toggle="isMenuOpen = !isMenuOpen"
+            />
           </div>
         </div>
       </div>
+
+      <!-- Mobile menu -->
+      <div
+        v-if="isMenuOpen"
+        id="mobile-nav"
+        class="tablet:hidden border-t border-gray-100 px-4 py-3"
+      >
+        <ul class="flex flex-col gap-1" role="list">
+          <li v-for="item in navItems" :key="item.to">
+            <span
+              v-if="item.disabled"
+              class="block rounded-md px-3 py-2 text-sm font-medium text-gray-300 cursor-not-allowed"
+              role="link"
+              aria-disabled="true"
+            >{{ item.label }}</span>
+            <NuxtLink
+              v-else
+              :to="item.to"
+              :class="[
+                'block rounded-md px-3 py-2 text-sm font-medium',
+                route.path.startsWith(item.to)
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              ]"
+            >{{ item.label }}</NuxtLink>
+          </li>
+        </ul>
+        <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+          <span class="text-sm text-gray-500">{{
+            authStore.currentUser?.role === 'SUPERUSER' ? 'Admin'
+            : authStore.currentUser?.role === 'MANAGER' ? 'Vorstand'
+            : authStore.currentUser?.role === 'TEAM' ? 'Team'
+            : 'Mitglied'
+          }}</span>
+          <button class="btn-secondary text-sm" @click="onLogout">Abmelden</button>
+        </div>
+      </div>
     </nav>
+
+    <NavOverlay :is-open="isMenuOpen" @close="isMenuOpen = false" />
 
     <main class="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8">
       <slot />

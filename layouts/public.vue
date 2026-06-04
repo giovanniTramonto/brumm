@@ -7,35 +7,7 @@ const navLinks = [
   { to: '/login', label: 'Anmelden' },
 ]
 
-const isMenuOpen = ref(false)
-
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') isMenuOpen.value = false
-}
-
-function onBreakpoint(e: MediaQueryListEvent) {
-  if (e.matches) isMenuOpen.value = false
-}
-
-let mql: MediaQueryList | null = null
-
-onMounted(() => {
-  mql = window.matchMedia('(min-width: 768px)')
-  mql.addEventListener('change', onBreakpoint)
-  document.addEventListener('keydown', onKeydown)
-})
-
-onUnmounted(() => {
-  mql?.removeEventListener('change', onBreakpoint)
-  document.removeEventListener('keydown', onKeydown)
-})
-
-watch(
-  () => route.path,
-  () => {
-    isMenuOpen.value = false
-  },
-)
+const { isMenuOpen } = useNavMenu(768)
 </script>
 
 <template>
@@ -78,34 +50,16 @@ watch(
           >Registrieren</NuxtLink>
         </nav>
 
-        <!-- Burger button -->
-        <button
-          class="tablet:hidden flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-          :aria-expanded="isMenuOpen"
-          aria-controls="main-nav"
-          :aria-label="isMenuOpen ? 'Menü schließen' : 'Menü öffnen'"
-          type="button"
-          @click="isMenuOpen = !isMenuOpen"
-        >
-          <svg v-if="!isMenuOpen" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
-          <svg v-else width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
+        <NavBurger
+          class="tablet:hidden"
+          :is-open="isMenuOpen"
+          controls="main-nav"
+          @toggle="isMenuOpen = !isMenuOpen"
+        />
       </div>
     </header>
 
-    <div
-      v-if="isMenuOpen"
-      class="tablet:hidden fixed inset-0 top-16 z-[9] bg-black/20"
-      aria-hidden="true"
-      @click="isMenuOpen = false"
-    />
+    <NavOverlay :is-open="isMenuOpen" @close="isMenuOpen = false" />
 
     <slot />
 
