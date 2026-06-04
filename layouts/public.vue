@@ -52,14 +52,14 @@ const { isMenuOpen } = useNavMenu(768)
 
         <NavBurger
           class="tablet:hidden"
-          :is-open="isMenuOpen"
+          :isOpen="isMenuOpen"
           controls="main-nav"
           @toggle="isMenuOpen = !isMenuOpen"
         />
       </div>
     </header>
 
-    <NavOverlay :is-open="isMenuOpen" @close="isMenuOpen = false" />
+    <NavOverlay :isOpen="isMenuOpen" @close="isMenuOpen = false" />
 
     <slot />
 

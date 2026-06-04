@@ -74,7 +74,7 @@ async function onLogout() {
             <button class="btn-secondary hidden text-sm tablet:inline-flex" @click="onLogout">Abmelden</button>
             <NavBurger
               class="tablet:hidden"
-              :is-open="isMenuOpen"
+              :isOpen="isMenuOpen"
               controls="mobile-nav"
               @toggle="isMenuOpen = !isMenuOpen"
             />
@@ -120,7 +120,7 @@ async function onLogout() {
       </div>
     </nav>
 
-    <NavOverlay :is-open="isMenuOpen" @close="isMenuOpen = false" />
+    <NavOverlay :isOpen="isMenuOpen" @close="isMenuOpen = false" />
 
     <main class="mx-auto max-w-7xl px-4 pt-8 pb-16 sm:px-6 lg:px-8">
       <slot />
