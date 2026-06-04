@@ -1,4 +1,4 @@
-export const MAX_UPLOAD_SIZE_BYTES = 2 * 1024 * 1024
-export const MAX_UPLOAD_SIZE_LABEL = '2 MB'
+export const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024
+export const MAX_UPLOAD_SIZE_LABEL = '5 MB'
 
 export const MEAL_ALLOWANCE = 23
