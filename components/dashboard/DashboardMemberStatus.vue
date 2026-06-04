@@ -3,6 +3,22 @@ import { useMembersStore } from '~/stores/members'
 
 const props = defineProps<{ slug: string }>()
 const membersStore = useMembersStore()
+
+const STATUS_LABEL: Record<string, string> = {
+  ACTIVE: 'Aktiv',
+  INACTIVE: 'Inaktiv',
+  REGISTERED: 'Bestätigt',
+  PENDING_INVITE: 'Ausstehend',
+  DEACTIVATED: 'Abgemeldet',
+}
+
+const STATUS_CLASS: Record<string, string> = {
+  ACTIVE: 'bg-green-100 text-green-800',
+  INACTIVE: 'bg-orange-100 text-orange-700',
+  REGISTERED: 'bg-blue-100 text-blue-800',
+  PENDING_INVITE: 'bg-amber-100 text-amber-800',
+  DEACTIVATED: 'bg-gray-100 text-gray-600',
+}
 </script>
 
 <template>
@@ -10,27 +26,30 @@ const membersStore = useMembersStore()
     <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
     <LoadingBrumm v-if="membersStore.isLoading" />
     <template v-else-if="membersStore.members.length > 0">
-      <div v-for="child in membersStore.members" :key="child.id" class="mb-2 last:mb-0">
-        <div v-if="child.status === 'ACTIVE' || child.status === 'INACTIVE'" class="rounded-md bg-green-50 p-3 text-sm text-green-800">
-          <strong>{{ child.firstName }} {{ child.lastName }}</strong> ist aktiv und für die Betreuung freigeschaltet.
-        </div>
-        <div v-else-if="child.status === 'DEACTIVATED'" class="rounded-md bg-gray-50 p-3 text-sm text-gray-700">
-          <strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde abgemeldet.
-        </div>
-        <div v-else class="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-          <p><strong>{{ child.firstName }} {{ child.lastName }}</strong> wurde bestätigt und wartet auf Freischaltung.</p>
-          <p class="mt-1">
-            Die Betreuung kann erst beginnen, wenn alle Vertragsunterlagen eingereicht wurden.
-            <NuxtLink :to="`/ini/${props.slug}/members/${child.id}`" class="font-medium underline hover:no-underline">
-              Hier kannst du die Unterlagen hochladen.
-            </NuxtLink>
-          </p>
-        </div>
-      </div>
+      <ul class="-mx-4 -mb-4">
+        <li
+          v-for="child in membersStore.members"
+          :key="child.id"
+          class="flex items-center justify-between px-4 py-2.5 text-sm"
+          :class="(child.status === 'REGISTERED' || child.status === 'PENDING_INVITE') ? 'bg-amber-50' : ''"
+        >
+          <div class="flex items-center gap-2">
+            <span class="text-gray-900">{{ child.firstName }} {{ child.lastName }}</span>
+            <span
+              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              :class="STATUS_CLASS[child.status] ?? 'bg-gray-100 text-gray-600'"
+            >{{ STATUS_LABEL[child.status] ?? child.status }}</span>
+          </div>
+          <NuxtLink
+            v-if="child.status === 'REGISTERED' || child.status === 'PENDING_INVITE'"
+            :to="`/ini/${props.slug}/members/${child.id}`"
+            class="text-sm font-medium text-primary-700 hover:text-primary-900"
+          >
+            Anmeldung abschließen →
+          </NuxtLink>
+        </li>
+      </ul>
     </template>
     <p v-else class="text-sm text-gray-500">Kein Kind angemeldet.</p>
-    <NuxtLink :to="`/ini/${props.slug}/members`" class="mt-4 inline-block text-sm font-medium text-primary-700 hover:text-primary-900">
-      Kinder & Unterlagen →
-    </NuxtLink>
   </div>
 </template>
