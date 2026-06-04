@@ -4,12 +4,8 @@ import type { OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
-  const currentUser = event.context.user
   const fileId = getRouterParam(event, 'fileId')
 
-  if (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'MANAGER') {
-    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
-  }
   if (!fileId) throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
 
   const document = await prisma.document.findFirst({ where: { id: fileId, clubId: club.id } })
