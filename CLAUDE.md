@@ -123,6 +123,7 @@ DEV_EMAIL_WHITELIST   # Optional: kommaseparierte Whitelist – nur diese Adress
 | Drive-Struktur (Templates-Ordner anlegen) | `server/utils/storage/googleDrive.ts` → `createTemplatesStructure` |
 | Vereinsunterlagen (Lazy-Init, Upload) | `server/utils/clubDocuments.ts` |
 | Dashboard-Komponenten | `components/dashboard/` |
+| Sortierbarer Tabellen-Header (WCAG) | `components/SortableTableHeader.vue` |
 | Managerdaten (Sheets/localData) | `server/utils/managerData.ts` |
 | Storage Utils | `server/utils/storage/` |
 | E-Mail Utils | `server/utils/email.ts` |

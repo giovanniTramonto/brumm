@@ -12,6 +12,27 @@ const membersStore = useMembersStore()
 
 const search = ref('')
 
+type SortKey = 'name' | 'group' | 'careType' | 'contractEnd' | 'status'
+const sortKey = ref<SortKey>('name')
+const sortDir = ref<'asc' | 'desc'>('asc')
+
+const STATUS_ORDER: Record<string, number> = {
+  ACTIVE: 0,
+  INACTIVE: 1,
+  REGISTERED: 2,
+  PENDING_INVITE: 3,
+  DEACTIVATED: 4,
+}
+
+function toggleSort(key: string) {
+  if (sortKey.value === key) {
+    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortKey.value = key as SortKey
+    sortDir.value = 'asc'
+  }
+}
+
 const canManageMembers = computed(() => {
   const user = authStore.currentUser
   return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
@@ -28,9 +49,30 @@ onMounted(() => membersStore.fetchMembers(slug))
 
 const filteredMembers = computed(() => {
   const q = search.value.toLowerCase()
-  return membersStore.members.filter(
+  const filtered = membersStore.members.filter(
     (m) => m.firstName.toLowerCase().includes(q) || m.lastName.toLowerCase().includes(q),
   )
+  const dir = sortDir.value === 'asc' ? 1 : -1
+  return [...filtered].sort((a, b) => {
+    if (sortKey.value === 'name') {
+      return (
+        dir * `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`, 'de')
+      )
+    }
+    if (sortKey.value === 'group') {
+      return dir * (a.group?.name ?? '').localeCompare(b.group?.name ?? '', 'de')
+    }
+    if (sortKey.value === 'careType') {
+      return dir * (a.careType ?? '').localeCompare(b.careType ?? '', 'de')
+    }
+    if (sortKey.value === 'contractEnd') {
+      return dir * (a.contractEnd ?? '').localeCompare(b.contractEnd ?? '')
+    }
+    if (sortKey.value === 'status') {
+      return dir * ((STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9))
+    }
+    return 0
+  })
 })
 </script>
 
@@ -94,12 +136,12 @@ const filteredMembers = computed(() => {
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th class="w-1/2 px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Name</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Gruppe</th>
-            <th v-if="canManageMembers || isMember" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Betreuungsumfang</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Vertragsende</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">Status</th>
-            <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">Aktionen</th>
+            <SortableTableHeader label="Name" columnKey="name" :activeSortKey="sortKey" :activeSortDir="sortDir" class="w-1/2" @sort="toggleSort" />
+            <SortableTableHeader label="Gruppe" columnKey="group" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+            <SortableTableHeader v-if="canManageMembers || isMember" label="Betreuungsumfang" columnKey="careType" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+            <SortableTableHeader label="Vertragsende" columnKey="contractEnd" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+            <SortableTableHeader label="Status" columnKey="status" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+            <th scope="col" class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">Aktionen</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
