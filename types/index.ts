@@ -11,6 +11,7 @@ export interface GoogleDriveConfig {
   managersSheetId?: string
   groupsFolderId?: string
   groupsSheetId?: string
+  documentsFolderId?: string
 }
 
 export interface OAuthTokens {

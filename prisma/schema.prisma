@@ -25,6 +25,7 @@ model Club {
   invites           Invite[]
   documentTemplates DocumentTemplate[]
   managers          Manager[]
+  documents         Document[]
 }
 
 model User {
@@ -112,6 +113,17 @@ model DocumentTemplate {
   submissions MemberDocument[]
 
   @@unique([clubId, ref])
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  clubId      String
+  name        String
+  order       Int      @default(0)
+  driveFileId String?
+  createdAt   DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id])
 }
 
 model Manager {

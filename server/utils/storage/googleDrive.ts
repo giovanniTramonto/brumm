@@ -380,6 +380,36 @@ export async function uploadMemberDocument(params: {
   return { id: result.data.id ?? '', name: result.data.name ?? '' }
 }
 
+export async function createDocumentsStructure(params: {
+  tokens: OAuthTokens
+  rootFolderId: string
+}): Promise<{ documentsFolderId: string }> {
+  const documentsFolderId = await getOrCreateFolder({
+    drive: getDriveClientFromTokens(params.tokens),
+    name: 'documents',
+    parentId: params.rootFolderId,
+  })
+  return { documentsFolderId }
+}
+
+export async function uploadClubDocument(params: {
+  tokens: OAuthTokens
+  folderId: string
+  filename: string
+  mimeType: string
+  buffer: Buffer
+}): Promise<string> {
+  const { Readable } = await import('node:stream')
+  const drive = getDriveClientFromTokens(params.tokens)
+  const result = await drive.files.create({
+    supportsAllDrives: true,
+    requestBody: { name: params.filename, parents: [params.folderId] },
+    media: { mimeType: params.mimeType, body: Readable.from(params.buffer) },
+    fields: 'id',
+  })
+  return result.data.id ?? ''
+}
+
 export async function createManagersStructure(params: {
   tokens: OAuthTokens
   rootFolderId: string
