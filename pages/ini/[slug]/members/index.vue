@@ -73,7 +73,7 @@ const filteredMembers = computed(() => {
       </template>
     </div>
 
-    <div v-if="authStore.currentUser?.role === 'SUPERUSER'" class="mb-4">
+    <div v-if="authStore.currentUser?.role === 'SUPERUSER' || authStore.currentUser?.role === 'MANAGER'" class="mb-4">
       <input
         v-model="search"
         type="search"
