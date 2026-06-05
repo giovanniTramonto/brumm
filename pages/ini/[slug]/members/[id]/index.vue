@@ -594,6 +594,7 @@ async function onUploadForTemplate(templateId: string, event: Event) {
 }
 
 async function onSubmit() {
+  if (!confirm('Unterlagen einreichen? Die Kita erhält eine Benachrichtigung.')) return
   try {
     await $fetch(`/api/ini/${slug}/members/${memberId}/submit`, { method: 'POST' })
     submitted.value = true
@@ -1155,16 +1156,6 @@ async function onSubmit() {
               </div>
             </li>
           </ul>
-          <div v-if="isMember" class="flex items-center justify-end gap-3 border-t pt-4">
-            <button
-              type="button"
-              class="btn-primary text-sm"
-              :disabled="!localAllSubmitted"
-              @click="onSubmit"
-            >
-              Einreichen
-            </button>
-          </div>
         </template>
 
         <div v-if="canManageMembers && (member.status === 'ACTIVE' || member.status === 'INACTIVE')" class="border-t pt-4">
@@ -1236,6 +1227,16 @@ async function onSubmit() {
               {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
             </button>
             <div v-else />
+            <div class="flex gap-3">
+              <button
+                v-if="isMember && member.status === 'REGISTERED' && member.hasInvite && !submitted"
+                type="button"
+                class="btn-primary text-sm"
+                :disabled="!localAllSubmitted"
+                @click="onSubmit"
+              >
+                Einreichen
+              </button>
             <div v-if="canManageMembers" class="flex gap-3">
             <!-- Vor Freischaltung: Freischalten + Einladung + Kind entfernen -->
             <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
@@ -1305,6 +1306,7 @@ async function onSubmit() {
                 Sofort löschen
               </button>
             </template>
+            </div>
             </div>
           </div>
           <p v-if="inviteActionError" class="text-sm text-red-700">
