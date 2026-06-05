@@ -67,7 +67,13 @@ const { isMember, canManageMembers } = storeToRefs(authStore)
 const isKidDataLocked = computed(() => {
   if (!member.value) return false
   if (member.value.status === 'DEACTIVATED') return true
-  return isMember.value && (member.value.status === 'ACTIVE' || member.value.status === 'INACTIVE')
+  if (!isMember.value) return false
+  if (member.value.status === 'ACTIVE' || member.value.status === 'INACTIVE') return true
+  return (
+    member.value.status === 'REGISTERED' &&
+    member.value.hasInvite &&
+    member.value.hasSubmittedDocuments
+  )
 })
 
 const isContactLocked = computed(() => {
