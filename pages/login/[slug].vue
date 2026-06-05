@@ -100,7 +100,7 @@ async function onPinForgot() {
 
       <!-- PIN-Login -->
       <template v-if="showPinLogin">
-        <div class="card" aria-live="polite" aria-atomic="true">
+        <div class="rounded-lg px-6 tablet:bg-white tablet:py-6 tablet:shadow-sm tablet:ring-1 tablet:ring-gray-900/5" aria-live="polite" aria-atomic="true">
           <template v-if="isDeviceLocked">
             <div role="alert" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
               Zu viele Fehlversuche. Bitte melde dich per E-Mail an.
