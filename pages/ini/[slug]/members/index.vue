@@ -33,12 +33,7 @@ function toggleSort(key: string) {
   }
 }
 
-const canManageMembers = computed(() => {
-  const user = authStore.currentUser
-  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
-})
-
-const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
+const { isMember, canManageMembers } = storeToRefs(authStore)
 
 const showNoMemberManagerHint = computed(() => {
   const user = authStore.currentUser

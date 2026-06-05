@@ -22,10 +22,7 @@ onMounted(async () => {
   await membersStore.fetchMembers(slug)
 })
 
-const canView = computed(() => {
-  const role = authStore.currentUser?.role
-  return role === 'SUPERUSER' || role === 'MANAGER'
-})
+const { canManageClub } = storeToRefs(authStore)
 
 const showAnnual = ref(false)
 
@@ -34,22 +31,22 @@ const currentYear = now.getFullYear()
 const currentMonth = now.getMonth() + 1
 
 const reimbursement = computed(() => {
-  if (!canView.value || membersStore.isLoading) return null
+  if (!canManageClub.value || membersStore.isLoading) return null
   return calculateReimbursement(membersStore.members, currentYear, currentMonth)
 })
 
 const staffing = computed(() => {
-  if (!canView.value || membersStore.isLoading) return null
+  if (!canManageClub.value || membersStore.isLoading) return null
   return calculateStaffing(membersStore.members, currentYear, currentMonth)
 })
 
 const annualReimbursement = computed(() => {
-  if (!canView.value || membersStore.isLoading) return null
+  if (!canManageClub.value || membersStore.isLoading) return null
   return calculateAnnualReimbursement(membersStore.members, currentYear)
 })
 
 const annualStaffing = computed(() => {
-  if (!canView.value || membersStore.isLoading) return null
+  if (!canManageClub.value || membersStore.isLoading) return null
   return calculateAnnualStaffing(membersStore.members, currentYear)
 })
 
@@ -154,7 +151,7 @@ async function onSaveMembershipFee() {
       <h1 class="text-2xl font-bold text-gray-900">Berechnung</h1>
     </div>
 
-    <div v-if="!canView" class="rounded-md bg-red-50 p-4 text-sm text-red-700">
+    <div v-if="!canManageClub" class="rounded-md bg-red-50 p-4 text-sm text-red-700">
       Keine Berechtigung.
     </div>
 

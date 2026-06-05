@@ -62,7 +62,7 @@ const otherReplaceErrorFileId = ref<string | null>(null)
 const isUploadingContractDoc = ref(false)
 const contractUploadError = ref<string | null>(null)
 
-const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
+const { isMember, canManageMembers } = storeToRefs(authStore)
 
 const isKidDataLocked = computed(() => {
   if (!member.value) return false
@@ -73,10 +73,6 @@ const isKidDataLocked = computed(() => {
 const isContactLocked = computed(() => {
   if (!member.value) return false
   return member.value.status === 'DEACTIVATED'
-})
-const canManageMembers = computed(() => {
-  const user = authStore.currentUser
-  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
 })
 
 const canInteractWithTemplates = computed(

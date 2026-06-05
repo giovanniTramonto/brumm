@@ -9,8 +9,7 @@ const slug = route.params.slug as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
-const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
-const isSuperUser = computed(() => authStore.currentUser?.role === 'SUPERUSER')
+const { isMember, isSuperUser } = storeToRefs(authStore)
 
 const pendingCount = computed(
   () =>

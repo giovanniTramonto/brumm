@@ -53,6 +53,16 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const isMember = computed(() => currentUser.value?.role === 'MEMBER')
+  const isSuperUser = computed(() => currentUser.value?.role === 'SUPERUSER')
+  const canManageMembers = computed(() => {
+    const user = currentUser.value
+    return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
+  })
+  const canManageClub = computed(
+    () => currentUser.value?.role === 'SUPERUSER' || currentUser.value?.role === 'MANAGER',
+  )
+
   function clearAuth(): void {
     currentUser.value = null
     currentClub.value = null
@@ -62,6 +72,10 @@ export const useAuthStore = defineStore('auth', () => {
     currentUser,
     currentClub,
     isLoading,
+    isMember,
+    isSuperUser,
+    canManageMembers,
+    canManageClub,
     login,
     verifyToken,
     logout,

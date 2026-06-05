@@ -2,7 +2,7 @@
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
-const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
+const { isMember } = storeToRefs(authStore)
 </script>
 
 <template>

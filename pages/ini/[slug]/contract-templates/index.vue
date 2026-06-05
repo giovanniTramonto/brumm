@@ -7,10 +7,7 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const canManage = computed(() => {
-  const user = authStore.currentUser
-  return user?.role === 'SUPERUSER' || (user?.role === 'MANAGER' && user?.isMemberManager)
-})
+const { canManageMembers } = storeToRefs(authStore)
 
 type Template = {
   id: string
@@ -40,7 +37,7 @@ async function loadTemplates() {
 }
 
 onMounted(async () => {
-  if (!canManage.value) {
+  if (!canManageMembers.value) {
     await navigateTo(`/ini/${slug}/dashboard`)
     return
   }
