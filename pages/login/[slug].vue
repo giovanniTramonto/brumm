@@ -101,9 +101,6 @@ async function onPinForgot() {
       <!-- PIN-Login -->
       <template v-if="showPinLogin">
         <div class="card" aria-live="polite" aria-atomic="true">
-          <h2 class="mb-1 text-xl font-semibold text-gray-900">Willkommen zurück</h2>
-          <p class="mb-6 text-sm text-gray-500">{{ clubName }}</p>
-
           <template v-if="isDeviceLocked">
             <div role="alert" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
               Zu viele Fehlversuche. Bitte melde dich per E-Mail an.
@@ -114,7 +111,6 @@ async function onPinForgot() {
           </template>
 
           <template v-else>
-            <p class="mb-6 text-sm text-gray-600">Gib deine PIN ein.</p>
             <div class="space-y-4">
               <PinInput ref="pinInput" v-model="pin" :disabled="pinLoading" @complete="onPinSubmit" />
               <div v-if="pinError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">

@@ -27,14 +27,34 @@ function onDigit(key: string) {
   }
 }
 
-function focus() {}
+const container = ref<HTMLDivElement | null>(null)
+
+function onKeydown(e: KeyboardEvent) {
+  if (props.disabled) return
+  if (e.key >= '0' && e.key <= '9') {
+    e.preventDefault()
+    onDigit(e.key)
+  } else if (e.key === 'Backspace') {
+    e.preventDefault()
+    onDigit('⌫')
+  } else if (e.key === 'Enter' && props.modelValue.length === 4) {
+    e.preventDefault()
+    emit('complete')
+  }
+}
+
+function focus() {
+  container.value?.focus()
+}
 defineExpose({ focus })
 </script>
 
 <template>
-  <div class="select-none space-y-4">
+  <div ref="container" class="select-none space-y-4 outline-none" tabindex="0" @keydown="onKeydown">
+    <p class="text-center text-xs font-medium uppercase tracking-widest text-gray-400">PIN</p>
+
     <!-- 4 Dots -->
-    <div class="flex justify-center gap-4 py-4">
+    <div class="flex justify-center gap-4 py-2">
       <div
         v-for="i in 4"
         :key="i"
