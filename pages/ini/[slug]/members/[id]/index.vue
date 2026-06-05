@@ -64,11 +64,15 @@ const contractUploadError = ref<string | null>(null)
 
 const isMember = computed(() => authStore.currentUser?.role === 'MEMBER')
 
-const isFormLocked = computed(() => {
+const isKidDataLocked = computed(() => {
   if (!member.value) return false
-  return isMember.value
-    ? member.value.status === 'ACTIVE' || member.value.status === 'INACTIVE'
-    : member.value.status === 'DEACTIVATED'
+  if (member.value.status === 'DEACTIVATED') return true
+  return isMember.value && (member.value.status === 'ACTIVE' || member.value.status === 'INACTIVE')
+})
+
+const isContactLocked = computed(() => {
+  if (!member.value) return false
+  return member.value.status === 'DEACTIVATED'
 })
 const canManageMembers = computed(() => {
   const user = authStore.currentUser
@@ -652,7 +656,7 @@ async function onSubmit() {
             {{ saveError }}
           </div>
 
-          <div :inert="isFormLocked" class="space-y-4">
+          <div :inert="isKidDataLocked" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="field-firstName" class="label">Vorname *</label>
@@ -661,7 +665,7 @@ async function onSubmit() {
                 v-model="form.firstName"
                 type="text"
                 class="input mt-1"
-                :readonly="isFormLocked"
+                :readonly="isKidDataLocked"
                 :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
               />
             </div>
@@ -672,7 +676,7 @@ async function onSubmit() {
                 v-model="form.lastName"
                 type="text"
                 class="input mt-1"
-                :readonly="isFormLocked"
+                :readonly="isKidDataLocked"
                 :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
               />
             </div>
@@ -685,7 +689,7 @@ async function onSubmit() {
               v-model="form.birthDate"
               type="date"
               class="input mt-1"
-              :readonly="isFormLocked"
+              :readonly="isKidDataLocked"
               :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
             />
           </div>
@@ -696,7 +700,7 @@ async function onSubmit() {
               id="field-groupId"
               v-model="form.groupId"
               class="input mt-1"
-              :disabled="isFormLocked"
+              :disabled="isKidDataLocked"
             >
               <option value="">Keine Gruppe</option>
               <option v-for="group in groups" :key="group.id" :value="group.id">
@@ -711,7 +715,7 @@ async function onSubmit() {
               id="field-careType"
               v-model="form.careType"
               class="input mt-1"
-              :disabled="isFormLocked"
+              :disabled="isKidDataLocked"
             >
               <option value="">Nicht angegeben</option>
               <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
@@ -733,7 +737,7 @@ async function onSubmit() {
                   type="checkbox"
                   :value="opt.key"
                   class="h-4 w-4 rounded border-gray-300"
-                  :disabled="isFormLocked"
+                  :disabled="isKidDataLocked"
                 />
                 {{ opt.label }}
               </label>
@@ -749,10 +753,14 @@ async function onSubmit() {
               class="input mt-1"
               placeholder="YYYY"
               maxlength="4"
-              :readonly="isFormLocked"
+              :readonly="isKidDataLocked"
             />
           </div>
+          </div>
 
+          <hr v-if="isMember && isKidDataLocked && !isContactLocked" class="border-gray-200" />
+
+          <div :inert="isContactLocked" class="space-y-4">
           <div>
             <label for="field-guardian1Name" class="label"
               >Erziehungsber. 1 *</label
@@ -762,8 +770,8 @@ async function onSubmit() {
               v-model="form.guardian1Name"
               type="text"
               class="input mt-1"
-              :readonly="isFormLocked"
-              :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
+              :readonly="isContactLocked"
+              required
             />
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -774,8 +782,8 @@ async function onSubmit() {
                 v-model="form.email1"
                 type="email"
                 class="input mt-1"
-                :readonly="isFormLocked"
-                :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
+                :readonly="isContactLocked"
+                required
               />
             </div>
             <div>
@@ -785,7 +793,7 @@ async function onSubmit() {
                 v-model="form.phone1"
                 type="tel"
                 class="input mt-1"
-                :readonly="isFormLocked"
+                :readonly="isContactLocked"
               />
             </div>
           </div>
@@ -799,7 +807,7 @@ async function onSubmit() {
               v-model="form.guardian2Name"
               type="text"
               class="input mt-1"
-              :readonly="isFormLocked"
+              :readonly="isContactLocked"
             />
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -810,7 +818,7 @@ async function onSubmit() {
                 v-model="form.email2"
                 type="email"
                 class="input mt-1"
-                :readonly="isFormLocked"
+                :readonly="isContactLocked"
               />
             </div>
             <div>
@@ -820,7 +828,7 @@ async function onSubmit() {
                 v-model="form.phone2"
                 type="tel"
                 class="input mt-1"
-                :readonly="isFormLocked"
+                :readonly="isContactLocked"
               />
             </div>
           </div>
@@ -832,7 +840,7 @@ async function onSubmit() {
               v-model="form.address"
               type="text"
               class="input mt-1"
-              :readonly="isFormLocked"
+              :readonly="isContactLocked"
             />
           </div>
           </div>
@@ -1245,13 +1253,13 @@ async function onSubmit() {
           </template>
         </div>
 
-        <div v-if="canManageMembers || (isMember && !isFormLocked)" class="space-y-2 border-t pt-4">
+        <div v-if="canManageMembers || (isMember && !isContactLocked)" class="space-y-2 border-t pt-4">
           <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
             Kind wurde abgemeldet. Automatische Löschung nach 1 Jahr.
           </p>
           <div class="flex items-center justify-between gap-3">
             <button
-              v-if="!isFormLocked"
+              v-if="!isContactLocked"
               type="submit"
               class="btn-primary text-sm"
               :disabled="isSubmitting || !hasChanges"
