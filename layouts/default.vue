@@ -27,10 +27,10 @@ const navItems = computed(() => {
 
 const { isMenuOpen } = useNavMenu(768)
 
-async function onLogout() {
+function onLogout() {
   if (!slug.value) return
-  await authStore.logout(slug.value)
-  await navigateTo(`/login/${slug.value}`)
+  authStore.logout(slug.value)
+  window.location.href = `/login/${slug.value}`
 }
 </script>
 

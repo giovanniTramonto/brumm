@@ -58,14 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(slug: string): Promise<void> {
-    isLoading.value = true
-    try {
-      await $fetch(`/api/ini/${slug}/auth/logout`, { method: 'POST' })
-    } finally {
-      currentUser.value = null
-      currentClub.value = null
-      isLoading.value = false
-    }
+    await $fetch(`/api/ini/${slug}/auth/logout`, { method: 'POST' }).catch(() => {})
   }
 
   async function fetchSession(slug: string): Promise<boolean> {

@@ -31,29 +31,30 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 ## URL-Struktur
 
 ```
-/                                  → Landing Page
-/login                             → Globaler Login (Email-Lookup über alle Vereine)
-/register                          → Verein registrieren
-/admin                             → Brumm Admin (ADMIN_SECRET)
-/ini/{slug}/login                  → Anmeldung per Magic Link
-/ini/{slug}/auth/verify/{token}    → Magic Link / Invite einlösen
-/ini/{slug}/settings/onboarding    → Google Drive einrichten
+/                                    → Landing Page
+/login                               → Globaler Login (Kita-Auswahl)
+/login/{slug}                        → Anmeldung per Magic Link / PIN
+/register                            → Verein registrieren
+/admin                               → Brumm Admin (ADMIN_SECRET)
+/ini/{slug}/auth/verify/{token}      → Magic Link / Invite einlösen
+/ini/{slug}/settings/onboarding      → Google Drive einrichten
 /ini/{slug}/dashboard
-/ini/{slug}/addresses              → Adressliste aller aktiven Kinder
+/ini/{slug}/addresses                → Adressliste aller aktiven Kinder
 /ini/{slug}/members
-/ini/{slug}/members/create         → Kind anlegen
-/ini/{slug}/members/{id}           → Kind-Detailseite & Vertragsunterlagen
-/ini/{slug}/members/deactivate     → Selbst abmelden
-/ini/{slug}/contract-templates     → Vertragsvorlagen verwalten (SUPERUSER + isMemberManager)
-/ini/{slug}/groups                 → Gruppen verwalten (SUPERUSER)
-/ini/{slug}/groups/create         → Gruppe anlegen
-/ini/{slug}/groups/{id}           → Gruppe bearbeiten
-/ini/{slug}/managers             → Vorstand verwalten (SUPERUSER)
-/ini/{slug}/managers/create      → Vorstand hinzufügen
-/ini/{slug}/managers/{id}        → Vorstand bearbeiten
-/ini/{slug}/calculations           → Rechnung: Einnahmen, Personalschlüssel (SUPERUSER + MANAGER)
+/ini/{slug}/members/create           → Kind anlegen
+/ini/{slug}/members/{id}             → Kind-Detailseite & Vertragsunterlagen
+/ini/{slug}/members/deactivate       → Selbst abmelden
+/ini/{slug}/contract-templates       → Vertragsvorlagen (SUPERUSER + isMemberManager)
+/ini/{slug}/groups                   → Gruppen verwalten (SUPERUSER)
+/ini/{slug}/groups/create            → Gruppe anlegen
+/ini/{slug}/groups/{id}              → Gruppe bearbeiten
+/ini/{slug}/managers                 → Vorstand verwalten (SUPERUSER)
+/ini/{slug}/managers/create          → Vorstand hinzufügen
+/ini/{slug}/managers/{id}            → Vorstand bearbeiten
+/ini/{slug}/calculations             → Rechnung: Einnahmen, Personalschlüssel (SUPERUSER + MANAGER)
+/ini/{slug}/documents                → Vereinsunterlagen (SUPERUSER + MANAGER)
 /ini/{slug}/settings
-/ini/{slug}/settings/delete        → Verein löschen
+/ini/{slug}/settings/delete          → Verein löschen
 ```
 
 ## Rollen
