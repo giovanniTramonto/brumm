@@ -6,16 +6,42 @@ export const useAuthStore = defineStore('auth', () => {
   const currentClub = ref<Club | null>(null)
   const isLoading = ref(false)
 
-  async function login(slug: string, email: string): Promise<void> {
+  async function login(slug: string, email: string, pin?: string): Promise<void> {
     isLoading.value = true
     try {
       await $fetch(`/api/ini/${slug}/auth/magic-link`, {
         method: 'POST',
-        body: { email },
+        body: { email, ...(pin ? { pin } : {}) },
       })
     } finally {
       isLoading.value = false
     }
+  }
+
+  async function checkDevice(slug: string): Promise<{ hasDevice: boolean; isLocked: boolean }> {
+    try {
+      return await $fetch(`/api/ini/${slug}/auth/device`)
+    } catch {
+      return { hasDevice: false, isLocked: false }
+    }
+  }
+
+  async function loginWithPin(slug: string, pin: string): Promise<void> {
+    isLoading.value = true
+    try {
+      const data = await $fetch<{ user: AuthUser; club: Club }>(`/api/ini/${slug}/auth/pin`, {
+        method: 'POST',
+        body: { pin },
+      })
+      currentUser.value = data.user
+      currentClub.value = data.club
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function removeDevice(slug: string): Promise<void> {
+    await $fetch(`/api/ini/${slug}/auth/device`, { method: 'DELETE' })
   }
 
   async function verifyToken(slug: string, token: string): Promise<void> {
@@ -81,5 +107,8 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     fetchSession,
     clearAuth,
+    checkDevice,
+    loginWithPin,
+    removeDevice,
   }
 })

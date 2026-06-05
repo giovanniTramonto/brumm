@@ -121,6 +121,11 @@ export default async function handler() {
 
   console.log(`DSGVO-Cleanup: ${cleaned} Mitglieder bereinigt`)
 
+  const deletedDeviceSessions = await prisma.deviceSession.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  })
+  console.log(`Cleanup: ${deletedDeviceSessions.count} abgelaufene DeviceSessions gelöscht`)
+
   await prisma.$disconnect()
 
   return {

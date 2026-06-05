@@ -8,6 +8,14 @@ export const registerSchema = z.object({
 
 export const magicLinkSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
+  pin: z
+    .string()
+    .regex(/^\d{4}$/, 'PIN muss genau 4 Ziffern sein')
+    .optional(),
+})
+
+export const pinSchema = z.object({
+  pin: z.string().regex(/^\d{4}$/, 'PIN muss genau 4 Ziffern sein'),
 })
 
 const contractEndField = z

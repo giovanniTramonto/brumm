@@ -102,8 +102,42 @@ useHead({ title: 'Datenschutzerklärung – Brumm' })
     </section>
 
     <section class="mt-8 space-y-4 text-gray-600">
-      <h2 class="text-xl font-semibold text-gray-900">§ 9 Gültigkeit und Änderung dieser Datenschutzerklärung</h2>
-      <p>Diese Datenschutzerklärung tritt am 22.05.2026 in Kraft. Wir behalten uns vor, diese Erklärung bei Bedarf und unter Einhaltung der geltenden Datenschutzgesetze zu ändern. Die jeweils aktuelle Version der Datenschutzerklärung, die zum Zeitpunkt Ihres Besuchs auf unserer Website abrufbar ist, ist bindend.</p>
+      <h2 class="text-xl font-semibold text-gray-900">§ 9 Cookies</h2>
+      <p>Diese Website verwendet ausschließlich technisch notwendige Cookies, die für den Betrieb der Anwendung erforderlich sind. Es werden keine Tracking- oder Werbe-Cookies eingesetzt.</p>
+      <table class="w-full text-sm border-collapse">
+        <thead>
+          <tr class="text-left border-b border-gray-200">
+            <th class="py-2 pr-4 font-semibold text-gray-700">Cookie</th>
+            <th class="py-2 pr-4 font-semibold text-gray-700">Zweck</th>
+            <th class="py-2 font-semibold text-gray-700">Speicherdauer</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr>
+            <td class="py-2 pr-4 font-mono text-xs">session_token</td>
+            <td class="py-2 pr-4">Authentifizierung (Anmelde-Session)</td>
+            <td class="py-2">30 Tage</td>
+          </tr>
+          <tr>
+            <td class="py-2 pr-4 font-mono text-xs">device_token</td>
+            <td class="py-2 pr-4">Geräteerkennung für „Angemeldet bleiben" (nur bei aktivierter Option)</td>
+            <td class="py-2">90 Tage</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Alle Cookies sind als HttpOnly gesetzt und können nicht per JavaScript ausgelesen werden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am sicheren Betrieb der Anwendung) bzw. bei optionalen Cookies Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).</p>
+    </section>
+
+    <section class="mt-8 space-y-4 text-gray-600">
+      <h2 class="text-xl font-semibold text-gray-900">§ 10 Angemeldet bleiben (Gerätekennung)</h2>
+      <p>Wenn du beim Anmelden die Option „Angemeldet bleiben" aktivierst, wird auf deinem Gerät ein technisches Erkennungsmerkmal (Gerätekennung) als HttpOnly-Cookie gespeichert. Zusätzlich wird ein Hashwert deiner selbst gewählten PIN serverseitig gespeichert. Diese Daten dienen ausschließlich dazu, die erneute Anmeldung auf dem jeweiligen Gerät zu erleichtern.</p>
+      <p>Die Gerätekennung wird für 90 Tage gespeichert und danach automatisch gelöscht. Du kannst dein Gerät jederzeit manuell abmelden – der entsprechende Link befindet sich auf der Anmeldeseite. Nach drei aufeinanderfolgenden Fehleingaben der PIN wird die gerätebasierte Anmeldung gesperrt; eine erneute Anmeldung per E-Mail-Link ist weiterhin möglich.</p>
+      <p>Rechtsgrundlage für diese Verarbeitung ist deine Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO, die du durch das Aktivieren der Option „Angemeldet bleiben" erteilst.</p>
+    </section>
+
+    <section class="mt-8 space-y-4 text-gray-600">
+      <h2 class="text-xl font-semibold text-gray-900">§ 11 Gültigkeit und Änderung dieser Datenschutzerklärung</h2>
+      <p>Diese Datenschutzerklärung tritt am 05.06.2026 in Kraft. Wir behalten uns vor, diese Erklärung bei Bedarf und unter Einhaltung der geltenden Datenschutzgesetze zu ändern. Die jeweils aktuelle Version der Datenschutzerklärung, die zum Zeitpunkt Ihres Besuchs auf unserer Website abrufbar ist, ist bindend.</p>
       <p>Im Falle von Änderungen an dieser Datenschutzerklärung werden wir diese auf dieser Seite veröffentlichen, um Sie umfassend darüber zu informieren, welche personenbezogenen Daten wir erfassen, wie wir sie verarbeiten und unter welchen Bedingungen wir sie gegebenenfalls weitergeben.</p>
     </section>
   </main>

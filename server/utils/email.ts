@@ -263,6 +263,27 @@ export async function sendEmailAddedNotification(params: {
   })
 }
 
+export async function sendPinDeleteLink(params: {
+  to: string
+  clubName: string
+  clubSlug: string
+  token: string
+}): Promise<void> {
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `PIN löschen – ${params.clubName}`,
+    html: `
+      <h2>PIN löschen bei ${params.clubName}</h2>
+      <p>Du hast angefordert, deinen gespeicherten PIN auf diesem Gerät zu löschen.</p>
+      <p>Klicke auf den folgenden Link, um den PIN zu löschen und dich gleichzeitig anzumelden. Der Link ist 15 Minuten gültig.</p>
+      <p><a href="${link}">PIN löschen und anmelden</a></p>
+      <p>Falls du das nicht angefordert hast, kannst du diese E-Mail ignorieren.</p>
+    `,
+  })
+}
+
 export async function sendDocumentsSubmittedNotification(params: {
   to: string[]
   clubName: string

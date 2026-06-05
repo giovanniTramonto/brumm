@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { sendMagicLink } from '~/server/utils/email'
+import { hashPin } from '~/server/utils/pinHash'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
 import { findManagerIdByEmail } from '~/server/utils/storage/managersSheet'
@@ -33,8 +34,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const { email } = parsed.data
+  const { email, pin } = parsed.data
   const normalizedEmail = email.toLowerCase()
+  const pendingPinHash = pin ? await hashPin(pin) : undefined
 
   // First: check UserEmail in Neon (covers SUPERUSER and MANAGER roles)
   const userEmail = await prisma.userEmail.findUnique({
@@ -45,7 +47,7 @@ export default defineEventHandler(async (event) => {
   if (userEmail && userEmail.user.clubId === club.id) {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
     const magicLink = await prisma.magicLink.create({
-      data: { userId: userEmail.userId, expiresAt },
+      data: { userId: userEmail.userId, expiresAt, pendingPinHash },
     })
     await sendMagicLink({
       to: email,
@@ -121,7 +123,7 @@ export default defineEventHandler(async (event) => {
 
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
     const magicLink = await prisma.magicLink.create({
-      data: { userId, expiresAt },
+      data: { userId, expiresAt, pendingPinHash },
     })
     await sendMagicLink({
       to: email,

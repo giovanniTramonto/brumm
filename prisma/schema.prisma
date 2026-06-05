@@ -26,6 +26,7 @@ model Club {
   documentTemplates DocumentTemplate[]
   managers          Manager[]
   documents         Document[]
+  deviceSessions    DeviceSession[]
 }
 
 model User {
@@ -48,6 +49,7 @@ model User {
   magicLinks      MagicLink[]
   invites         Invite[]
   memberDocuments MemberDocument[]
+  deviceSessions  DeviceSession[]
 
   @@unique([storageId, clubId])
 }
@@ -76,12 +78,14 @@ model Invite {
 }
 
 model MagicLink {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique @default(cuid())
-  expiresAt DateTime
-  isUsed    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id                       String   @id @default(cuid())
+  userId                   String
+  token                    String   @unique @default(cuid())
+  expiresAt                DateTime
+  isUsed                   Boolean  @default(false)
+  pendingPinHash           String?
+  pendingDeviceTokenToDelete String?
+  createdAt                DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -152,6 +156,21 @@ model MemberDocument {
   template DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, templateId])
+}
+
+model DeviceSession {
+  id             String    @id @default(cuid())
+  userId         String
+  clubId         String
+  deviceToken    String    @unique
+  pinHash        String
+  failedAttempts Int       @default(0)
+  lockedAt       DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  club Club @relation(fields: [clubId], references: [id])
 }
 
 enum Role {
