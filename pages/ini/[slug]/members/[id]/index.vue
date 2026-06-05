@@ -910,8 +910,8 @@ async function onSubmit() {
 
           <LoadingBrumm v-if="isLoadingTemplates" />
 
-          <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
-            Noch keine Vertragsunterlagen konfiguriert.
+          <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
+            Die Kita hat noch keine Vertragsunterlagen hinterlegt.
           </p>
 
           <template v-else-if="submitted">
@@ -1038,9 +1038,7 @@ async function onSubmit() {
             </div>
           </template>
 
-          <p v-else-if="memberDocTemplates.length === 0" class="text-sm text-gray-500">
-            Keine Vertragsunterlagen konfiguriert.
-          </p>
+          <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">Noch keine Vertragsvorlagen konfiguriert – <NuxtLink :to="`/ini/${slug}/contract-templates`" class="font-medium underline">Jetzt anlegen →</NuxtLink></p>
 
           <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates, shown alongside template list before activation -->
           <ul v-if="filteredDocuments.length > 0 && member.hasInvite && member.status === 'REGISTERED'" class="mt-2 divide-y divide-gray-100">
