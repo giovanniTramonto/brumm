@@ -172,7 +172,26 @@ const form = reactive({
   careType: '',
   surcharges: [] as string[],
   contractEnd: '',
+
   address: '',
+})
+
+const guardian1Fields = computed({
+  get: () => ({ name: form.guardian1Name, email: form.email1, phone: form.phone1 }),
+  set: (v) => {
+    form.guardian1Name = v.name
+    form.email1 = v.email
+    form.phone1 = v.phone
+  },
+})
+
+const guardian2Fields = computed({
+  get: () => ({ name: form.guardian2Name, email: form.email2, phone: form.phone2 }),
+  set: (v) => {
+    form.guardian2Name = v.name
+    form.email2 = v.email
+    form.phone2 = v.phone
+  },
 })
 
 async function loadDocuments(silent = false) {
@@ -331,6 +350,7 @@ async function loadMemberDocTemplates() {
 }
 
 onMounted(async () => {
+  membersStore.fetchMembers(slug) // fire-and-forget: hint computed updates reactively when members arrive
   try {
     const [memberData, groupsData, templatesData] = await Promise.all([
       $fetch<{ member: Member; isOwnChild: boolean }>(`/api/ini/${slug}/members/${memberId}`),
@@ -761,88 +781,37 @@ async function onSubmit() {
           <hr v-if="isMember && isKidDataLocked && !isContactLocked" class="border-gray-200" />
 
           <div :inert="isContactLocked" class="space-y-4">
-          <div>
-            <label for="field-guardian1Name" class="label"
-              >Erziehungsber. 1 *</label
-            >
-            <input
-              id="field-guardian1Name"
-              v-model="form.guardian1Name"
-              type="text"
-              class="input mt-1"
-              :readonly="isContactLocked"
+            <GuardianField
+              v-model="guardian1Fields"
+              label="Erziehungsber. 1"
+              fieldId="field-guardian-1"
               required
-            />
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="field-email1" class="label">E-Mail 1 *</label>
-              <input
-                id="field-email1"
-                v-model="form.email1"
-                type="email"
-                class="input mt-1"
-                :readonly="isContactLocked"
-                required
-              />
-            </div>
-            <div>
-              <label for="field-phone1" class="label">Telefon 1</label>
-              <input
-                id="field-phone1"
-                v-model="form.phone1"
-                type="tel"
-                class="input mt-1"
-                :readonly="isContactLocked"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label for="field-guardian2Name" class="label"
-              >Erziehungsber. 2</label
-            >
-            <input
-              id="field-guardian2Name"
-              v-model="form.guardian2Name"
-              type="text"
-              class="input mt-1"
               :readonly="isContactLocked"
+              :memberId="member.id"
+              :originalEmail="member.email1"
+              :otherEmail="form.email2"
             />
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="field-email2" class="label">E-Mail 2</label>
-              <input
-                id="field-email2"
-                v-model="form.email2"
-                type="email"
-                class="input mt-1"
-                :readonly="isContactLocked"
-              />
-            </div>
-            <div>
-              <label for="field-phone2" class="label">Telefon 2</label>
-              <input
-                id="field-phone2"
-                v-model="form.phone2"
-                type="tel"
-                class="input mt-1"
-                :readonly="isContactLocked"
-              />
-            </div>
-          </div>
 
-          <div>
-            <label for="field-address" class="label">Adresse</label>
-            <input
-              id="field-address"
-              v-model="form.address"
-              type="text"
-              class="input mt-1"
+            <GuardianField
+              v-model="guardian2Fields"
+              label="Erziehungsber. 2"
+              fieldId="field-guardian-2"
               :readonly="isContactLocked"
+              :memberId="member.id"
+              :originalEmail="member.email2 ?? undefined"
+              :otherEmail="form.email1"
             />
-          </div>
+
+            <div>
+              <label for="field-address" class="label">Adresse</label>
+              <input
+                id="field-address"
+                v-model="form.address"
+                type="text"
+                class="input mt-1"
+                :readonly="isContactLocked"
+              />
+            </div>
           </div>
 
 
