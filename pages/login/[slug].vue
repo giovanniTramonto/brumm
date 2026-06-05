@@ -128,9 +128,15 @@ async function onPinForgot() {
               <p class="text-gray-500">Link gesendet! Prüfe deine E-Mails.</p>
             </template>
             <template v-else>
-              <button class="hover:text-gray-600" :disabled="pinForgotLoading" @click="onPinForgot">
-                {{ pinForgotLoading ? 'Wird gesendet…' : 'PIN vergessen' }}
-              </button>
+              <div class="flex justify-center gap-4">
+                <button class="hover:text-gray-600" @click="showPinLogin = false; pin = ''">
+                  Per E-Mail anmelden
+                </button>
+                <span>·</span>
+                <button class="hover:text-gray-600" :disabled="pinForgotLoading" @click="onPinForgot">
+                  {{ pinForgotLoading ? 'Wird gesendet…' : 'PIN löschen' }}
+                </button>
+              </div>
             </template>
           </div>
         </div>
