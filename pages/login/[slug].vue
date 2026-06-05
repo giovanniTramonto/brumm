@@ -101,6 +101,9 @@ async function onPinForgot() {
       <!-- PIN-Login -->
       <template v-if="showPinLogin">
         <div class="rounded-lg px-6 tablet:bg-white tablet:py-6 tablet:shadow-sm tablet:ring-1 tablet:ring-gray-900/5" aria-live="polite" aria-atomic="true">
+          <h2 class="mb-1 hidden text-xl font-semibold text-gray-900 tablet:block">Willkommen zurück</h2>
+          <p class="mb-6 hidden text-sm text-gray-600 tablet:block">Gib deinen PIN ein.</p>
+
           <template v-if="isDeviceLocked">
             <div role="alert" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
               Zu viele Fehlversuche. Bitte melde dich per E-Mail an.

@@ -51,7 +51,7 @@ defineExpose({ focus })
 
 <template>
   <div ref="container" class="select-none space-y-4 outline-none" tabindex="0" @keydown="onKeydown">
-    <p class="text-center text-xs font-medium uppercase tracking-widest text-gray-400">PIN</p>
+    <p class="text-center text-xs font-medium uppercase tracking-widest text-gray-400 tablet:hidden">PIN</p>
 
     <!-- 4 Dots -->
     <div class="flex justify-center gap-4 py-2">
