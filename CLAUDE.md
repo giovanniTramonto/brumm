@@ -19,7 +19,7 @@
 - Event handler: `on*` prefix (onSubmit, onDelete)
 - Funktionen: verb-first (createMember, fetchMembers)
 - Vue templates: props immer camelCase
-- Tailwind Breakpoints: `tablet` (768px), `desktop` (1024px) — in `tailwind.config.ts` unter `theme.extend.screens` definiert
+- Tailwind Breakpoints: `mobile` (480px), `tablet` (768px), `desktop` (1024px) — in `tailwind.config.ts` unter `theme.extend.screens` definiert
 
 ## URL-Struktur
 ```

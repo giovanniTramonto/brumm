@@ -68,8 +68,8 @@ defineExpose({ focus })
     </div>
 
     <!-- Numpad -->
-    <div class="space-y-4 px-6">
-      <div v-for="(row, ri) in ROWS" :key="ri" class="flex gap-6">
+    <div class="space-y-2 px-6 mobile:space-y-4">
+      <div v-for="(row, ri) in ROWS" :key="ri" class="flex gap-2 mobile:gap-6">
         <button
           v-for="key in row"
           :key="key"
