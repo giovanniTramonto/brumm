@@ -88,9 +88,9 @@ export default defineEventHandler(async (event) => {
     email2: newEmail2,
     phone1: phone1 || null,
     phone2: phone2 || null,
-    groupId: groupId || null,
-    careType: careType || null,
-    contractEnd: contractEnd || null,
+    groupId: isSelfUpdate ? existing.groupId : groupId || null,
+    careType: isSelfUpdate ? existing.careType : careType || null,
+    contractEnd: isSelfUpdate ? existing.contractEnd : contractEnd || null,
     address: address || null,
   }
 
