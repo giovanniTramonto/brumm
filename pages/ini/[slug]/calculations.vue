@@ -210,6 +210,10 @@ async function onSaveMembershipFee() {
                 <div v-else-if="reimbursement.ndhChildCount > 0" class="text-xs text-gray-400">
                   ndH-Zuschlag nicht angerechnet (unter 40 % Schwellenwert)
                 </div>
+                <div v-if="reimbursement.baseTotal > 0" class="flex justify-between border-t pt-1 font-medium text-gray-700">
+                  <span>Gesamterstattung (Land Berlin)</span>
+                  <span>{{ formatEur(reimbursement.total) }}</span>
+                </div>
                 <div v-if="monthlyMembershipFees > 0" class="flex justify-between">
                   <span>Mitgliedsbeiträge</span>
                   <span>{{ formatEur(monthlyMembershipFees) }}</span>
