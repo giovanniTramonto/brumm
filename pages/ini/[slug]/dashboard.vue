@@ -120,6 +120,16 @@ onMounted(() => membersStore.fetchMembers(slug))
                 </span>
               </li>
             </ul>
+            <template v-if="expiredContractMembers.length > 0">
+              <p class="mt-5 text-xs font-medium text-red-700">Vertragsende überschritten</p>
+              <ul class="mt-1 space-y-0">
+                <li v-for="m in expiredContractMembers" :key="m.id">
+                  <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-red-600 hover:text-red-800">
+                    {{ m.firstName }} {{ m.lastName }} →
+                  </NuxtLink>
+                </li>
+              </ul>
+            </template>
           </div>
           <div class="card">
             <p class="text-sm font-medium text-gray-500">Abgemeldet</p>
@@ -134,16 +144,6 @@ onMounted(() => membersStore.fetchMembers(slug))
                 </span>
               </li>
             </ul>
-            <template v-if="expiredContractMembers.length > 0">
-              <p class="mt-5 text-xs font-medium text-red-700">Vertragsende überschritten</p>
-              <ul class="mt-1 space-y-0">
-                <li v-for="m in expiredContractMembers" :key="m.id">
-                  <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-red-600 hover:text-red-800">
-                    {{ m.firstName }} {{ m.lastName }} →
-                  </NuxtLink>
-                </li>
-              </ul>
-            </template>
           </div>
         </div>
 
