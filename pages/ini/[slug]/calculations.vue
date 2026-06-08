@@ -148,7 +148,7 @@ async function onSaveMembershipFee() {
 <template>
   <div>
     <div class="mb-8">
-      <h1 class="font-mono text-2xl font-bold text-gray-900">Berechnung</h1>
+      <h1 class="text-2xl font-bold text-gray-900">Berechnung</h1>
     </div>
 
     <div v-if="!canManageClub" class="rounded-md bg-red-50 p-4 text-sm text-red-700">
