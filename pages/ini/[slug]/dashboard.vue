@@ -184,7 +184,7 @@ onMounted(() => membersStore.fetchMembers(slug))
             <div class="card flex-1">
               <p class="text-sm font-medium text-gray-500">Vertragsende in {{ new Date().getFullYear() }}</p>
               <p class="mt-1 text-3xl font-bold text-orange-500">{{ contractEndingSoon.length }}</p>
-              <ul v-if="contractEndingSoon.length > 0" class="mt-8 space-y-0">
+              <ul v-if="contractEndingSoon.length > 0" class="mt-5 space-y-1">
                 <li v-for="m in contractEndingSoon" :key="m.id" class="flex items-center justify-between gap-1">
                   <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-gray-600 hover:text-gray-900">
                     {{ m.firstName }} {{ m.lastName }} →
@@ -196,7 +196,7 @@ onMounted(() => membersStore.fetchMembers(slug))
               </ul>
               <template v-if="expiredContractMembers.length > 0">
                 <p class="mt-8 text-xs font-medium text-red-700">Vertragsende überschritten</p>
-                <ul class="mt-1 space-y-0">
+                <ul class="mt-1 space-y-1">
                   <li v-for="m in expiredContractMembers" :key="m.id">
                     <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-red-600 hover:text-red-800">
                       {{ m.firstName }} {{ m.lastName }} →
