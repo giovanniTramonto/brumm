@@ -122,15 +122,15 @@ onMounted(() => membersStore.fetchMembers(slug))
             <div class="grid grid-cols-3">
               <div>
                 <p class="text-sm font-medium text-gray-500">Angemeldete Kinder</p>
-                <p class="mt-1 text-3xl font-bold text-gray-900">{{ totalCount }}</p>
+                <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ totalCount }}</p>
               </div>
               <div>
                 <p class="text-sm font-medium text-green-500">Aktiv</p>
-                <p class="mt-1 text-3xl font-bold text-green-600">{{ activeCount }}</p>
+                <p class="mt-1 font-mono text-3xl font-bold text-green-600">{{ activeCount }}</p>
               </div>
               <div>
                 <p class="text-sm font-medium text-purple-500">Inaktiv</p>
-                <p class="mt-1 text-3xl font-bold text-purple-800">{{ inactiveCount }}</p>
+                <p class="mt-1 font-mono text-3xl font-bold text-purple-800">{{ inactiveCount }}</p>
               </div>
             </div>
             <div v-if="activeByGroup.length > 0" class="mt-6 grid grid-cols-3 gap-y-1">
@@ -183,13 +183,13 @@ onMounted(() => membersStore.fetchMembers(slug))
           <div class="flex flex-col gap-4">
             <div class="card flex-1">
               <p class="text-sm font-medium text-gray-500">Vertragsende in {{ new Date().getFullYear() }}</p>
-              <p class="mt-1 text-3xl font-bold text-orange-500">{{ contractEndingSoon.length }}</p>
+              <p class="mt-1 font-mono text-3xl font-bold text-orange-500">{{ contractEndingSoon.length }}</p>
               <ul v-if="contractEndingSoon.length > 0" class="mt-5 space-y-1">
                 <li v-for="m in contractEndingSoon" :key="m.id" class="flex items-center justify-between gap-1">
                   <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-gray-600 hover:text-gray-900">
                     {{ m.firstName }} {{ m.lastName }} →
                   </NuxtLink>
-                  <span class="text-xs text-gray-400 shrink-0">
+                  <span class="shrink-0 font-mono text-xs text-gray-400">
                     {{ new Date(m.birthDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
                   </span>
                 </li>
@@ -207,14 +207,14 @@ onMounted(() => membersStore.fetchMembers(slug))
             </div>
             <div class="card flex-1">
               <p class="text-sm font-medium text-gray-500">Abgemeldet</p>
-              <p class="mt-1 text-3xl font-bold text-gray-400">{{ deactivatedMembers.length }}</p>
+              <p class="mt-1 font-mono text-3xl font-bold text-gray-400">{{ deactivatedMembers.length }}</p>
               <ul v-if="deactivatedMembers.length > 0" class="mt-5 space-y-1">
                 <li v-for="m in deactivatedMembers" :key="m.id" class="flex items-center justify-between gap-1">
                   <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-gray-600 hover:text-gray-900">
                     {{ m.firstName }} {{ m.lastName }} →
                   </NuxtLink>
                   <span v-if="m.deactivatedAt" class="text-xs text-gray-400 shrink-0">
-                    Löschung am {{ deletionDate(m.deactivatedAt) }}
+                    Löschung am <span class="font-mono">{{ deletionDate(m.deactivatedAt) }}</span>
                   </span>
                 </li>
               </ul>

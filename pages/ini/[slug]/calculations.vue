@@ -148,7 +148,7 @@ async function onSaveMembershipFee() {
 <template>
   <div>
     <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900">Berechnung</h1>
+      <h1 class="font-mono text-2xl font-bold text-gray-900">Berechnung</h1>
     </div>
 
     <div v-if="!canManageClub" class="rounded-md bg-red-50 p-4 text-sm text-red-700">
@@ -178,45 +178,45 @@ async function onSaveMembershipFee() {
                 <div class="flex gap-6">
                   <div>
                     <p class="text-sm text-gray-500">Aktive Kinder</p>
-                    <p class="mt-1 text-3xl font-bold text-gray-900">{{ activeCount }}</p>
+                    <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ activeCount }}</p>
                   </div>
                   <div>
                     <p class="text-sm text-gray-500">0–1 J.</p>
-                    <p class="mt-1 text-3xl font-bold text-gray-300">{{ ageBreakdown['01'] }}</p>
+                    <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['01'] }}</p>
                   </div>
                   <div>
                     <p class="text-sm text-gray-500">2 J.</p>
-                    <p class="mt-1 text-3xl font-bold text-gray-300">{{ ageBreakdown['2'] }}</p>
+                    <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['2'] }}</p>
                   </div>
                   <div>
                     <p class="text-sm text-gray-500">3+ J.</p>
-                    <p class="mt-1 text-3xl font-bold text-gray-300">{{ ageBreakdown['3plus'] }}</p>
+                    <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['3plus'] }}</p>
                   </div>
                 </div>
                 <div class="text-right">
                   <p class="text-sm text-gray-500">Gesamteinnahmen</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-900">{{ formatEur(reimbursement.total + monthlyMembershipFees) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ formatEur(reimbursement.total + monthlyMembershipFees) }}</p>
                 </div>
               </div>
               <div v-if="reimbursement.baseTotal > 0 || monthlyMembershipFees > 0" class="mt-4 space-y-1 border-t pt-3 text-sm text-gray-600">
                 <div class="flex justify-between">
                   <span>Grunderstattung</span>
-                  <span>{{ formatEur(reimbursement.baseTotal) }}</span>
+                  <span class="font-mono">{{ formatEur(reimbursement.baseTotal) }}</span>
                 </div>
                 <div v-if="reimbursement.ndhSurchargeTotal > 0" class="flex justify-between">
                   <span>ndH-Zuschlag ({{ reimbursement.ndhChildCount }} Kinder)</span>
-                  <span>{{ formatEur(reimbursement.ndhSurchargeTotal) }}</span>
+                  <span class="font-mono">{{ formatEur(reimbursement.ndhSurchargeTotal) }}</span>
                 </div>
                 <div v-else-if="reimbursement.ndhChildCount > 0" class="text-xs text-gray-400">
                   ndH-Zuschlag nicht angerechnet (unter 40 % Schwellenwert)
                 </div>
                 <div v-if="reimbursement.baseTotal > 0" class="flex justify-between border-t pt-1 font-medium text-gray-700">
                   <span>Gesamterstattung (Land Berlin)</span>
-                  <span>{{ formatEur(reimbursement.total) }}</span>
+                  <span class="font-mono">{{ formatEur(reimbursement.total) }}</span>
                 </div>
                 <div v-if="monthlyMembershipFees > 0" class="flex justify-between font-medium text-gray-700">
                   <span>Mitgliedsbeiträge</span>
-                  <span>{{ formatEur(monthlyMembershipFees) }}</span>
+                  <span class="font-mono">{{ formatEur(monthlyMembershipFees) }}</span>
                 </div>
               </div>
               <p v-if="reimbursement.childCount === 0" class="mt-2 text-sm text-gray-500">
@@ -232,28 +232,28 @@ async function onSaveMembershipFee() {
               <div class="flex gap-6">
                 <div>
                   <p class="text-sm text-gray-500">Betreuungsstunden</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-900">{{ staffing.careHours.toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.careHours.toFixed(1) }}</p>
                 </div>
                 <div>
                   <p class="text-sm text-gray-500">Leitungsstunden</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-900">{{ staffing.leadershipHours.toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.leadershipHours.toFixed(1) }}</p>
                 </div>
                 <div class="border-l pl-6">
                   <p class="text-sm text-gray-500">Min. Fachstunden</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours * 2 / 3).toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours * 2 / 3).toFixed(1) }}</p>
                 </div>
                 <div>
                   <p class="text-sm text-gray-500">Max. Quereinsteigerstd.</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours / 3).toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours / 3).toFixed(1) }}</p>
                 </div>
               </div>
               <div class="text-right">
                 <p class="text-sm text-gray-500">Gesamt</p>
-                <p class="mt-1 text-3xl font-bold text-gray-900">{{ staffing.weeklyHours.toFixed(1) }}</p>
+                <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.weeklyHours.toFixed(1) }}</p>
               </div>
             </div>
             <div class="mt-4 border-t pt-3 text-xs text-gray-400">
-              {{ staffing.positionsWithLeadership.toFixed(2) }} Stellen mit Leitung gesamt
+              <span class="font-mono">{{ staffing.positionsWithLeadership.toFixed(2) }}</span> Stellen mit Leitung gesamt
             </div>
           </template>
         </div>
@@ -265,7 +265,7 @@ async function onSaveMembershipFee() {
           <template v-if="annualReimbursement">
             <div class="mb-4 flex items-baseline justify-between">
               <h2 class="text-sm font-medium text-gray-900">Einnahmen {{ annualReimbursement.year }}</h2>
-              <p class="text-2xl font-bold text-gray-900">{{ formatEur(annualReimbursement.total + annualMembershipFees) }}</p>
+              <p class="font-mono text-2xl font-bold text-gray-900">{{ formatEur(annualReimbursement.total + annualMembershipFees) }}</p>
             </div>
             <div class="grid grid-cols-12 gap-1 border-t pt-3">
               <div v-for="(m, i) in annualReimbursement.months" :key="i" class="text-center">
@@ -283,11 +283,11 @@ async function onSaveMembershipFee() {
             <div class="flex items-end justify-between">
               <div>
                 <p class="text-sm text-gray-500">Ø Betreuungsstunden</p>
-                <p class="mt-1 text-2xl font-bold text-gray-900">{{ annualStaffing.averageCareHours.toFixed(1) }}</p>
+                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageCareHours.toFixed(1) }}</p>
               </div>
               <div class="text-right">
                 <p class="text-sm text-gray-500">Ø Leitungsstunden</p>
-                <p class="mt-1 text-2xl font-bold text-gray-900">{{ annualStaffing.averageLeadershipHours.toFixed(1) }}</p>
+                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageLeadershipHours.toFixed(1) }}</p>
               </div>
             </div>
             <div class="mt-4 grid grid-cols-12 gap-1 border-t pt-3">
@@ -308,11 +308,11 @@ async function onSaveMembershipFee() {
           <template v-if="!membershipFeeEditing">
             <div class="flex items-center justify-between">
               <div class="flex items-baseline gap-3">
-                <p class="text-2xl font-bold text-gray-900">
+                <p class="font-mono text-2xl font-bold text-gray-900">
                   {{ authStore.currentClub?.membershipFee != null ? formatEur(authStore.currentClub.membershipFee) : '–' }}
                 </p>
                 <p v-if="authStore.currentClub?.membershipFee != null" class="text-sm text-gray-400">
-                  {{ formatEur(authStore.currentClub.membershipFee + getMealAllowance()) }} inkl. Essen
+                  <span class="font-mono">{{ formatEur(authStore.currentClub.membershipFee + getMealAllowance()) }}</span> inkl. Essen
                 </p>
               </div>
               <button class="btn-secondary text-sm" @click="onEditMembershipFee">Ändern</button>
