@@ -69,7 +69,7 @@ const STAFF_RATES: Record<AgeGroup, Record<CareTypeKey, StaffRates>> = {
 }
 
 const LEADERSHIP_RATE = 0.0118
-const HOURS_PER_POSITION = 39
+const HOURS_PER_POSITION = 39.4
 const MEAL_ALLOWANCE = 23
 
 export function getMealAllowance(): number {
