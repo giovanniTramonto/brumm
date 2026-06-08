@@ -81,6 +81,13 @@ const isContactLocked = computed(() => {
   return member.value.status === 'DEACTIVATED'
 })
 
+const deletionDate = computed(() => {
+  if (!member.value?.deactivatedAt) return null
+  const d = new Date(member.value.deactivatedAt)
+  d.setFullYear(d.getFullYear() + 1)
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+})
+
 const canInteractWithTemplates = computed(
   () =>
     (isMember.value || isOwnChild.value || !member.value?.hasInvite) &&
@@ -1215,7 +1222,7 @@ async function onSubmit() {
 
         <div v-if="canManageMembers || (isMember && !isContactLocked)" class="space-y-2 border-t pt-4">
           <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
-            Kind wurde abgemeldet. Automatische Löschung nach 1 Jahr.
+            Kind wurde abgemeldet.<template v-if="deletionDate"> Automatische Löschung am {{ deletionDate }}.</template>
           </p>
           <div class="flex items-center justify-between gap-3">
             <button
