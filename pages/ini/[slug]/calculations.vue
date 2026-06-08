@@ -214,7 +214,7 @@ async function onSaveMembershipFee() {
                   <span>Gesamterstattung (Land Berlin)</span>
                   <span>{{ formatEur(reimbursement.total) }}</span>
                 </div>
-                <div v-if="monthlyMembershipFees > 0" class="flex justify-between">
+                <div v-if="monthlyMembershipFees > 0" class="flex justify-between font-medium text-gray-700">
                   <span>Mitgliedsbeiträge</span>
                   <span>{{ formatEur(monthlyMembershipFees) }}</span>
                 </div>
