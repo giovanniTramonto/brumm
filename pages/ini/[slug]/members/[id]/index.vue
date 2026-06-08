@@ -643,7 +643,7 @@ async function onSubmit() {
                   : member.status === 'DEACTIVATED'
                     ? 'bg-gray-100 text-gray-600'
                     : member.status === 'PENDING_INVITE'
-                      ? 'bg-amber-100 text-amber-800'
+                      ? 'bg-orange-100 text-orange-800'
                       : 'bg-blue-100 text-blue-800'
             "
           >
@@ -905,8 +905,8 @@ async function onSubmit() {
           <div class="border-t pt-4">
             <div class="mb-3 flex items-center gap-3">
               <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-              <span v-if="!member.hasInvite" class="text-xs text-amber-600">Die Unterlagen werden von der Kita hochgeladen</span>
-              <span v-else-if="!localAllSubmitted" class="text-xs text-amber-600">Bitte vervollständige alle Unterlagen</span>
+              <span v-if="!member.hasInvite" class="text-xs text-gray-500">Die Unterlagen werden von der Kita hochgeladen</span>
+              <span v-else-if="!localAllSubmitted" class="text-xs text-orange-600">Bitte vervollständige alle Unterlagen</span>
             </div>
           </div>
 
@@ -972,11 +972,11 @@ async function onSubmit() {
             <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
             <span
               v-if="!member.hasInvite && member.status === 'REGISTERED'"
-              class="text-xs text-amber-600"
+              class="text-xs text-gray-500"
             >Unterlagen können direkt hochgeladen werden</span>
             <span
               v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments && !isOwnChild"
-              class="text-xs text-amber-600"
+              class="text-xs text-orange-600"
             >Noch nicht fertig eingereicht</span>
           </div>
 

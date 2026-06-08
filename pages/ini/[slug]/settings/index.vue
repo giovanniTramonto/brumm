@@ -37,7 +37,7 @@ const reconnected = route.query.reconnected === '1'
         </div>
         <div class="flex gap-2">
           <dt class="w-32 text-gray-500">Setup</dt>
-          <dd :class="authStore.currentClub?.isSetupDone ? 'text-green-700' : 'text-amber-600'">
+          <dd :class="authStore.currentClub?.isSetupDone ? 'text-green-700' : 'text-orange-600'">
             {{ authStore.currentClub?.isSetupDone ? "Abgeschlossen" : "Ausstehend" }}
           </dd>
         </div>

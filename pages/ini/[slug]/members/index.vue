@@ -99,7 +99,7 @@ const filteredMembers = computed(() => {
       </div>
     </div>
 
-    <div v-if="showNoMemberManagerHint" class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    <div v-if="showNoMemberManagerHint" class="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
       <template v-if="membersStore.hasAnyMemberManager">
         Kinder können nur von <span class="font-semibold">{{ membersStore.memberManagerNames.join(', ') }}</span> verwaltet werden.
       </template>
@@ -149,14 +149,14 @@ const filteredMembers = computed(() => {
               <span v-if="member.careType" class="text-gray-600">
                 {{ CARE_TYPE_OPTIONS.find(o => o.key === member.careType)?.label ?? member.careType }}
               </span>
-              <span v-else-if="member.status === 'ACTIVE'" class="inline-flex rounded-full bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">fehlt</span>
+              <span v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE'" class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
               <span v-else class="text-gray-400">–</span>
             </td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ member.contractEnd ?? '–' }}</td>
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : member.status === 'INACTIVE' ? 'bg-orange-100 text-orange-700' : member.status === 'DEACTIVATED' ? 'bg-gray-100 text-gray-600' : member.status === 'PENDING_INVITE' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
+                :class="member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : member.status === 'INACTIVE' ? 'bg-orange-100 text-orange-700' : member.status === 'DEACTIVATED' ? 'bg-gray-100 text-gray-600' : member.status === 'PENDING_INVITE' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'"
               >
                 {{ member.status === 'ACTIVE' ? "Aktiv" : member.status === 'INACTIVE' ? "Inaktiv" : member.status === 'DEACTIVATED' ? "Abgemeldet" : member.status === 'PENDING_INVITE' ? "Ausstehend" : "Bestätigt" }}
               </span>

@@ -59,7 +59,7 @@ const googleAuthUrl = computed(() => {
 
           <div
             v-if="authStore.currentClub?.isSetupDone"
-            class="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-700"
+            class="mb-4 rounded-md bg-orange-50 p-3 text-sm text-orange-700"
           >
             <strong>Achtung:</strong> Ein Wechsel des Datenspeichers ist ein manueller Eingriff und sollte im Normalfall nicht durchgeführt werden. Alle bestehenden Mitgliederdaten, Dokumente und Ordner im bisherigen Drive bleiben dort — sie werden <strong>nicht automatisch übertragen</strong> und sind danach über Brumm nicht mehr erreichbar. Nur fortfahren, wenn du weißt was du tust.
           </div>

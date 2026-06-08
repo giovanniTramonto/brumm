@@ -16,7 +16,7 @@ const STATUS_CLASS: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800',
   INACTIVE: 'bg-orange-100 text-orange-700',
   REGISTERED: 'bg-blue-100 text-blue-800',
-  PENDING_INVITE: 'bg-amber-100 text-amber-800',
+  PENDING_INVITE: 'bg-orange-100 text-orange-800',
   DEACTIVATED: 'bg-gray-100 text-gray-600',
 }
 </script>
@@ -31,7 +31,7 @@ const STATUS_CLASS: Record<string, string> = {
           v-for="child in membersStore.members"
           :key="child.id"
           class="flex items-center justify-between px-4 py-2.5 text-sm"
-          :class="(child.status === 'REGISTERED' || child.status === 'PENDING_INVITE') ? 'bg-amber-50' : ''"
+          :class="(child.status === 'REGISTERED' || child.status === 'PENDING_INVITE') ? 'bg-orange-50' : ''"
         >
           <div class="flex items-center gap-2">
             <span class="text-gray-900">{{ child.firstName }} {{ child.lastName }}</span>

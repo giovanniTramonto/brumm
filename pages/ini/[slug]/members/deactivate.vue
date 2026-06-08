@@ -48,8 +48,8 @@ async function onDeactivate() {
         </p>
       </div>
 
-      <div class="rounded-md bg-amber-50 p-4">
-        <p class="text-sm font-medium text-amber-800">
+      <div class="rounded-md bg-orange-50 p-4">
+        <p class="text-sm font-medium text-orange-800">
           Abzumelden:
           <strong>
             {{ authStore.currentUser?.firstName }} {{ authStore.currentUser?.lastName }}
