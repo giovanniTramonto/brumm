@@ -25,6 +25,7 @@ model Club {
   invites           Invite[]
   documentTemplates DocumentTemplate[]
   managers          Manager[]
+  team              Team[]
   documents         Document[]
   deviceSessions    DeviceSession[]
 }
@@ -137,6 +138,18 @@ model Manager {
   isMemberManager Boolean  @default(false)
   localData       Json?
   createdAt       DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id])
+
+  @@unique([storageId, clubId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  clubId    String
+  storageId String
+  localData Json?
+  createdAt DateTime @default(now())
 
   club Club @relation(fields: [clubId], references: [id])
 

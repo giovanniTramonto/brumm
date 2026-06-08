@@ -422,6 +422,18 @@ export async function createManagersStructure(params: {
   return { managersFolderId }
 }
 
+export async function createTeamStructure(params: {
+  tokens: OAuthTokens
+  rootFolderId: string
+}): Promise<{ teamFolderId: string }> {
+  const teamFolderId = await getOrCreateFolder({
+    drive: getDriveClientFromTokens(params.tokens),
+    name: 'team',
+    parentId: params.rootFolderId,
+  })
+  return { teamFolderId }
+}
+
 export async function createGroupsStructure(params: {
   tokens: OAuthTokens
   rootFolderId: string

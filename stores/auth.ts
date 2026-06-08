@@ -73,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const isMember = computed(() => currentUser.value?.role === 'MEMBER')
+  const isTeam = computed(() => currentUser.value?.role === 'TEAM')
   const isSuperUser = computed(() => currentUser.value?.role === 'SUPERUSER')
   const canManageMembers = computed(() => {
     const user = currentUser.value
@@ -92,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentClub,
     isLoading,
     isMember,
+    isTeam,
     isSuperUser,
     canManageMembers,
     canManageClub,

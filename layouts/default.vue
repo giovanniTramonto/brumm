@@ -12,11 +12,9 @@ const navItems = computed(() => {
   if (authStore.currentUser.role !== 'MEMBER') {
     items.push({ label: 'Kinder', to: `${base}/members` })
   }
-  if (authStore.currentUser.role !== 'MEMBER') {
-    items.push({ label: 'Gruppen', to: `${base}/groups` })
-  }
   if (authStore.currentUser.role === 'SUPERUSER') {
     items.push({ label: 'Vorstand', to: `${base}/managers` })
+    items.push({ label: 'Team', to: `${base}/team` })
   }
   if (authStore.currentUser.role === 'SUPERUSER' || authStore.currentUser.role === 'MANAGER') {
     items.push({ label: 'Berechnung', to: `${base}/calculations` })
@@ -37,7 +35,7 @@ function onLogout() {
 </script>
 
 <template>
-  <div :class="authStore.currentUser?.role === 'MEMBER' ? 'bg-member' : 'bg-ini'" class="min-h-screen">
+  <div :class="authStore.currentUser?.role === 'MEMBER' ? 'bg-member' : authStore.currentUser?.role === 'TEAM' ? 'bg-team' : 'bg-ini'" class="min-h-screen">
     <nav v-if="authStore.currentUser" aria-label="Hauptnavigation" class="relative z-10 border-b border-gray-200 bg-white shadow-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-16 items-center justify-between py-4">

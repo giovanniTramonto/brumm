@@ -156,6 +156,43 @@ export async function sendManagerRemovedEmail(params: {
   })
 }
 
+export async function sendTeamAddedEmail(params: {
+  to: string
+  name: string
+  clubName: string
+  clubSlug: string
+  magicLinkToken: string
+}): Promise<void> {
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.magicLinkToken}`
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Willkommen im Team – ${params.clubName}`,
+    html: `
+      <h2>Hallo ${params.name},</h2>
+      <p>Du wurdest als Teammitglied bei <strong>${params.clubName}</strong> eingetragen.</p>
+      <p><a href="${link}">Jetzt einloggen</a></p>
+      <p>Bei Fragen wende dich an den Admin.</p>
+    `,
+  })
+}
+
+export async function sendTeamRemovedEmail(params: {
+  to: string
+  name: string
+  clubName: string
+}): Promise<void> {
+  await send({
+    from: FROM_ADDRESS,
+    to: params.to,
+    subject: `Teammitglied entfernt – ${params.clubName}`,
+    html: `
+      <h2>Hallo ${params.name},</h2>
+      <p>Du wurdest als Teammitglied bei <strong>${params.clubName}</strong> entfernt.</p>
+    `,
+  })
+}
+
 export async function sendMemberRemovedEmail(params: {
   to: string[]
   clubName: string

@@ -88,14 +88,6 @@ const filteredMembers = computed(() => {
         >
           Kind anlegen
         </NuxtLink>
-        <span
-          v-else
-          class="btn-primary cursor-not-allowed opacity-50"
-          aria-disabled="true"
-          role="link"
-        >
-          Kind anlegen
-        </span>
       </div>
     </div>
 

@@ -6,6 +6,7 @@ import { prisma } from '~/server/utils/prisma'
 import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
 import { findManagerIdByEmail } from '~/server/utils/storage/managersSheet'
 import { findUserIdByEmail } from '~/server/utils/storage/sheets'
+import { findTeamMemberIdByEmail } from '~/server/utils/storage/teamSheet'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 async function findOrCreateManagerUser(managerId: string, clubId: string) {
@@ -25,6 +26,12 @@ async function findOrCreateManagerUser(managerId: string, clubId: string) {
       isMemberManager: manager.isMemberManager,
     },
   })
+}
+
+async function findTeamUser(teamId: string, clubId: string) {
+  const member = await prisma.team.findFirst({ where: { id: teamId, clubId } })
+  if (!member) return null
+  return prisma.user.findFirst({ where: { storageId: member.storageId, clubId, role: 'TEAM' } })
 }
 
 export default defineEventHandler(async (event) => {
@@ -62,7 +69,7 @@ export default defineEventHandler(async (event) => {
   if (club.isSetupDone && club.storageConfig && club.oauthToken) {
     const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
     const tokens = club.oauthToken as unknown as OAuthTokens
-    const [memberId, managerId] = await Promise.all([
+    const [memberId, managerId, teamId] = await Promise.all([
       findUserIdByEmail({
         tokens,
         membersSheetId: storageConfig.membersSheetId,
@@ -75,6 +82,13 @@ export default defineEventHandler(async (event) => {
             email: normalizedEmail,
           })
         : null,
+      storageConfig.teamSheetId
+        ? findTeamMemberIdByEmail({
+            tokens,
+            teamSheetId: storageConfig.teamSheetId,
+            email: normalizedEmail,
+          })
+        : null,
     ])
 
     if (memberId) {
@@ -82,6 +96,9 @@ export default defineEventHandler(async (event) => {
     } else if (managerId) {
       const managerUser = await findOrCreateManagerUser(managerId, club.id)
       if (managerUser) userId = managerUser.id
+    } else if (teamId) {
+      const teamUser = await findTeamUser(teamId, club.id)
+      if (teamUser) userId = teamUser.id
     }
   } else {
     const usersWithLocalData = await prisma.user.findMany({
@@ -109,6 +126,18 @@ export default defineEventHandler(async (event) => {
       if (managerMatch) {
         const managerUser = await findOrCreateManagerUser(managerMatch.id, club.id)
         if (managerUser) userId = managerUser.id
+      } else {
+        const teamMembers = await prisma.team.findMany({
+          where: { clubId: club.id, localData: { not: Prisma.DbNull } },
+        })
+        const teamMatch = teamMembers.find((m) => {
+          const d = m.localData as Record<string, unknown> | null
+          return d && (d.email as string)?.toLowerCase() === normalizedEmail
+        })
+        if (teamMatch) {
+          const teamUser = await findTeamUser(teamMatch.id, club.id)
+          if (teamUser) userId = teamUser.id
+        }
       }
     }
   }

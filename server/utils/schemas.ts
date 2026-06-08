@@ -82,6 +82,16 @@ export const updateManagerSchema = z.object({
   isMemberManager: z.boolean().optional(),
 })
 
+export const createTeamSchema = z.object({
+  name: z.string().min(1, 'Name fehlt'),
+  email: z.string().email('Ungültige E-Mail-Adresse'),
+})
+
+export const updateTeamSchema = z.object({
+  name: z.string().min(1, 'Name fehlt').optional(),
+  email: z.string().email('Ungültige E-Mail-Adresse').optional(),
+})
+
 export const importPreviewSchema = z.object({
   csvContent: z.string().min(1, 'CSV-Inhalt fehlt'),
 })

@@ -12,6 +12,8 @@ export interface GoogleDriveConfig {
   groupsFolderId?: string
   groupsSheetId?: string
   documentsFolderId?: string
+  teamFolderId?: string
+  teamSheetId?: string
 }
 
 export interface OAuthTokens {
@@ -123,6 +125,22 @@ export interface Manager {
   clubId: string
   storageId: string
   isMemberManager: boolean
+  name: string
+  email: string
+  createdAt: string
+}
+
+export interface TeamData {
+  teamId: string
+  storageId: string
+  name: string
+  email: string
+}
+
+export interface TeamMember {
+  id: string
+  clubId: string
+  storageId: string
   name: string
   email: string
   createdAt: string

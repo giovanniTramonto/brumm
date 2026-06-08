@@ -35,6 +35,14 @@ export default {
           700: '#c9a000',
           800: '#7a5e00',
         },
+        team: {
+          DEFAULT: '#f2baba',
+          200: '#fce9e9',
+          300: '#e7a9a9',
+          500: '#f2baba',
+          700: '#b76464',
+          800: '#904848',
+        },
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

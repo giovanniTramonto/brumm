@@ -62,7 +62,7 @@ const otherReplaceErrorFileId = ref<string | null>(null)
 const isUploadingContractDoc = ref(false)
 const contractUploadError = ref<string | null>(null)
 
-const { isMember, canManageMembers } = storeToRefs(authStore)
+const { isMember, isTeam, canManageMembers } = storeToRefs(authStore)
 
 const isKidDataLocked = computed(() => {
   if (!member.value) return false
@@ -672,9 +672,10 @@ async function onSubmit() {
           Kind wurde ohne Einladung angelegt.
         </p>
 
-        <!-- canManageMembers or own MEMBER: editable form -->
+        <!-- canManageMembers or own MEMBER: editable form; TEAM: read-only -->
         <form
-          v-if="canManageMembers || isMember"
+          v-if="canManageMembers || isMember || isTeam"
+          :inert="isTeam"
           class="space-y-4"
           @submit.prevent="onSave"
         >
@@ -826,7 +827,7 @@ async function onSubmit() {
 
 
         <!-- MEMBER: Aktiv → documents -->
-        <template v-if="isMember && (member.status === 'ACTIVE' || member.status === 'INACTIVE')">
+        <template v-if="!isTeam && isMember && (member.status === 'ACTIVE' || member.status === 'INACTIVE')">
           <div class="border-t pt-4">
             <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
             <LoadingBrumm v-if="isLoadingDocs" />
@@ -908,7 +909,7 @@ async function onSubmit() {
         </template>
 
         <!-- MEMBER: Bestätigt → template-based upload list -->
-        <template v-else-if="isMember && member.status === 'REGISTERED'">
+        <template v-else-if="!isTeam && isMember && member.status === 'REGISTERED'">
           <div class="border-t pt-4">
             <div class="mb-3 flex items-center gap-3">
               <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
@@ -952,7 +953,7 @@ async function onSubmit() {
         </template>
 
         <!-- TEAM or other: readonly data -->
-        <dl v-else-if="!isMember && !canManageMembers" class="space-y-2 text-sm">
+        <dl v-else-if="!isMember && !canManageMembers && !isTeam" class="space-y-2 text-sm">
           <div class="flex gap-2">
             <dt class="w-40 text-gray-500">Geburtsdatum</dt>
             <dd class="text-gray-900">
@@ -1226,7 +1227,7 @@ async function onSubmit() {
           </p>
           <div class="flex items-center justify-between gap-3">
             <button
-              v-if="!isContactLocked"
+              v-if="!isContactLocked && !isTeam"
               type="submit"
               class="btn-primary text-sm"
               :disabled="isSubmitting || !hasChanges"

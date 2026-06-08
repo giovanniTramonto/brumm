@@ -225,7 +225,6 @@ onMounted(() => membersStore.fetchMembers(slug))
       </template>
 
       <DashboardAktuell :slug="slug" />
-
       <DashboardDocuments :slug="slug" />
     </div>
   </div>
