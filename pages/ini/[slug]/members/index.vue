@@ -144,15 +144,20 @@ const filteredMembers = computed(() => {
                 {{ member.lastName }}, {{ member.firstName }}
               </NuxtLink>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600">{{ member.group?.name ?? "–" }}</td>
+            <td class="px-4 py-3 text-sm">
+              <span v-if="member.group?.name" class="text-gray-600">{{ member.group.name }}</span>
+              <span v-else class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
+            </td>
             <td v-if="canManageMembers || isMember" class="px-4 py-3 text-sm">
               <span v-if="member.careType" class="text-gray-600">
                 {{ CARE_TYPE_OPTIONS.find(o => o.key === member.careType)?.label ?? member.careType }}
               </span>
-              <span v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE'" class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
-              <span v-else class="text-gray-400">–</span>
+              <span v-else class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600">{{ member.contractEnd ?? '–' }}</td>
+            <td class="px-4 py-3 text-sm">
+              <span v-if="member.contractEnd" class="text-gray-600">{{ member.contractEnd }}</span>
+              <span v-else class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
+            </td>
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
