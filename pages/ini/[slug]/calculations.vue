@@ -235,16 +235,16 @@ async function onSaveMembershipFee() {
                   <p class="mt-1 text-3xl font-bold text-gray-900">{{ staffing.careHours.toFixed(1) }}</p>
                 </div>
                 <div>
+                  <p class="text-sm text-gray-500">Leitungsstunden</p>
+                  <p class="mt-1 text-3xl font-bold text-gray-900">{{ staffing.leadershipHours.toFixed(1) }}</p>
+                </div>
+                <div class="border-l pl-6">
                   <p class="text-sm text-gray-500">Min. Fachstunden</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-300">{{ (staffing.careHours * 2 / 3).toFixed(1) }}</p>
+                  <p class="mt-1 text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours * 2 / 3).toFixed(1) }}</p>
                 </div>
                 <div>
                   <p class="text-sm text-gray-500">Max. Quereinsteigerstd.</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-300">{{ (staffing.careHours / 3).toFixed(1) }}</p>
-                </div>
-                <div class="border-l pl-6">
-                  <p class="text-sm text-gray-500">Vorstandsstunden</p>
-                  <p class="mt-1 text-3xl font-bold text-gray-900">{{ staffing.leadershipHours.toFixed(1) }}</p>
+                  <p class="mt-1 text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours / 3).toFixed(1) }}</p>
                 </div>
               </div>
               <div class="text-right">
@@ -253,7 +253,7 @@ async function onSaveMembershipFee() {
               </div>
             </div>
             <div class="mt-4 border-t pt-3 text-xs text-gray-400">
-              {{ staffing.positionsWithLeadership.toFixed(2) }} Stellen gesamt
+              {{ staffing.positionsWithLeadership.toFixed(2) }} Stellen mit Leitung gesamt
             </div>
           </template>
         </div>
@@ -286,7 +286,7 @@ async function onSaveMembershipFee() {
                 <p class="mt-1 text-2xl font-bold text-gray-900">{{ annualStaffing.averageCareHours.toFixed(1) }}</p>
               </div>
               <div class="text-right">
-                <p class="text-sm text-gray-500">Ø Vorstandsstunden</p>
+                <p class="text-sm text-gray-500">Ø Leitungsstunden</p>
                 <p class="mt-1 text-2xl font-bold text-gray-900">{{ annualStaffing.averageLeadershipHours.toFixed(1) }}</p>
               </div>
             </div>
