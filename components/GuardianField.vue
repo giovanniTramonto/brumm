@@ -122,7 +122,7 @@ watch(isDuplicateEmail, (isDuplicate) => {
     <template v-if="hint.isChanged">Änderung wird auch automatisch für {{ hint.names }} übernommen.</template>
     <template v-else>Diese E-Mail gehört auch zu {{ hint.names }}.</template>
   </p>
-  <p v-if="isNoInviteWorkflow" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
-    Kein-Invite-Workflow: E-Mail-Änderungen lösen keine Benachrichtigungen aus.
+  <p v-if="isNoInviteWorkflow" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+    Es wird keine E-Mail-Einladung versendet.
   </p>
 </template>
