@@ -99,26 +99,6 @@ export async function sendInviteEmail(params: {
   })
 }
 
-export async function sendSuperUserNotification(params: {
-  to: string[]
-  clubName: string
-  childName: string
-  clubSlug: string
-  userId: string
-}): Promise<void> {
-  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/members/${params.userId}`
-  await send({
-    from: FROM_ADDRESS,
-    to: params.to,
-    subject: `Neues Kind wartet auf Aktivierung: ${params.childName}`,
-    html: `
-      <h2>Neues Kind bei ${params.clubName}</h2>
-      <p><strong>${params.childName}</strong> hat das Onboarding abgeschlossen und wartet auf Aktivierung.</p>
-      <p><a href="${link}">Kind aktivieren</a></p>
-    `,
-  })
-}
-
 export async function sendActivationEmail(params: {
   to: string[]
   clubName: string
@@ -139,47 +119,14 @@ export async function sendActivationEmail(params: {
   })
 }
 
-export async function sendDeactivationConfirmation(params: {
-  to: string[]
-  clubName: string
-  childName: string
-}): Promise<void> {
-  await send({
-    from: FROM_ADDRESS,
-    to: params.to,
-    subject: `Abmeldung bestätigt: ${params.childName}`,
-    html: `
-      <h2>Abmeldung bei ${params.clubName}</h2>
-      <p><strong>${params.childName}</strong> wurde erfolgreich vom Verein abgemeldet.</p>
-      <p>Gemäß DSGVO werden alle persönlichen Daten nach einem Jahr vollständig gelöscht.</p>
-    `,
-  })
-}
-
-export async function sendReactivationEmail(params: {
-  to: string[]
-  clubName: string
-  childName: string
-}): Promise<void> {
-  await send({
-    from: FROM_ADDRESS,
-    to: params.to,
-    subject: `Abmeldung aufgehoben: ${params.childName} – ${params.clubName}`,
-    html: `
-      <h2>Abmeldung aufgehoben</h2>
-      <p>Die Abmeldung von <strong>${params.childName}</strong> bei <strong>${params.clubName}</strong> wurde aufgehoben.</p>
-      <p>Das Mitglied ist ab sofort wieder aktiv.</p>
-    `,
-  })
-}
-
 export async function sendManagerAddedEmail(params: {
   to: string
   name: string
   clubName: string
   clubSlug: string
+  magicLinkToken: string
 }): Promise<void> {
-  const loginLink = `${process.env.APP_URL ?? ''}/login/${params.clubSlug}`
+  const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.magicLinkToken}`
   await send({
     from: FROM_ADDRESS,
     to: params.to,
@@ -187,7 +134,7 @@ export async function sendManagerAddedEmail(params: {
     html: `
       <h2>Hallo ${params.name},</h2>
       <p>Du wurdest als Vorstandsmitglied bei <strong>${params.clubName}</strong> eingetragen.</p>
-      <p><a href="${loginLink}">Hier kannst du dich einloggen</a></p>
+      <p><a href="${link}">Jetzt einloggen</a></p>
       <p>Bei Fragen wende dich an den Admin.</p>
     `,
   })
@@ -301,29 +248,6 @@ export async function sendDocumentsSubmittedNotification(params: {
       <h2>Vertragsunterlagen eingereicht – ${params.clubName}</h2>
       <p><strong>${params.childName}</strong> hat alle Vertragsunterlagen eingereicht und wartet auf Aktivierung.</p>
       <p><a href="${link}">Kind aktivieren</a></p>
-    `,
-  })
-}
-
-export async function sendImportSummary(params: {
-  to: string[]
-  clubName: string
-  succeeded: number
-  failed: number
-  total: number
-}): Promise<void> {
-  await send({
-    from: FROM_ADDRESS,
-    to: params.to,
-    subject: `CSV-Import abgeschlossen: ${params.clubName}`,
-    html: `
-      <h2>Import-Zusammenfassung für ${params.clubName}</h2>
-      <p>Der CSV-Import wurde abgeschlossen:</p>
-      <ul>
-        <li>Gesamt: ${params.total}</li>
-        <li>Erfolgreich: ${params.succeeded}</li>
-        <li>Fehlgeschlagen: ${params.failed}</li>
-      </ul>
     `,
   })
 }
