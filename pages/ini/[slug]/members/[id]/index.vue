@@ -661,7 +661,7 @@ async function onSubmit() {
           </span>
         </div>
 
-        <p v-if="canManageMembers && !member.hasInvite && member.status !== 'ACTIVE' && member.status !== 'INACTIVE'" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
+        <p v-if="canManageMembers && !member.hasInvite && (member.status === 'PENDING_INVITE' || member.status === 'REGISTERED')" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
           Kind wurde ohne Einladung angelegt.
         </p>
 
