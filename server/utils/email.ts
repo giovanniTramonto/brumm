@@ -123,7 +123,7 @@ export async function sendActivationEmail(params: {
   to: string[]
   clubName: string
   childName: string
-  profileUrl: string
+  loginUrl: string
 }): Promise<void> {
   await send({
     from: FROM_ADDRESS,
@@ -133,7 +133,8 @@ export async function sendActivationEmail(params: {
       <h2>Anmeldung fertig!</h2>
       <p><strong>${params.childName}</strong> wurde erfolgreich bei <strong>${params.clubName}</strong> aktiviert.</p>
       <p>Wir freuen uns auf eine schöne gemeinsame Zeit!</p>
-      <p>Alle Infos zum Kind und der Kita findest du unter: <a href="${params.profileUrl}">${params.profileUrl}</a></p>
+      <p>Mit folgendem Link kannst du dich direkt in der App anmelden – der Link ist 7 Tage gültig:</p>
+      <p><a href="${params.loginUrl}">Jetzt anmelden</a></p>
     `,
   })
 }

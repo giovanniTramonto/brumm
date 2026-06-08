@@ -1,4 +1,5 @@
 import { sendActivationEmail } from '~/server/utils/email'
+import { createMagicLink, SEVEN_DAYS } from '~/server/utils/magicLink'
 import { getMemberData } from '~/server/utils/memberData'
 import { assertValidTransition } from '~/server/utils/memberStatus'
 import { prisma } from '~/server/utils/prisma'
@@ -38,11 +39,13 @@ export default defineEventHandler(async (event) => {
   if (md) {
     const emails = [md.email1, ...(md.email2 ? [md.email2] : [])]
     const slug = getRouterParam(event, 'slug')
+    const magicLink = await createMagicLink({ userId: memberId, expiresInMs: SEVEN_DAYS })
+    const loginUrl = `${process.env.APP_URL}/ini/${slug}/auth/verify/${magicLink.token}`
     await sendActivationEmail({
       to: emails,
       clubName: club.name,
       childName: `${md.firstName} ${md.lastName}`,
-      profileUrl: `${process.env.APP_URL}/ini/${slug}/dashboard`,
+      loginUrl,
     })
   }
 

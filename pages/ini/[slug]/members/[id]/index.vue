@@ -617,9 +617,9 @@ async function onSubmit() {
   <div class="max-w-3xl">
     <div class="mb-6">
       <NuxtLink
-        :to="`/ini/${slug}/members`"
+        :to="isMember ? `/ini/${slug}/dashboard` : `/ini/${slug}/members`"
         class="text-sm text-gray-500 hover:text-gray-900"
-        aria-label="Zurück zur Kinderliste"
+        :aria-label="isMember ? 'Zurück zum Dashboard' : 'Zurück zur Kinderliste'"
       >
         ← Zurück
       </NuxtLink>

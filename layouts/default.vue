@@ -9,7 +9,9 @@ const navItems = computed(() => {
   if (!slug.value || !authStore.currentUser) return []
   const base = `/ini/${slug.value}`
   const items: { label: string; to: string; disabled?: boolean }[] = []
-  items.push({ label: 'Kinder', to: `${base}/members` })
+  if (authStore.currentUser.role !== 'MEMBER') {
+    items.push({ label: 'Kinder', to: `${base}/members` })
+  }
   if (authStore.currentUser.role !== 'MEMBER') {
     items.push({ label: 'Gruppen', to: `${base}/groups` })
   }

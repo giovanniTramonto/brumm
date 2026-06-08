@@ -47,7 +47,7 @@ const { isMenuOpen } = useNavMenu(768)
             to="/register"
             class="btn-primary text-sm w-fit"
             :aria-current="route.path === '/register' ? 'page' : undefined"
-          >Registrieren</NuxtLink>
+          >Kita registrieren</NuxtLink>
         </nav>
 
         <NavBurger

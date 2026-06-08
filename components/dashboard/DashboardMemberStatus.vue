@@ -34,7 +34,7 @@ const STATUS_CLASS: Record<string, string> = {
           :class="(child.status === 'REGISTERED' || child.status === 'PENDING_INVITE') ? 'bg-orange-50' : ''"
         >
           <div class="flex items-center gap-2">
-            <span class="text-gray-900">{{ child.firstName }} {{ child.lastName }}</span>
+            <NuxtLink :to="`/ini/${props.slug}/members/${child.id}`" class="text-primary-700 hover:text-primary-900">{{ child.firstName }} {{ child.lastName }} →</NuxtLink>
             <span
               class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
               :class="STATUS_CLASS[child.status] ?? 'bg-gray-100 text-gray-600'"

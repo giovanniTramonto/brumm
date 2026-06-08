@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { sendMagicLink } from '~/server/utils/email'
+import { createMagicLink } from '~/server/utils/magicLink'
 import { hashPin } from '~/server/utils/pinHash'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
@@ -45,10 +46,7 @@ export default defineEventHandler(async (event) => {
   })
 
   if (userEmail && userEmail.user.clubId === club.id) {
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
-    const magicLink = await prisma.magicLink.create({
-      data: { userId: userEmail.userId, expiresAt, pendingPinHash },
-    })
+    const magicLink = await createMagicLink({ userId: userEmail.userId, pendingPinHash })
     await sendMagicLink({
       to: email,
       clubName: club.name,
@@ -121,10 +119,7 @@ export default defineEventHandler(async (event) => {
       return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
     }
 
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
-    const magicLink = await prisma.magicLink.create({
-      data: { userId, expiresAt, pendingPinHash },
-    })
+    const magicLink = await createMagicLink({ userId, pendingPinHash })
     await sendMagicLink({
       to: email,
       clubName: club.name,

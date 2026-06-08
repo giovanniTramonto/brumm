@@ -146,7 +146,7 @@ async function onPinForgot() {
       <template v-else>
         <div class="card" aria-live="polite" aria-atomic="true">
           <template v-if="!isSent">
-            <h2 class="mb-1 text-xl font-semibold text-gray-900">Anmelden</h2>
+            <h2 class="mb-1 text-xl font-semibold text-gray-900">Link anfordern</h2>
             <p class="mb-6 text-sm text-gray-500">{{ clubName }}</p>
             <p class="mb-4 text-sm text-gray-600">
               Gib deine E-Mail-Adresse ein. Wir senden dir einen Anmelde-Link.

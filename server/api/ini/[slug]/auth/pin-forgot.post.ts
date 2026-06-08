@@ -1,4 +1,5 @@
 import { sendPinDeleteLink } from '~/server/utils/email'
+import { createMagicLink } from '~/server/utils/magicLink'
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 
@@ -33,9 +34,9 @@ export default defineEventHandler(async (event) => {
     return { message: 'Falls ein Gerät registriert ist, wurde ein Link gesendet' }
   }
 
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
-  const magicLink = await prisma.magicLink.create({
-    data: { userId: user.id, expiresAt, pendingDeviceTokenToDelete: deviceToken },
+  const magicLink = await createMagicLink({
+    userId: user.id,
+    pendingDeviceTokenToDelete: deviceToken,
   })
 
   await sendPinDeleteLink({
