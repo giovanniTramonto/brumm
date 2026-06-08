@@ -146,10 +146,6 @@ async function onSubmit() {
     </div>
 
     <form v-else class="card space-y-4" @submit.prevent="onSubmit">
-      <div v-if="hasSuperUserEmail" class="rounded-md bg-blue-50 p-3 text-sm text-blue-700">
-        Sie sind Erziehungsberechtigter dieses Kindes. Das Kind wird beim Anlegen sofort
-        bestätigt.
-      </div>
       <h1 class="text-2xl font-bold text-gray-900">Kind anlegen</h1>
       <div v-if="error" class="rounded-md bg-red-50 p-3 text-sm text-red-700">{{ error }}</div>
 
@@ -219,7 +215,6 @@ async function onSubmit() {
         fieldId="field-guardian-1"
         required
         :otherEmail="form.email2"
-        :isNoInviteWorkflow="isNoInviteWorkflow"
       />
 
       <GuardianField
@@ -227,7 +222,6 @@ async function onSubmit() {
         label="Erziehungsber. 2"
         fieldId="field-guardian-2"
         :otherEmail="form.email1"
-        :isNoInviteWorkflow="isNoInviteWorkflow"
       />
 
       <div>
@@ -239,6 +233,13 @@ async function onSubmit() {
         <input v-model="form.sendInvite" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
         Einladung senden
       </label>
+
+      <p v-if="isNoInviteWorkflow && !isSuperUserGuardian" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        Es wird keine E-Mail-Einladung versendet.
+      </p>
+      <p v-if="hasSuperUserEmail" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        Du bist Erziehungsberechtigter dieses Kindes. Das Kind wird beim Anlegen sofort bestätigt.
+      </p>
 
       <div class="flex gap-3">
         <button type="submit" class="btn-primary" :disabled="isSubmitting">

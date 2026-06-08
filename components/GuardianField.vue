@@ -15,7 +15,6 @@ const props = defineProps<{
   memberId?: string | null
   otherEmail?: string
   originalEmail?: string
-  isNoInviteWorkflow?: boolean
 }>()
 
 const model = defineModel<GuardianFieldModel>({ required: true })
@@ -121,8 +120,5 @@ watch(isDuplicateEmail, (isDuplicate) => {
   <p v-else-if="hint" class="rounded-md px-3 py-2 text-xs" :class="hint.isChanged ? 'bg-orange-50 text-orange-700' : 'bg-gray-100 text-gray-600'">
     <template v-if="hint.isChanged">Änderung wird auch automatisch für {{ hint.names }} übernommen.</template>
     <template v-else>Diese E-Mail gehört auch zu {{ hint.names }}.</template>
-  </p>
-  <p v-if="isNoInviteWorkflow" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
-    Es wird keine E-Mail-Einladung versendet.
   </p>
 </template>
