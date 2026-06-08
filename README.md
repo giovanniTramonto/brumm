@@ -51,6 +51,9 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/managers                 → Vorstand verwalten (SUPERUSER)
 /ini/{slug}/managers/create          → Vorstand hinzufügen
 /ini/{slug}/managers/{id}            → Vorstand bearbeiten
+/ini/{slug}/team                     → Team verwalten (SUPERUSER)
+/ini/{slug}/team/create              → Teammitglied hinzufügen
+/ini/{slug}/team/{id}                → Teammitglied bearbeiten
 /ini/{slug}/calculations             → Rechnung: Einnahmen, Personalschlüssel (SUPERUSER + MANAGER)
 /ini/{slug}/documents                → Vereinsunterlagen (SUPERUSER + MANAGER)
 /ini/{slug}/settings
@@ -63,7 +66,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 |---|---|
 | `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen, Vorstand, Gruppen, Rechnung (Einnahmen & Personalschlüssel), Settings, Google Drive verbinden. Beim Anlegen kann per Checkbox gesteuert werden, ob eine Einladungs-Email verschickt wird. |
 | `MANAGER` | Vorstandsmitglied. Zugriff auf Rechnung (Einnahmen & Personalschlüssel). Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen verwalten |
-| `TEAM` | Alle Daten lesen |
+| `TEAM` | Kinderdaten lesen (read-only, keine Unterlagen). Dashboard mit Vereinsunterlagen. Login per Magic Link. Wird ausschließlich von SUPERUSER angelegt und verwaltet. |
 | `MEMBER` | Elternteil eines Kindes – sieht eigene Kinder in der Liste (inkl. Betreuungsumfang und Vertragsende) und auf dem Dashboard. Kann das Formular auf der Kind-Detailseite bearbeiten solange das Kind noch nicht aktiv ist. Ab Freischaltung ist das Formular vollständig readonly. Kann Vertragsunterlagen hochladen (max. 1 MB) und weitere Unterlagen nach Aktivierung hoch- oder ersetzen. Klickt „Einreichen" wenn alle Unterlagen vollständig sind. |
 
 `canManageMembers` = `SUPERUSER` oder `MANAGER` mit `isMemberManager`
