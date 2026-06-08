@@ -47,12 +47,13 @@ const hint = computed(() => {
   const current = local.email.trim().toLowerCase()
   const isCreate = props.originalEmail === undefined
   const original = (props.originalEmail ?? '').trim().toLowerCase()
-  const isChanged = isCreate || (!!original && current !== original)
-  const emailToCheck = !isCreate && isChanged ? original : current
+  const isChanged = !isCreate && !!original && current !== original
+  const emailToCheck = isChanged ? original : current
   const siblings = findSiblings(emailToCheck)
   if (!siblings.length) return null
   return {
     names: joinWithAnd(siblings.map((s) => `${s.firstName} ${s.lastName}`)),
+    isCreate,
     isChanged,
   }
 })
@@ -117,8 +118,9 @@ watch(isDuplicateEmail, (isDuplicate) => {
   <p v-if="isDuplicateEmail" class="rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">
     Diese E-Mail-Adressen sind identisch.
   </p>
-  <p v-else-if="hint" class="rounded-md px-3 py-2 text-xs" :class="hint.isChanged ? 'bg-orange-50 text-orange-700' : 'bg-gray-100 text-gray-600'">
+  <p v-else-if="hint" class="rounded-md px-3 py-2 text-xs" :class="hint.isChanged ? 'bg-orange-50 text-orange-700' : hint.isCreate ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'">
     <template v-if="hint.isChanged">Änderung wird auch automatisch für {{ hint.names }} übernommen.</template>
+    <template v-else-if="hint.isCreate">Diese E-Mail wird bereits von {{ hint.names }} verwendet.</template>
     <template v-else>Diese E-Mail gehört auch zu {{ hint.names }}.</template>
   </p>
 </template>
