@@ -77,10 +77,30 @@ onMounted(() => membersStore.fetchMembers(slug))
               {{ membersStore.members.filter(m => m.status === 'ACTIVE' || m.status === 'INACTIVE').length }}
             </p>
             <template v-if="pendingMembers.length > 0">
-              <p class="mt-5 text-xs font-medium text-amber-700">Warten auf Freischaltung</p>
-              <ul class="mt-1 space-y-1">
+              <p class="mt-5 text-xs font-medium text-orange-700">Warten auf Freischaltung</p>
+              <ul class="mt-1 space-y-0">
                 <li v-for="m in pendingMembers" :key="m.id">
-                  <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-amber-600 hover:text-amber-800">
+                  <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-orange-600 hover:text-orange-800">
+                    {{ m.firstName }} {{ m.lastName }} →
+                  </NuxtLink>
+                </li>
+              </ul>
+            </template>
+            <template v-if="noGroupMembers.length > 0">
+              <p class="mt-5 text-xs font-medium text-orange-700">Ohne Gruppe</p>
+              <ul class="mt-1 space-y-0">
+                <li v-for="m in noGroupMembers" :key="m.id">
+                  <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-orange-600 hover:text-orange-800">
+                    {{ m.firstName }} {{ m.lastName }} →
+                  </NuxtLink>
+                </li>
+              </ul>
+            </template>
+            <template v-if="noCareTypeMembers.length > 0">
+              <p class="mt-5 text-xs font-medium text-orange-700">Betreuungsumfang fehlt</p>
+              <ul class="mt-1 space-y-0">
+                <li v-for="m in noCareTypeMembers" :key="m.id">
+                  <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-xs text-orange-600 hover:text-orange-800">
                     {{ m.firstName }} {{ m.lastName }} →
                   </NuxtLink>
                 </li>
@@ -127,29 +147,6 @@ onMounted(() => membersStore.fetchMembers(slug))
           </div>
         </div>
 
-        <!-- Hinweis-Grid -->
-        <div v-if="noGroupMembers.length > 0 || noCareTypeMembers.length > 0" class="grid gap-4 sm:grid-cols-2 desktop:grid-cols-3">
-          <div v-if="noGroupMembers.length > 0" class="card border-orange-200">
-            <p class="mb-2 text-sm font-medium text-orange-700">Ohne Gruppe</p>
-            <ul class="space-y-1">
-              <li v-for="m in noGroupMembers" :key="m.id">
-                <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-sm text-orange-600 hover:text-orange-800">
-                  {{ m.firstName }} {{ m.lastName }} →
-                </NuxtLink>
-              </li>
-            </ul>
-          </div>
-          <div v-if="noCareTypeMembers.length > 0" class="card border-orange-200">
-            <p class="mb-2 text-sm font-medium text-orange-700">Betreuungsumfang fehlt</p>
-            <ul class="space-y-1">
-              <li v-for="m in noCareTypeMembers" :key="m.id">
-                <NuxtLink :to="`/ini/${slug}/members/${m.id}`" class="text-sm text-orange-600 hover:text-orange-800">
-                  {{ m.firstName }} {{ m.lastName }} →
-                </NuxtLink>
-              </li>
-            </ul>
-          </div>
-        </div>
       </template>
 
       <DashboardAktuell :slug="slug" />
