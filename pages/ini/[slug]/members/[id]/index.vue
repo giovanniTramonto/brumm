@@ -460,7 +460,7 @@ async function onActivate() {
   if (!member.value) return
   if (
     !confirm(
-      `${member.value.firstName} ${member.value.lastName} freischalten?\nDie Erziehungsberechtigten erhalten eine Bestätigungs-E-Mail.`,
+      `${member.value.firstName} ${member.value.lastName} aktivieren?\nDie Erziehungsberechtigten erhalten eine Bestätigungs-E-Mail.`,
     )
   )
     return
@@ -934,12 +934,12 @@ async function onSubmit() {
               </li>
             </ul>
             <p class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
-              Unterlagen wurden erfolgreich eingereicht. Du erhältst eine E-Mail, sobald dein Kind freigeschaltet wurde.
+              Unterlagen wurden erfolgreich eingereicht. Du erhältst eine E-Mail, sobald dein Kind aktiviert wurde.
             </p>
           </template>
 
           <p v-if="!member.hasInvite" class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
-            Du erhältst eine E-Mail, sobald dein Kind freigeschaltet wurde.
+            Du erhältst eine E-Mail, sobald dein Kind aktiviert wurde.
           </p>
 
         </template>
@@ -1238,7 +1238,7 @@ async function onSubmit() {
                 Einreichen
               </button>
             <div v-if="canManageMembers" class="flex gap-3">
-            <!-- Vor Freischaltung: Freischalten + Einladung + Kind entfernen -->
+            <!-- Vor Aktivierung: Aktivieren + Einladung + Kind entfernen -->
             <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
               <button
                 type="button"
@@ -1246,7 +1246,7 @@ async function onSubmit() {
                 :disabled="(!member.hasSubmittedDocuments && member.hasInvite && !isOwnChild) || !canManageMembers"
                 @click="onActivate"
               >
-                Freischalten
+                Aktivieren
               </button>
               <button
                 v-if="member.status === 'PENDING_INVITE'"

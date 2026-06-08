@@ -138,9 +138,9 @@ const filteredMembers = computed(() => {
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-for="member in filteredMembers" :key="member.id" class="hover:bg-gray-50">
+          <tr v-for="member in filteredMembers" :key="member.id" class="hover:bg-gray-50" :class="{ 'bg-gray-50/50': member.status === 'DEACTIVATED' }">
             <td class="px-4 py-3">
-              <NuxtLink :to="`/ini/${slug}/members/${member.id}`" class="font-medium text-gray-900 hover:text-primary-700">
+              <NuxtLink :to="`/ini/${slug}/members/${member.id}`" class="font-medium hover:text-primary-700" :class="member.status === 'DEACTIVATED' ? 'text-gray-500' : 'text-gray-900'">
                 {{ member.lastName }}, {{ member.firstName }}
               </NuxtLink>
             </td>
@@ -161,7 +161,7 @@ const filteredMembers = computed(() => {
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : member.status === 'INACTIVE' ? 'bg-orange-100 text-orange-700' : member.status === 'DEACTIVATED' ? 'bg-gray-100 text-gray-600' : member.status === 'PENDING_INVITE' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'"
+                :class="member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : member.status === 'INACTIVE' ? 'bg-purple-100 text-purple-800' : member.status === 'DEACTIVATED' ? 'bg-gray-100 text-gray-600' : member.status === 'PENDING_INVITE' ? 'bg-orange-100 text-orange-800' : 'bg-purple-100 text-purple-800'"
               >
                 {{ member.status === 'ACTIVE' ? "Aktiv" : member.status === 'INACTIVE' ? "Inaktiv" : member.status === 'DEACTIVATED' ? "Abgemeldet" : member.status === 'PENDING_INVITE' ? "Ausstehend" : "Bestätigt" }}
               </span>

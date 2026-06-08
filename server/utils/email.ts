@@ -110,11 +110,11 @@ export async function sendSuperUserNotification(params: {
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `Neues Kind wartet auf Freischaltung: ${params.childName}`,
+    subject: `Neues Kind wartet auf Aktivierung: ${params.childName}`,
     html: `
       <h2>Neues Kind bei ${params.clubName}</h2>
-      <p><strong>${params.childName}</strong> hat das Onboarding abgeschlossen und wartet auf Freischaltung.</p>
-      <p><a href="${link}">Kind freischalten</a></p>
+      <p><strong>${params.childName}</strong> hat das Onboarding abgeschlossen und wartet auf Aktivierung.</p>
+      <p><a href="${link}">Kind aktivieren</a></p>
     `,
   })
 }
@@ -128,10 +128,10 @@ export async function sendActivationEmail(params: {
   await send({
     from: FROM_ADDRESS,
     to: params.to,
-    subject: `${params.childName} wurde freigeschaltet – ${params.clubName}`,
+    subject: `${params.childName} wurde aktiviert – ${params.clubName}`,
     html: `
       <h2>Anmeldung fertig!</h2>
-      <p><strong>${params.childName}</strong> wurde erfolgreich bei <strong>${params.clubName}</strong> freigeschaltet.</p>
+      <p><strong>${params.childName}</strong> wurde erfolgreich bei <strong>${params.clubName}</strong> aktiviert.</p>
       <p>Wir freuen uns auf eine schöne gemeinsame Zeit!</p>
       <p>Alle Infos zum Kind und der Kita findest du unter: <a href="${params.profileUrl}">${params.profileUrl}</a></p>
     `,
@@ -298,8 +298,8 @@ export async function sendDocumentsSubmittedNotification(params: {
     subject: `Vertragsunterlagen eingereicht: ${params.childName}`,
     html: `
       <h2>Vertragsunterlagen eingereicht – ${params.clubName}</h2>
-      <p><strong>${params.childName}</strong> hat alle Vertragsunterlagen eingereicht und wartet auf Freischaltung.</p>
-      <p><a href="${link}">Kind freischalten</a></p>
+      <p><strong>${params.childName}</strong> hat alle Vertragsunterlagen eingereicht und wartet auf Aktivierung.</p>
+      <p><a href="${link}">Kind aktivieren</a></p>
     `,
   })
 }

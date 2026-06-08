@@ -25,7 +25,7 @@ useHead({ title: 'Anleitung – Brumm' })
       <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Laufender Betrieb</p>
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
         <li>Unter <strong class="text-gray-700">Kinder</strong> neue Kinder anlegen. Optional: Einladungslink per E-Mail an die Eltern versenden.</li>
-        <li>Sobald Eltern ihre Vertragsunterlagen eingereicht haben, das Kind freischalten.</li>
+        <li>Sobald Eltern ihre Vertragsunterlagen eingereicht haben, das Kind aktivieren.</li>
         <li>Unter <strong class="text-gray-700">Gruppen</strong> Betreuungsgruppen anlegen und Kindern zuweisen.</li>
         <li>Unter <strong class="text-gray-700">Berechnung</strong> monatliche Kostenerstattungen und den Personalschlüssel einsehen.</li>
       </ol>
@@ -42,7 +42,7 @@ useHead({ title: 'Anleitung – Brumm' })
       <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Mit Mitgliederverwaltung</p>
       <p class="mt-1 text-sm text-gray-500">Nur wenn der Admin diese Berechtigung aktiviert hat.</p>
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
-        <li>Unter <strong class="text-gray-700">Kinder</strong> Kinder anlegen, bearbeiten und freischalten.</li>
+        <li>Unter <strong class="text-gray-700">Kinder</strong> Kinder anlegen, bearbeiten und aktivieren.</li>
         <li>Einladungslinks verwalten und Vertragsvorlagen pflegen.</li>
       </ol>
     </section>
@@ -54,8 +54,8 @@ useHead({ title: 'Anleitung – Brumm' })
         <li>Ihr erhaltet einen Einladungslink per E-Mail, sobald euer Kind in Brumm angelegt wurde.</li>
         <li>Nach dem Klick auf den Link seid ihr eingeloggt und seht das Dashboard mit euren Kindern.</li>
         <li>Unter <strong class="text-gray-700">Kinder</strong> ladet ihr die geforderten Vertragsunterlagen hoch bzw. bestätigt sie als gelesen.</li>
-        <li>Sobald alle Unterlagen vollständig sind, klickt ihr auf <strong class="text-gray-700">Einreichen</strong> – der Vorstand wird benachrichtigt und schaltet euer Kind frei.</li>
-        <li>Nach der Freischaltung sind eure Angaben schreibgeschützt. Änderungen nur über den Vorstand.</li>
+        <li>Sobald alle Unterlagen vollständig sind, klickt ihr auf <strong class="text-gray-700">Einreichen</strong> – der Vorstand wird benachrichtigt und aktiviert euer Kind.</li>
+        <li>Nach der Aktivierung sind eure Angaben schreibgeschützt. Änderungen nur über den Vorstand.</li>
       </ol>
     </section>
 
