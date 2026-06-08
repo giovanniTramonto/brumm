@@ -1214,7 +1214,7 @@ async function onSubmit() {
         </div>
 
         <div v-if="canManageMembers || (isMember && !isContactLocked)" class="space-y-2 border-t pt-4">
-          <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
+          <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
             Kind wurde abgemeldet. Automatische Löschung nach 1 Jahr.
           </p>
           <div class="flex items-center justify-between gap-3">
