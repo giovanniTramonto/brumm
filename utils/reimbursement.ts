@@ -40,6 +40,8 @@ const BASE_RATES: Record<AgeGroup, Record<CareTypeKey, Rates>> = {
 
 // ndH (non-German family language) surcharge per qualifying child
 const NDH_SURCHARGE_RATES: Rates = [101.35, 103.92, 103.92]
+// ndH additional staff positions per qualifying child (same rate for both periods)
+const NDH_STAFF_RATE = 0.017
 
 // Staff ratio per child (FTE positions) — two periods: Jan–Jul, Aug–Dez
 type StaffRates = [number, number]
@@ -152,6 +154,7 @@ export function calculateStaffing(members: Member[], year: number, month: number
 
   let positions = 0
   let childCount = 0
+  let ndhChildCount = 0
 
   for (const m of activeMembers) {
     if (!m.careType) continue
@@ -160,7 +163,12 @@ export function calculateStaffing(members: Member[], year: number, month: number
     if (!rates) continue
     positions += rates[periodIndex]
     childCount++
+    if (m.surcharges.includes('ndhs')) ndhChildCount++
   }
+
+  // ndH staff positions apply when ndH children make up ≥ 40% of occupied places
+  const ndhQualifies = childCount > 0 && ndhChildCount / childCount >= 0.4
+  if (ndhQualifies) positions += ndhChildCount * NDH_STAFF_RATE
 
   const leadershipPositions = LEADERSHIP_RATE * childCount
   const positionsWithLeadership = positions + leadershipPositions
