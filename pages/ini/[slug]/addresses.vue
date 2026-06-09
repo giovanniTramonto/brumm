@@ -21,21 +21,25 @@ type Address = {
 
 type Group = { id: string; name: string }
 type TeamMember = { id: string; name: string; email: string }
+type Manager = { id: string; name: string; email: string }
 
 const addresses = ref<Address[]>([])
 const groups = ref<Group[]>([])
 const teamMembers = ref<TeamMember[]>([])
+const managers = ref<Manager[]>([])
 const isLoading = ref(true)
 
 onMounted(async () => {
   try {
-    const [addressData, teamData] = await Promise.all([
+    const [addressData, teamData, managerData] = await Promise.all([
       $fetch<{ addresses: Address[]; groups: Group[] }>(`/api/ini/${slug}/addresses`),
       $fetch<{ team: TeamMember[] }>(`/api/ini/${slug}/team`).catch(() => ({ team: [] })),
+      $fetch<{ managers: Manager[] }>(`/api/ini/${slug}/managers`).catch(() => ({ managers: [] })),
     ])
     addresses.value = addressData.addresses
     groups.value = addressData.groups
     teamMembers.value = teamData.team
+    managers.value = managerData.managers
   } finally {
     isLoading.value = false
   }
@@ -80,29 +84,9 @@ const groupedSections = computed(() => {
       </p>
     </div>
 
-    <div v-if="!isLoading" class="card">
-      <h2 class="mb-4 text-xl font-semibold text-gray-900">Team</h2>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
-          <thead>
-            <tr class="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-              <th class="pb-3 pr-8">Name</th>
-              <th class="pb-3">E-Mail</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="m in teamMembers" :key="m.id" class="border-t border-gray-100 whitespace-nowrap">
-              <td class="py-4 pr-8 font-medium text-gray-900">{{ m.name }}</td>
-              <td class="py-4 text-gray-600">
-                <a :href="`mailto:${m.email}`" class="text-blue-600 hover:underline">{{ m.email }}</a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-if="teamMembers.length === 0" class="mt-4 text-sm text-gray-500">
-          Noch keine Teammitglieder eingetragen.
-        </p>
-      </div>
-    </div>
+    <template v-if="!isLoading">
+      <ContactTable title="Team" :members="teamMembers" emptyText="Noch keine Teammitglieder eingetragen." />
+      <ContactTable title="Vorstand" :members="managers" emptyText="Noch keine Vorstandsmitglieder eingetragen." />
+    </template>
   </div>
 </template>
