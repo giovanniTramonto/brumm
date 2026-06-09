@@ -108,7 +108,7 @@ function onLogout() {
             >{{ item.label }}</NuxtLink>
           </li>
         </ul>
-        <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+        <div :class="navItems.length > 0 ? 'mt-3 border-t border-gray-100 pt-3' : ''" class="flex items-center justify-between">
           <span class="text-sm text-gray-500">{{
             authStore.currentUser?.role === 'SUPERUSER' ? 'Admin'
             : authStore.currentUser?.role === 'MANAGER' ? 'Vorstand'
