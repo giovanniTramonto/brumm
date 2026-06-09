@@ -4,12 +4,7 @@ import { useMembersStore } from '~/stores/members'
 const props = defineProps<{ slug: string }>()
 
 const membersStore = useMembersStore()
-
-onMounted(() => {
-  if (membersStore.members.length === 0) {
-    membersStore.fetchMembers(props.slug)
-  }
-})
+await membersStore.fetchMembers(props.slug)
 
 const WITHOUT_GROUP = 'Ohne Gruppe'
 
@@ -47,9 +42,7 @@ const groupedChildren = computed(() => {
   <div class="card h-full">
     <h2 class="mb-4 text-lg font-semibold text-gray-900">Gruppen</h2>
 
-    <LoadingBrumm v-if="membersStore.isLoading" />
-
-    <p v-else-if="groupedChildren.length === 0" class="text-sm text-gray-500">
+    <p v-if="groupedChildren.length === 0" class="text-sm text-gray-500">
       Keine aktiven Kinder vorhanden.
     </p>
 
@@ -75,7 +68,7 @@ const groupedChildren = computed(() => {
       </div>
     </div>
 
-    <div v-if="ungrouped.length > 0 && !membersStore.isLoading" class="mt-6 text-sm text-orange-800">
+    <div v-if="ungrouped.length > 0" class="mt-6 text-sm text-orange-800">
       {{ ungrouped.length }} {{ ungrouped.length === 1 ? 'Kind' : 'Kinder' }} ohne Gruppe:
       {{ ungrouped.map(m => `${m.firstName} ${m.lastName}`).join(', ') }}
     </div>

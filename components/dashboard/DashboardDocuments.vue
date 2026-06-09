@@ -7,14 +7,10 @@ const authStore = useAuthStore()
 const { canManageClub } = storeToRefs(authStore)
 
 type Document = { id: string; name: string }
-const documents = ref<Document[]>([])
-
-onMounted(async () => {
-  const data = await $fetch<{ documents: Document[] }>(`/api/ini/${props.slug}/documents`).catch(
-    () => ({ documents: [] }),
-  )
-  documents.value = data.documents
-})
+const data = await $fetch<{ documents: Document[] }>(`/api/ini/${props.slug}/documents`).catch(
+  () => ({ documents: [] }),
+)
+const documents = ref(data.documents)
 
 const isVisible = computed(() => canManageClub.value || documents.value.length > 0)
 </script>

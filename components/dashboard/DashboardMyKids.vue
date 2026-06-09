@@ -3,6 +3,7 @@ import { useMembersStore } from '~/stores/members'
 
 const props = defineProps<{ slug: string }>()
 const membersStore = useMembersStore()
+await membersStore.fetchMembers(props.slug)
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: 'Aktiv',
@@ -24,8 +25,7 @@ const STATUS_CLASS: Record<string, string> = {
 <template>
   <div class="card mt-6">
     <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
-    <LoadingBrumm v-if="membersStore.isLoading" />
-    <template v-else-if="membersStore.members.length > 0">
+    <template v-if="membersStore.members.length > 0">
       <ul class="-mx-4 -mb-4">
         <li
           v-for="child in membersStore.members"

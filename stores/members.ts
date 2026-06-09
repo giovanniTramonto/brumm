@@ -7,27 +7,34 @@ export const useMembersStore = defineStore('members', () => {
   const memberManagerNames = ref<string[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  let fetchPromise: Promise<void> | null = null
 
   async function fetchMembers(slug: string): Promise<void> {
+    if (members.value.length > 0) return
+    if (fetchPromise) return fetchPromise
     isLoading.value = true
     error.value = null
-    try {
-      const data = await $fetch<{
-        members: Member[]
-        hasAnyMemberManager: boolean
-        memberManagerNames: string[]
-      }>(`/api/ini/${slug}/members`)
-      members.value = data.members
-      hasAnyMemberManager.value = data.hasAnyMemberManager
-      memberManagerNames.value = data.memberManagerNames
-    } catch (err) {
-      const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
-      const sm = d?.statusMessage
-      const m = d?.message
-      error.value = sm ? (m && m !== sm ? `${sm} (${m})` : sm) : 'Fehler beim Laden'
-    } finally {
-      isLoading.value = false
-    }
+    fetchPromise = $fetch<{
+      members: Member[]
+      hasAnyMemberManager: boolean
+      memberManagerNames: string[]
+    }>(`/api/ini/${slug}/members`)
+      .then((data) => {
+        members.value = data.members
+        hasAnyMemberManager.value = data.hasAnyMemberManager
+        memberManagerNames.value = data.memberManagerNames
+      })
+      .catch((err) => {
+        const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
+        const sm = d?.statusMessage
+        const m = d?.message
+        error.value = sm ? (m && m !== sm ? `${sm} (${m})` : sm) : 'Fehler beim Laden'
+      })
+      .finally(() => {
+        isLoading.value = false
+        fetchPromise = null
+      })
+    return fetchPromise
   }
 
   async function activateMember(slug: string, memberId: string): Promise<void> {

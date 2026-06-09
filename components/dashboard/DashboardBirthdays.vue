@@ -4,12 +4,7 @@ import { useMembersStore } from '~/stores/members'
 const props = defineProps<{ slug: string }>()
 
 const membersStore = useMembersStore()
-
-onMounted(() => {
-  if (membersStore.members.length === 0) {
-    membersStore.fetchMembers(props.slug)
-  }
-})
+await membersStore.fetchMembers(props.slug)
 
 function getNextBirthday(birthDate: string): Date {
   const today = new Date()
@@ -82,13 +77,11 @@ const rest = computed(() => {
   <div class="card h-full">
     <h2 class="mb-4 text-lg font-semibold text-gray-900">Geburtstage</h2>
 
-    <LoadingBrumm v-if="membersStore.isLoading" />
-
-    <p v-else-if="highlighted.length === 0" class="text-sm text-gray-500">
+    <p v-if="highlighted.length === 0" class="text-sm text-gray-500">
       Keine aktiven Kinder vorhanden.
     </p>
 
-    <template v-else>
+    <template v-else-if="highlighted.length > 0">
       <div v-for="group in highlighted" :key="group.label" class="flex items-start gap-3 mt-3 first:mt-0">
         <span class="w-20 shrink-0 font-mono pt-4 text-sm text-gray-400">{{ group.label }}</span>
         <div class="flex flex-wrap items-start gap-2 desktop:flex-1 desktop:flex-col desktop:items-stretch">
