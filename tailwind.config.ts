@@ -18,7 +18,14 @@ export default {
         desktop: '1024px',
       },
       colors: {
-        admin: '#d5e4eb',
+        admin: {
+          DEFAULT: '#aac3de',
+          200: '#dde7f3',
+          300: '#9bbcd9',
+          500: '#b7cee6',
+          700: '#5185bd',
+          800: '#325a85',
+        },
         ini: {
           DEFAULT: '#bdd792',
           200: '#dcedc4',

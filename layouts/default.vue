@@ -8,7 +8,12 @@ const { currentUser, isMember, isTeam, isManager, isSuperUser, canManageClub } =
 const route = useRoute()
 const { isMenuOpen } = useNavMenu(768)
 
-const bgClass = computed(() => (isMember.value ? 'bg-member' : isTeam.value ? 'bg-team' : 'bg-ini'))
+const bgClass = computed(() => {
+  if (isMember.value) return 'bg-member'
+  if (isTeam.value) return 'bg-team'
+  if (isSuperUser.value) return 'bg-admin'
+  return 'bg-ini'
+})
 const slug = computed(() => route.params.slug as string | undefined)
 const navItems = computed(() => {
   if (!slug.value || !currentUser.value) return []
