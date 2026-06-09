@@ -6,8 +6,8 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
 
-  if (currentUser.role !== 'SUPERUSER') {
-    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
+  if (!currentUser) {
+    throw createError({ statusCode: 401, statusMessage: 'Nicht eingeloggt' })
   }
 
   const members = await prisma.team.findMany({ where: { clubId: club.id } })
