@@ -224,6 +224,8 @@ onMounted(() => membersStore.fetchMembers(slug))
 
       </template>
 
+      <DashboardGroups v-if="authStore.currentUser?.role === 'TEAM'" :slug="slug" />
+
       <DashboardAktuell :slug="slug" />
       <DashboardDocuments :slug="slug" />
     </div>
