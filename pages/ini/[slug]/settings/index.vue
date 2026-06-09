@@ -8,6 +8,41 @@ const slug = route.params.slug as string
 const authStore = useAuthStore()
 
 const reconnected = route.query.reconnected === '1'
+
+const nameInput = ref(authStore.currentClub?.name ?? '')
+const isEditingName = ref(false)
+const isSavingName = ref(false)
+const nameError = ref('')
+
+function onEditName() {
+  nameInput.value = authStore.currentClub?.name ?? ''
+  nameError.value = ''
+  isEditingName.value = true
+}
+
+function onCancelName() {
+  isEditingName.value = false
+  nameError.value = ''
+}
+
+async function onSaveName() {
+  if (!nameInput.value.trim()) return
+  isSavingName.value = true
+  nameError.value = ''
+  try {
+    const data = await $fetch<{ name: string }>(`/api/ini/${slug}/settings/name`, {
+      method: 'PATCH',
+      body: { name: nameInput.value.trim() },
+    })
+    if (authStore.currentClub) authStore.currentClub.name = data.name
+    isEditingName.value = false
+  } catch (err) {
+    nameError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
+  } finally {
+    isSavingName.value = false
+  }
+}
 </script>
 
 <template>
@@ -22,8 +57,26 @@ const reconnected = route.query.reconnected === '1'
       <h2 class="font-semibold text-gray-900">Verein</h2>
       <dl class="space-y-2 text-sm">
         <div class="flex gap-2">
-          <dt class="w-32 text-gray-500">Name</dt>
-          <dd class="text-gray-900">{{ authStore.currentClub?.name }}</dd>
+          <dt class="w-32 shrink-0 text-gray-500">Name</dt>
+          <dd class="text-gray-900">
+            <form v-if="isEditingName" class="flex items-center gap-2" @submit.prevent="onSaveName">
+              <input
+                v-model="nameInput"
+                type="text"
+                class="input text-sm"
+                maxlength="100"
+                required
+                autofocus
+              />
+              <button type="submit" class="btn-primary text-sm" :disabled="isSavingName">Speichern</button>
+              <button type="button" class="btn-secondary text-sm" @click="onCancelName">Abbrechen</button>
+            </form>
+            <template v-else>
+              {{ authStore.currentClub?.name }}
+              <button class="ml-2 text-xs text-primary-600 hover:underline" @click="onEditName">Ändern</button>
+            </template>
+            <p v-if="nameError" class="mt-1 text-xs text-red-600">{{ nameError }}</p>
+          </dd>
         </div>
         <div class="flex gap-2">
           <dt class="w-32 text-gray-500">Slug</dt>
