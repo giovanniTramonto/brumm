@@ -24,9 +24,14 @@ export default defineEventHandler(async (event) => {
   })
 
   const userIds = users.map((u) => u.id)
-  const [memberDataList, groups] = await Promise.all([
+  const [memberDataList, groups, memberManagerRecords, allManagerData] = await Promise.all([
     getAllMemberData(userIds, club),
     getAllGroups(club),
+    prisma.manager.findMany({
+      where: { clubId: club.id, isMemberManager: true },
+      select: { id: true },
+    }),
+    getAllManagerData(club),
   ])
   const groupMap = new Map(groups.map((g) => [g.id, g]))
 
@@ -86,14 +91,6 @@ export default defineEventHandler(async (event) => {
       const lastCmp = a.lastName.localeCompare(b.lastName, 'de')
       return lastCmp !== 0 ? lastCmp : a.firstName.localeCompare(b.firstName, 'de')
     }) as Member[]
-
-  const [memberManagerRecords, allManagerData] = await Promise.all([
-    prisma.manager.findMany({
-      where: { clubId: club.id, isMemberManager: true },
-      select: { id: true },
-    }),
-    getAllManagerData(club),
-  ])
 
   const memberManagerIds = new Set(memberManagerRecords.map((m) => m.id))
   const memberManagerNames = allManagerData

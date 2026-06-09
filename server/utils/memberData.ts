@@ -3,6 +3,7 @@ import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
 import { withGoogleErrorHandling } from './googleAuth'
 import {
+  batchUpdateMembersInSheet,
   getAllMembersFromSheet,
   getMemberFromSheet,
   removeMemberFromSheet,
@@ -145,6 +146,30 @@ export async function deleteMemberData(userId: string, club: ClubForData): Promi
       removeMemberFromSheet({ tokens, membersSheetId, storageRef: memberData.storageRef }),
     )
   }
+}
+
+export async function batchUpdateMembersData(
+  updates: { userId: string; patch: Partial<MemberData> }[],
+  club: ClubForData,
+  expectedLastEditedAt?: string | null,
+): Promise<void> {
+  if (!club.isSetupDone) {
+    for (const { userId, patch } of updates) {
+      const user = await prisma.user.findUnique({ where: { id: userId } })
+      const existing = localDataToMemberData(userId, user?.localData) ?? ({} as MemberData)
+      await prisma.user.update({
+        where: { id: userId },
+        data: { localData: { ...existing, ...patch } as unknown as Prisma.InputJsonValue },
+      })
+    }
+    return
+  }
+
+  const tokens = getTokens(club.oauthToken)
+  const membersSheetId = getMembersSheetId(club.storageConfig)
+  await withGoogleErrorHandling(() =>
+    batchUpdateMembersInSheet({ tokens, membersSheetId, updates, expectedLastEditedAt }),
+  )
 }
 
 export async function updateMemberData(

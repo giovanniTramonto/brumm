@@ -5,18 +5,18 @@ import { prisma } from '~/server/utils/prisma'
 export default defineEventHandler(async (event) => {
   const club = event.context.club
 
-  const [users, groups] = await Promise.all([
-    prisma.user.findMany({
-      where: { clubId: club.id, role: 'MEMBER', status: { in: ['ACTIVE', 'INACTIVE'] } },
-      select: { id: true },
-    }),
+  const users = await prisma.user.findMany({
+    where: { clubId: club.id, role: 'MEMBER', status: { in: ['ACTIVE', 'INACTIVE'] } },
+    select: { id: true },
+  })
+
+  const [memberDataList, groups] = await Promise.all([
+    getAllMemberData(
+      users.map((u) => u.id),
+      club,
+    ),
     club.isSetupDone ? getAllGroups(club).catch(() => []) : Promise.resolve([]),
   ])
-
-  const memberDataList = await getAllMemberData(
-    users.map((u) => u.id),
-    club,
-  )
 
   const addresses = memberDataList
     .map((md) => ({

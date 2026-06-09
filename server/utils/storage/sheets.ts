@@ -231,6 +231,71 @@ export async function findUserIdByEmail(params: {
   return match ? (match[0] as string) : null
 }
 
+export async function batchUpdateMembersInSheet(params: {
+  tokens: OAuthTokens
+  membersSheetId: string
+  updates: { userId: string; patch: Partial<MemberData> }[]
+  expectedLastEditedAt?: string | null
+}): Promise<void> {
+  if (params.updates.length === 0) return
+  const sheets = getSheetsClientFromTokens(params.tokens)
+
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: params.membersSheetId,
+    range: 'A:R',
+  })
+  const rows = response.data.values ?? []
+
+  if (params.expectedLastEditedAt !== undefined && params.expectedLastEditedAt !== null) {
+    const primaryRowIndex = rows.findIndex((r, i) => i > 0 && r[0] === params.updates[0].userId)
+    if (
+      primaryRowIndex !== -1 &&
+      (rows[primaryRowIndex][15] ?? '') !== params.expectedLastEditedAt
+    ) {
+      throw createError({
+        statusCode: 409,
+        statusMessage:
+          'Dieses Kind wurde zwischenzeitlich von jemand anderem gespeichert. Bitte Seite neu laden.',
+      })
+    }
+  }
+
+  const data: { range: string; values: string[][] }[] = []
+  for (const { userId, patch } of params.updates) {
+    const rowIndex = rows.findIndex((r, i) => i > 0 && r[0] === userId)
+    if (rowIndex === -1) continue
+    const existing = rowToMemberData(rows[rowIndex] as string[])
+    const merged: MemberData = { ...existing, ...patch }
+    const updatedRow = [
+      merged.userId,
+      merged.storageRef,
+      merged.firstName,
+      merged.lastName,
+      merged.birthDate,
+      merged.guardian1Name ?? '',
+      merged.guardian2Name ?? '',
+      merged.email1,
+      merged.email2 ?? '',
+      merged.groupId ?? '',
+      merged.contractEnd ?? '',
+      merged.phone1 ?? '',
+      merged.phone2 ?? '',
+      merged.surcharges.join(','),
+      merged.careType ?? '',
+      merged.lastEditedAt ?? '',
+      merged.lastEditedBy ?? '',
+      merged.address ?? '',
+    ]
+    data.push({ range: `A${rowIndex + 1}`, values: [updatedRow] })
+  }
+
+  if (data.length === 0) return
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: params.membersSheetId,
+    requestBody: { valueInputOption: 'RAW', data },
+  })
+}
+
 export async function updateMemberInSheet(params: {
   tokens: OAuthTokens
   membersSheetId: string

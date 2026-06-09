@@ -1,6 +1,6 @@
 import { sendEmailAddedNotification, sendEmailRemovedNotification } from '~/server/utils/email'
 import { getManagerData } from '~/server/utils/managerData'
-import { getAllMemberData, getMemberData, updateMemberData } from '~/server/utils/memberData'
+import { batchUpdateMembersData, getAllMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, updateMemberSchema } from '~/server/utils/schemas'
 
@@ -44,15 +44,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const user = await prisma.user.findFirst({
-    where: { id: memberId, clubId: club.id },
-  })
+  const [user, allMemberUsers] = await Promise.all([
+    prisma.user.findFirst({ where: { id: memberId, clubId: club.id } }),
+    prisma.user.findMany({ where: { clubId: club.id, role: 'MEMBER' }, select: { id: true } }),
+  ])
 
   if (!user) {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  const existing = await getMemberData(memberId, club)
+  // Single sheet read for all member data
+  const allMemberData = await getAllMemberData(
+    allMemberUsers.map((u) => u.id),
+    club,
+  )
+  const existing = allMemberData.find((m) => m.userId === memberId)
   if (!existing) {
     throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
   }
@@ -78,7 +84,7 @@ export default defineEventHandler(async (event) => {
   const newEmail1 = email1.toLowerCase()
   const newEmail2 = email2 ? email2.toLowerCase() : null
 
-  const updates: Parameters<typeof updateMemberData>[1] = {
+  const mainPatch: Partial<typeof existing> = {
     firstName,
     lastName,
     birthDate,
@@ -92,47 +98,42 @@ export default defineEventHandler(async (event) => {
     careType: isSelfUpdate ? existing.careType : careType || null,
     contractEnd: isSelfUpdate ? existing.contractEnd : contractEnd || null,
     address: address || null,
+    lastEditedAt: new Date().toISOString(),
+    lastEditedBy: await resolveEditorName(currentUser, existing, club),
   }
 
   if (canManageMembers && surcharges !== undefined) {
-    updates.surcharges = surcharges
+    mainPatch.surcharges = surcharges
   }
 
-  updates.lastEditedAt = new Date().toISOString()
-  updates.lastEditedBy = await resolveEditorName(currentUser, existing, club)
-
-  await updateMemberData(memberId, updates, club, expectedLastEditedAt)
-
-  // Cascade email changes to sibling members (other children of the same guardian)
+  // Find siblings from already-loaded data, no second sheet read
   const email1Changed = existing.email1 !== newEmail1
   const email2Changed = (existing.email2 ?? null) !== (newEmail2 ?? null)
   const affectedSiblingNames: string[] = []
+
+  const batchUpdates: { userId: string; patch: Partial<typeof existing> }[] = [
+    { userId: memberId, patch: mainPatch },
+  ]
+
   if (email1Changed || email2Changed) {
-    const siblingUsers = await prisma.user.findMany({
-      where: { clubId: club.id, role: 'MEMBER', id: { not: memberId } },
-    })
-    if (siblingUsers.length > 0) {
-      const siblingDataList = await getAllMemberData(
-        siblingUsers.map((u) => u.id),
-        club,
-      )
-      const affectedSiblings = siblingDataList.filter(
-        (md) =>
-          (email1Changed && md.email1 === existing.email1) ||
-          (email2Changed && existing.email2 && md.email2 === existing.email2),
-      )
-      for (const s of affectedSiblings) affectedSiblingNames.push(`${s.firstName} ${s.lastName}`)
-      await Promise.allSettled(
-        affectedSiblings.map((sibling) => {
-          const siblingUpdates: Record<string, string | null> = {}
-          if (email1Changed && sibling.email1 === existing.email1) siblingUpdates.email1 = newEmail1
-          if (email2Changed && existing.email2 && sibling.email2 === existing.email2)
-            siblingUpdates.email2 = newEmail2
-          return updateMemberData(sibling.userId, siblingUpdates, club)
-        }),
-      )
+    const affectedSiblings = allMemberData.filter(
+      (md) =>
+        md.userId !== memberId &&
+        ((email1Changed && md.email1 === existing.email1) ||
+          (email2Changed && existing.email2 && md.email2 === existing.email2)),
+    )
+    for (const s of affectedSiblings) {
+      affectedSiblingNames.push(`${s.firstName} ${s.lastName}`)
+      const siblingPatch: Record<string, string | null> = {}
+      if (email1Changed && s.email1 === existing.email1) siblingPatch.email1 = newEmail1
+      if (email2Changed && existing.email2 && s.email2 === existing.email2)
+        siblingPatch.email2 = newEmail2
+      batchUpdates.push({ userId: s.userId, patch: siblingPatch })
     }
   }
+
+  // Single write for main member + all siblings
+  await batchUpdateMembersData(batchUpdates, club, expectedLastEditedAt)
 
   const oldEmailSet = new Set([existing.email1, existing.email2].filter(Boolean) as string[])
   const newEmails = [newEmail1, ...(newEmail2 ? [newEmail2] : [])]
