@@ -44,7 +44,7 @@ const groupedChildren = computed(() => {
 </script>
 
 <template>
-  <div class="card">
+  <div class="card h-full">
     <h2 class="mb-4 text-lg font-semibold text-gray-900">Gruppen</h2>
 
     <LoadingBrumm v-if="membersStore.isLoading" />
