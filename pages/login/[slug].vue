@@ -139,7 +139,7 @@ async function onPinForgot() {
 
           <template v-else>
             <div class="space-y-4">
-              <PinInput ref="pinInput" v-model="pin" :disabled="pinLoading" @complete="onPinSubmit" />
+              <PinInput ref="pinInput" v-model="pin" :disabled="pinLoading" showSubmit @complete="onPinSubmit" />
               <div v-if="pinError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
                 {{ pinError }}
               </div>

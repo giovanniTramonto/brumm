@@ -2,6 +2,7 @@
 const props = defineProps<{
   modelValue: string
   disabled?: boolean
+  showSubmit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -13,17 +14,19 @@ const ROWS = [
   ['1', '2', '3'],
   ['4', '5', '6'],
   ['7', '8', '9'],
-  ['', '0', '⌫'],
+  ['↵', '0', '⌫'],
 ]
 
 function onDigit(key: string) {
   if (props.disabled) return
   if (key === '⌫') {
     emit('update:modelValue', props.modelValue.slice(0, -1))
+  } else if (key === '↵') {
+    if (props.modelValue.length === 4) emit('complete')
   } else if (props.modelValue.length < 4) {
     const next = props.modelValue + key
     emit('update:modelValue', next)
-    if (next.length === 4) emit('complete')
+    if (next.length === 4 && !props.showSubmit) emit('complete')
   }
 }
 
@@ -74,11 +77,15 @@ defineExpose({ focus })
           v-for="key in row"
           :key="key"
           type="button"
-          :disabled="disabled || (!key && key !== '0')"
+          :disabled="disabled || (key === '↵' && modelValue.length < 4)"
           class="flex aspect-square flex-1 items-center justify-center rounded-full text-3xl font-medium transition-all duration-100 active:scale-95"
           :class="
-            !key
-              ? 'pointer-events-none opacity-0'
+            key === '↵'
+              ? !showSubmit
+                ? 'pointer-events-none opacity-0'
+                : modelValue.length === 4
+                  ? 'text-primary-600 hover:bg-primary-50 active:bg-primary-100'
+                  : 'pointer-events-none opacity-0'
               : key === '⌫'
                 ? 'text-gray-500 hover:bg-gray-100 active:bg-gray-200'
                 : 'bg-white shadow-sm hover:bg-gray-50 active:bg-gray-200 border border-gray-200 text-gray-900'
