@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   /^\/api\/ini\/[^/]+\/auth\/device$/,
   /^\/api\/ini\/[^/]+\/auth\/pin$/,
   /^\/api\/ini\/[^/]+\/auth\/pin-forgot$/,
+  /^\/api\/ini\/[^/]+\/auth\/verify-otp$/,
 ]
 
 export default defineEventHandler(async (event) => {

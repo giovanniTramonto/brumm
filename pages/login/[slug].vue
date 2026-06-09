@@ -232,18 +232,8 @@ async function onPinForgot() {
 
               <form class="space-y-3" @submit.prevent="onVerifyOtp">
                 <div>
-                  <label for="otp-input" class="label">Code aus der E-Mail</label>
-                  <input
-                    id="otp-input"
-                    v-model="otpCode"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="6"
-                    pattern="[0-9]{6}"
-                    class="input mt-1 text-center text-2xl tracking-[0.5em]"
-                    placeholder="000000"
-                    autocomplete="one-time-code"
-                  />
+                  <label class="label mb-2 block">Code aus der E-Mail</label>
+                  <OtpInput v-model="otpCode" :disabled="otpLoading" @complete="onVerifyOtp" />
                 </div>
                 <div v-if="otpError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
                   {{ otpError }}

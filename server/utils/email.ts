@@ -44,7 +44,6 @@ export async function sendMagicLink(params: {
   otpCode: string
 }): Promise<void> {
   const link = `${process.env.APP_URL ?? ''}/ini/${params.clubSlug}/auth/verify/${params.token}`
-  const digits = params.otpCode.split('').join(' ')
   await send({
     from: FROM_ADDRESS,
     to: params.to,
@@ -54,7 +53,7 @@ export async function sendMagicLink(params: {
       <p>Klicke auf den folgenden Link, um dich anzumelden. Der Link ist 15 Minuten gültig.</p>
       <p><a href="${link}">Jetzt anmelden</a></p>
       <p>Oder gib diesen Code direkt in der App ein:</p>
-      <p style="font-size:32px;font-weight:bold;letter-spacing:8px;">${digits}</p>
+      <p style="font-size:32px;font-weight:bold;letter-spacing:6px;font-family:monospace;">${params.otpCode}</p>
       <p>Falls du diese E-Mail nicht angefordert hast, kannst du sie ignorieren.</p>
     `,
   })
