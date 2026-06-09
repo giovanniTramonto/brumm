@@ -17,6 +17,19 @@ export default defineEventHandler(async (event) => {
   const existing = await prisma.document.findFirst({ where: { id: fileId, clubId: club.id } })
   if (!existing) throw createError({ statusCode: 404, statusMessage: 'Dokument nicht gefunden' })
 
+  if (existing.type === 'link') {
+    const body = await readBody<{ name?: string; url?: string }>(event)
+    const document = await prisma.document.update({
+      where: { id: fileId },
+      data: {
+        ...(body.name && { name: body.name.trim() }),
+        ...(body.url && { url: body.url.trim() }),
+      },
+      select: { id: true, name: true, order: true, type: true, url: true, createdAt: true },
+    })
+    return { document }
+  }
+
   const formData = await readMultipartFormData(event)
   const filePart = formData?.find((p) => p.name === 'file')
   if (!filePart?.data || !filePart.filename) {
@@ -51,7 +64,7 @@ export default defineEventHandler(async (event) => {
   const document = await prisma.document.update({
     where: { id: fileId },
     data: { name: filePart.filename, driveFileId: newDriveFileId },
-    select: { id: true, name: true, createdAt: true },
+    select: { id: true, name: true, order: true, type: true, url: true, createdAt: true },
   })
 
   return { document }

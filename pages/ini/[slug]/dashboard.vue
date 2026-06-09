@@ -22,7 +22,7 @@ const { isMember, canManageMembers } = storeToRefs(authStore)
       <template #default>
         <div class="space-y-6">
           <DashboardMyKids v-if="isMember" :slug="slug" />
-
+          
           <DashboardOverview v-if="canManageMembers" :slug="slug" />
 
           <template v-if="authStore.currentUser?.role === 'TEAM'">
@@ -34,9 +34,8 @@ const { isMember, canManageMembers } = storeToRefs(authStore)
             </div>
           </template>
 
-          <DashboardAktuell :slug="slug" />
-          
-          <DashboardDocuments :slug="slug" />
+          <DashboardWall :slug="slug" />
+          <DashboardContacts :slug="slug" />
         </div>
       </template>
       <template #fallback>

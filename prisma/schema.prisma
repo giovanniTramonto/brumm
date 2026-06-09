@@ -125,7 +125,9 @@ model Document {
   clubId      String
   name        String
   order       Int      @default(0)
+  type        String   @default("document")
   driveFileId String?
+  url         String?
   createdAt   DateTime @default(now())
 
   club Club @relation(fields: [clubId], references: [id])

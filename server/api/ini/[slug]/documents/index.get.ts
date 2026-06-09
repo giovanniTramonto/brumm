@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   const documents = await prisma.document.findMany({
     where: { clubId: club.id },
     orderBy: { order: 'asc' },
-    select: { id: true, name: true, order: true, createdAt: true },
+    select: { id: true, name: true, order: true, type: true, url: true, createdAt: true },
   })
 
   return { documents }

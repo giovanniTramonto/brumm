@@ -12,6 +12,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
+  const contentType = getHeader(event, 'content-type') ?? ''
+  const count = await prisma.document.count({ where: { clubId: club.id } })
+
+  if (!contentType.includes('multipart/form-data')) {
+    const body = await readBody<{ name: string; url: string }>(event)
+    if (!body.name?.trim()) throw createError({ statusCode: 400, statusMessage: 'Name fehlt' })
+    if (!body.url?.trim()) throw createError({ statusCode: 400, statusMessage: 'URL fehlt' })
+
+    const document = await prisma.document.create({
+      data: {
+        clubId: club.id,
+        name: body.name.trim(),
+        type: 'link',
+        url: body.url.trim(),
+        order: count,
+      },
+      select: { id: true, name: true, order: true, type: true, url: true, createdAt: true },
+    })
+    return { document }
+  }
+
   if (!club.isSetupDone) {
     throw createError({ statusCode: 400, statusMessage: 'Storage nicht eingerichtet' })
   }
@@ -41,10 +62,9 @@ export default defineEventHandler(async (event) => {
     buffer: filePart.data,
   })
 
-  const count = await prisma.document.count({ where: { clubId: club.id } })
   const document = await prisma.document.create({
     data: { clubId: club.id, name, driveFileId, order: count },
-    select: { id: true, name: true, order: true, createdAt: true },
+    select: { id: true, name: true, order: true, type: true, url: true, createdAt: true },
   })
 
   return { document }

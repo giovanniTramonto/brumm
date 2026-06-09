@@ -55,7 +55,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/team/create              → Teammitglied hinzufügen
 /ini/{slug}/team/{id}                → Teammitglied bearbeiten
 /ini/{slug}/calculations             → Rechnung: Einnahmen, Personalschlüssel (SUPERUSER + MANAGER)
-/ini/{slug}/documents                → Vereinsunterlagen (SUPERUSER + MANAGER)
+/ini/{slug}/wall                     → Wall / Aktuell (SUPERUSER + MANAGER)
 /ini/{slug}/settings
 /ini/{slug}/settings/delete          → Verein löschen
 ```
