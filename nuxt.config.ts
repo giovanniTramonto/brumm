@@ -1,7 +1,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
-  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vite-pwa/nuxt'],
 
   typescript: {
     strict: true,
@@ -24,6 +24,44 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'netlify',
+  },
+
+  pwa: {
+    registerType: 'autoUpdate',
+    includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png'],
+    manifest: {
+      name: 'Brumm',
+      short_name: 'Brumm',
+      description: 'Verwaltungssoftware für Elterninitiativ-Kitas',
+      theme_color: '#ffffff',
+      background_color: '#ffffff',
+      display: 'standalone',
+      start_url: '/',
+      icons: [
+        { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
+        {
+          src: '/android-chrome-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+      ],
+    },
+    workbox: {
+      navigateFallback: '/',
+      navigateFallbackDenylist: [/^\/api\//],
+      globPatterns: ['**/*.{js,css,woff2,html}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^\/api\//,
+          handler: 'NetworkOnly',
+        },
+      ],
+    },
+    devOptions: {
+      enabled: false,
+    },
   },
 
   app: {
@@ -54,10 +92,14 @@ export default defineNuxtConfig({
           content:
             'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin.',
         },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+        { name: 'apple-mobile-web-app-title', content: 'Brumm' },
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       ],
     },
   },
