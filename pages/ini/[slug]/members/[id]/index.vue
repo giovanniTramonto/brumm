@@ -646,7 +646,7 @@ async function onSubmit() {
               member.status === 'ACTIVE'
                 ? 'bg-green-100 text-green-800'
                 : member.status === 'INACTIVE'
-                  ? 'bg-orange-100 text-orange-700'
+                  ? 'bg-purple-100 text-purple-800'
                   : member.status === 'DEACTIVATED'
                     ? 'bg-gray-100 text-gray-600'
                     : member.status === 'PENDING_INVITE'
