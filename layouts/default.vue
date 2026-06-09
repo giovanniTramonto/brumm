@@ -9,7 +9,7 @@ const navItems = computed(() => {
   if (!slug.value || !authStore.currentUser) return []
   const base = `/ini/${slug.value}`
   const items: { label: string; to: string; disabled?: boolean }[] = []
-  if (authStore.currentUser.role !== 'MEMBER') {
+  if (authStore.currentUser.role !== 'MEMBER' && authStore.currentUser.role !== 'TEAM') {
     items.push({ label: 'Kinder', to: `${base}/members` })
   }
   if (authStore.currentUser.role === 'SUPERUSER') {
