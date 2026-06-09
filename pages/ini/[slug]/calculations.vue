@@ -171,7 +171,7 @@ async function onSaveMembershipFee() {
 
       <!-- Monatsansicht -->
       <template v-if="!showAnnual">
-        <div class="card min-h-[245px]">
+        <div class="card min-h-[270px]">
             <h2 class="mb-4 text-sm font-medium text-gray-900">Einnahmen – {{ monthLabel }}</h2>
             <template v-if="reimbursement">
               <div class="flex items-end justify-between">
