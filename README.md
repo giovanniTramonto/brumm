@@ -6,7 +6,7 @@ Verwaltungssoftware für Berliner Kindergarten-Vereine. Mehrere Vereine laufen a
 
 ## Stack
 
-- **Nuxt 3** – SPA
+- **Nuxt 3** – SPA + PWA (`@vite-pwa/nuxt`, App Shell Caching, Offline-Fallback)
 - **Prisma + Neon** – PostgreSQL (nur Auth/Tech-Daten, Multi-Tenant via `clubId`)
 - **Google Drive + Sheets** – Persönliche Mitgliederdaten, Storage pro Verein (OAuth 2.0)
 - **Resend** – Transaktionale E-Mails
@@ -58,6 +58,7 @@ Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallbac
 /ini/{slug}/wall                     → Wall / Aktuell (SUPERUSER + MANAGER)
 /ini/{slug}/settings
 /ini/{slug}/settings/delete          → Verein löschen
+/offline                             → Offline-Fallback (PWA)
 ```
 
 ## Rollen

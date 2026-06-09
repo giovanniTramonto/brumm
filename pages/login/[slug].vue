@@ -28,6 +28,30 @@ const error = ref<string | null>(null)
 const rememberMe = ref(false)
 const pin = ref('')
 
+// OTP State
+const otpCode = ref('')
+const otpLoading = ref(false)
+const otpError = ref<string | null>(null)
+
+async function onVerifyOtp() {
+  otpLoading.value = true
+  otpError.value = null
+  try {
+    await authStore.verifyOtp(slug, otpCode.value)
+    const target = authStore.currentClub?.isSetupDone
+      ? `/ini/${slug}/dashboard`
+      : `/ini/${slug}/settings/onboarding`
+    await navigateTo(target, { replace: true })
+  } catch (err: unknown) {
+    otpError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??
+      'Code ungültig oder abgelaufen'
+    otpCode.value = ''
+  } finally {
+    otpLoading.value = false
+  }
+}
+
 // PIN-Login State
 const pinLoading = ref(false)
 const pinError = ref<string | null>(null)
@@ -197,15 +221,47 @@ async function onPinForgot() {
           </template>
 
           <template v-else>
-            <div class="text-center">
-              <p class="text-lg font-medium text-gray-900">Link gesendet!</p>
-              <p class="mt-2 text-sm text-gray-600">
-                Falls diese E-Mail in unserem System vorhanden ist, hast du einen Anmelde-Link
-                erhalten. Der Link ist 15 Minuten gültig.
-              </p>
-              <button class="btn-secondary mt-4 text-sm" @click="isSent = false; email = ''; pin = ''; rememberMe = false">
-                Andere E-Mail verwenden
-              </button>
+            <div class="space-y-4">
+              <div>
+                <p class="text-lg font-medium text-gray-900">Link gesendet!</p>
+                <p class="mt-1 text-sm text-gray-600">
+                  Falls diese E-Mail in unserem System vorhanden ist, hast du einen Anmelde-Link
+                  erhalten. Der Link ist 15 Minuten gültig.
+                </p>
+              </div>
+
+              <form class="space-y-3" @submit.prevent="onVerifyOtp">
+                <div>
+                  <label for="otp-input" class="label">Code aus der E-Mail</label>
+                  <input
+                    id="otp-input"
+                    v-model="otpCode"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    class="input mt-1 text-center text-2xl tracking-[0.5em]"
+                    placeholder="000000"
+                    autocomplete="one-time-code"
+                  />
+                </div>
+                <div v-if="otpError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                  {{ otpError }}
+                </div>
+                <button
+                  type="submit"
+                  class="btn-primary w-full"
+                  :disabled="otpCode.length !== 6 || otpLoading"
+                >
+                  {{ otpLoading ? 'Wird geprüft…' : 'Anmelden' }}
+                </button>
+              </form>
+
+              <div class="text-center">
+                <button class="btn-secondary text-sm" @click="isSent = false; email = ''; pin = ''; rememberMe = false; otpCode = ''; otpError = null">
+                  Andere E-Mail verwenden
+                </button>
+              </div>
             </div>
           </template>
         </div>

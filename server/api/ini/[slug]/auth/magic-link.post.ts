@@ -53,12 +53,17 @@ export default defineEventHandler(async (event) => {
   })
 
   if (userEmail && userEmail.user.clubId === club.id) {
-    const magicLink = await createMagicLink({ userId: userEmail.userId, pendingPinHash })
+    const magicLink = await createMagicLink({
+      userId: userEmail.userId,
+      pendingPinHash,
+      withOtp: true,
+    })
     await sendMagicLink({
       to: email,
       clubName: club.name,
       clubSlug: club.slug,
       token: magicLink.token,
+      otpCode: magicLink.otpCode ?? '',
     })
     return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
   }
@@ -148,12 +153,13 @@ export default defineEventHandler(async (event) => {
       return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
     }
 
-    const magicLink = await createMagicLink({ userId, pendingPinHash })
+    const magicLink = await createMagicLink({ userId, pendingPinHash, withOtp: true })
     await sendMagicLink({
       to: email,
       clubName: club.name,
       clubSlug: club.slug,
       token: magicLink.token,
+      otpCode: magicLink.otpCode ?? '',
     })
   }
 

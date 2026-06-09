@@ -57,6 +57,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function verifyOtp(slug: string, code: string): Promise<void> {
+    const data = await $fetch<{ user: AuthUser; club: Club }>(`/api/ini/${slug}/auth/verify-otp`, {
+      method: 'POST',
+      body: { code },
+    })
+    currentUser.value = data.user
+    currentClub.value = data.club
+  }
+
   async function logout(slug: string): Promise<void> {
     await $fetch(`/api/ini/${slug}/auth/logout`, { method: 'POST' }).catch(() => {})
   }
@@ -101,6 +110,7 @@ export const useAuthStore = defineStore('auth', () => {
     canManageClub,
     login,
     verifyToken,
+    verifyOtp,
     logout,
     fetchSession,
     clearAuth,

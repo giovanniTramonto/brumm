@@ -82,6 +82,7 @@ model MagicLink {
   id                       String   @id @default(cuid())
   userId                   String
   token                    String   @unique @default(cuid())
+  otpCode                  String?
   expiresAt                DateTime
   isUsed                   Boolean  @default(false)
   pendingPinHash           String?

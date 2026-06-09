@@ -1,6 +1,7 @@
 const RATE_LIMITED_PATHS = ['/api/clubs', '/api/register']
 const MAGIC_LINK_PATTERN = /^\/api\/ini\/[^/]+\/auth\/magic-link$/
 const PIN_PATTERN = /^\/api\/ini\/[^/]+\/auth\/pin$/
+const OTP_PATTERN = /^\/api\/ini\/[^/]+\/auth\/verify-otp$/
 
 const WINDOW_MS = 60_000
 const MAX_REQUESTS = 5
@@ -12,8 +13,9 @@ export default defineEventHandler((event) => {
   const path = getRequestURL(event).pathname
   const isMagicLink = MAGIC_LINK_PATTERN.test(path)
   const isPin = PIN_PATTERN.test(path)
+  const isOtp = OTP_PATTERN.test(path)
 
-  if (!RATE_LIMITED_PATHS.includes(path) && !isMagicLink && !isPin) return
+  if (!RATE_LIMITED_PATHS.includes(path) && !isMagicLink && !isPin && !isOtp) return
 
   const ip =
     getRequestHeader(event, 'x-forwarded-for')?.split(',')[0].trim() ??
@@ -23,7 +25,7 @@ export default defineEventHandler((event) => {
   const key = `${ip}:${path}`
   const now = Date.now()
   const entry = store.get(key)
-  const limit = isPin ? PIN_MAX_REQUESTS : MAX_REQUESTS
+  const limit = isPin || isOtp ? PIN_MAX_REQUESTS : MAX_REQUESTS
 
   if (!entry || now > entry.resetAt) {
     store.set(key, { count: 1, resetAt: now + WINDOW_MS })
