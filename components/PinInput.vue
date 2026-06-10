@@ -78,7 +78,7 @@ defineExpose({ focus })
           :key="key"
           type="button"
           :disabled="disabled || (key === '↵' && modelValue.length < 4)"
-          class="flex aspect-square flex-1 items-center justify-center rounded-full text-3xl font-medium transition-all duration-100 active:scale-95"
+          class="numpad-key flex aspect-square flex-1 items-center justify-center rounded-full text-3xl font-medium"
           :class="
             key === '↵'
               ? !showSubmit
@@ -98,3 +98,20 @@ defineExpose({ focus })
     </div>
   </div>
 </template>
+
+<style scoped>
+.numpad-key {
+  transition:
+    transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 150ms ease-out,
+    background-color 100ms ease-out;
+}
+
+.numpad-key:active {
+  transform: scale(0.88);
+  transition:
+    transform 20ms ease-in,
+    box-shadow 20ms ease-in,
+    background-color 20ms ease-in;
+}
+</style>
