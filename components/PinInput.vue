@@ -53,7 +53,7 @@ defineExpose({ focus })
 </script>
 
 <template>
-  <div ref="container" class="select-none space-y-4 outline-none" tabindex="0" @keydown="onKeydown">
+  <div ref="container" class="select-none space-y-4 outline-none touch-manipulation" tabindex="0" @keydown="onKeydown">
     <p class="text-center text-xs font-medium uppercase tracking-widest text-gray-400 tablet:hidden">PIN</p>
 
     <!-- 4 Dots -->
