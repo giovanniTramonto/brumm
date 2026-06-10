@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const route = useRoute()
-
 const navLinks = [
   { to: '/about', label: 'Über Brumm' },
   { to: '/guide', label: 'Anleitung' },
@@ -40,13 +38,12 @@ const { isMenuOpen } = useNavMenu(768)
             v-for="link in navLinks"
             :key="link.to"
             :to="link.to"
-            :aria-current="route.path.startsWith(link.to) ? 'page' : undefined"
-            :class="route.path.startsWith(link.to) ? 'text-gray-900 font-medium' : 'text-gray-600 hover:text-gray-900'"
+            class="text-gray-600 hover:text-gray-900"
+            exactActiveClass="text-gray-900 font-medium"
           >{{ link.label }}</NuxtLink>
           <NuxtLink
             to="/register"
             class="btn-primary text-sm w-fit"
-            :aria-current="route.path === '/register' ? 'page' : undefined"
           >Kita registrieren</NuxtLink>
         </nav>
 
