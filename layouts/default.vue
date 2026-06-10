@@ -43,7 +43,7 @@ function onLogout() {
 
 <template>
   <div :class="bgClass" class="min-h-screen">
-    <nav v-if="currentUser" aria-label="Hauptnavigation" class="relative z-10 border-b border-gray-200 bg-white shadow-sm">
+    <nav v-if="currentUser" aria-label="Hauptnavigation" class="app-nav relative z-10 border-b border-gray-200 bg-white shadow-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-16 items-center justify-between py-4">
           <div class="flex items-center gap-8">
@@ -110,3 +110,9 @@ function onLogout() {
     </main>
   </div>
 </template>
+
+<style scoped>
+.app-nav {
+  padding-top: env(safe-area-inset-top);
+}
+</style>

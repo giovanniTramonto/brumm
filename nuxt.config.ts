@@ -70,7 +70,7 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'de' },
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         {
           name: 'description',
           content:
@@ -93,7 +93,7 @@ export default defineNuxtConfig({
             'Brumm ist die Verwaltungssoftware für Elterninitiativ-Kindertagesstätten in Berlin.',
         },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
-        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'Brumm' },
       ],
       link: [

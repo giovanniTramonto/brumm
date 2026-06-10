@@ -11,10 +11,10 @@ const { isMenuOpen } = useNavMenu(768)
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-white pt-16">
+  <div class="public-wrapper flex min-h-screen flex-col bg-white">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-700 focus:ring-2 focus:ring-primary-500">Zum Inhalt springen</a>
 
-    <header class="fixed top-0 left-0 right-0 z-20 border-b border-gray-100 bg-white">
+    <header class="public-header fixed top-0 left-0 right-0 z-20 border-b border-gray-100 bg-white">
       <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
         <div class="flex items-center gap-2">
           <NuxtLink to="/" class="flex items-center gap-2 text-lg font-semibold text-primary-700" aria-label="Brumm – zur Startseite">
@@ -75,3 +75,13 @@ const { isMenuOpen } = useNavMenu(768)
     </footer>
   </div>
 </template>
+
+<style scoped>
+.public-header {
+  padding-top: env(safe-area-inset-top);
+}
+
+.public-wrapper {
+  padding-top: calc(4rem + env(safe-area-inset-top));
+}
+</style>
