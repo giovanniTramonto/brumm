@@ -354,7 +354,7 @@ async function onSaveMembershipFee() {
               <p class="font-mono text-2xl font-bold text-gray-900">{{ formatEur(annualReimbursement.total + annualMembershipFees) }}</p>
             </div>
             <div class="overflow-x-auto">
-            <div class="grid grid-cols-12 gap-1 border-t pt-3" style="min-width: 540px;">
+            <div class="annual-grid grid grid-cols-12 gap-1 border-t pt-3">
               <div v-for="(m, i) in annualReimbursement.months" :key="i" class="text-center">
                 <p class="text-xs text-gray-400">{{ MONTH_LABELS[i] }}</p>
                 <p class="mt-0.5 text-xs font-medium text-gray-700">{{ formatEur(m.total + countContractActiveMembers(membersStore.members, displayYear, i + 1) * (authStore.currentClub?.membershipFee ?? 0)) }}</p>
@@ -390,7 +390,7 @@ async function onSaveMembershipFee() {
               </div>
             </div>
             <div class="mt-4 overflow-x-auto">
-            <div class="grid grid-cols-12 gap-1 border-t pt-3" style="min-width: 540px;">
+            <div class="annual-grid grid grid-cols-12 gap-1 border-t pt-3">
               <div v-for="(m, i) in annualStaffing.months" :key="i" class="text-center">
                 <p class="text-xs text-gray-400">{{ MONTH_LABELS[i] }}</p>
                 <p class="mt-0.5 text-xs font-medium text-gray-700">{{ m.careHours.toFixed(1) }}</p>
@@ -460,3 +460,9 @@ async function onSaveMembershipFee() {
     </template>
   </div>
 </template>
+
+<style scoped>
+.annual-grid {
+  min-width: 540px;
+}
+</style>
