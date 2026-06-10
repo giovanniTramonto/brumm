@@ -144,7 +144,12 @@ async function onMarkRead(templateId: string) {
   }
 }
 
-const SURCHARGE_OPTIONS = [{ key: 'ndhs', label: 'NdHS' }]
+const SURCHARGE_OPTIONS = [
+  { key: 'ndhs', label: 'NdHS' },
+  { key: 'qm', label: 'QM/MSS' },
+  { key: 'integration_a', label: 'Integration Typ A' },
+  { key: 'integration_b', label: 'Integration Typ B' },
+]
 
 const hasChanges = computed(() => {
   const m = member.value
