@@ -30,6 +30,8 @@ function onDigit(key: string) {
   }
 }
 
+const pressedKey = ref<string | null>(null)
+
 const container = ref<HTMLDivElement | null>(null)
 
 function onKeydown(e: KeyboardEvent) {
@@ -79,17 +81,24 @@ defineExpose({ focus })
           type="button"
           :disabled="disabled || (key === '↵' && modelValue.length < 4)"
           class="numpad-key flex aspect-square flex-1 items-center justify-center rounded-full text-3xl font-medium"
-          :class="
+          :class="[
             key === '↵'
               ? !showSubmit
                 ? 'pointer-events-none opacity-0'
                 : modelValue.length === 4
-                  ? 'text-primary-600 hover:bg-primary-50 active:bg-primary-100'
+                  ? 'text-primary-600 hover:bg-primary-50'
                   : 'pointer-events-none opacity-0'
               : key === '⌫'
-                ? 'text-gray-500 hover:bg-gray-100 active:bg-gray-200'
-                : 'bg-white shadow-sm hover:bg-gray-50 active:bg-gray-200 border border-gray-200 text-gray-900'
-          "
+                ? 'text-gray-500 hover:bg-gray-100'
+                : 'bg-white shadow-sm hover:bg-gray-50 border border-gray-200 text-gray-900',
+            pressedKey === key ? 'numpad-key--pressed' : '',
+          ]"
+          @mousedown="pressedKey = key"
+          @mouseup="pressedKey = null"
+          @mouseleave="pressedKey = null"
+          @touchstart.passive="pressedKey = key"
+          @touchend="pressedKey = null"
+          @touchcancel="pressedKey = null"
           @click="onDigit(key)"
         >
           {{ key }}
@@ -107,7 +116,7 @@ defineExpose({ focus })
     background-color 100ms ease-out;
 }
 
-.numpad-key:active {
+.numpad-key--pressed {
   transform: scale(0.88);
   transition:
     transform 20ms ease-in,
