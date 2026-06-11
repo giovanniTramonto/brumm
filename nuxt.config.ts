@@ -49,8 +49,7 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallbackDenylist: [/^\/api\//],
-      globPatterns: ['**/*.{js,css,woff2,html}'],
+      globPatterns: ['**/*.{js,css,woff2}'],
       runtimeCaching: [
         {
           urlPattern: /^\/api\//,
