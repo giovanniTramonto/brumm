@@ -7,7 +7,7 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const { isMember, canManageMembers } = storeToRefs(authStore)
+const { isMember, canManageClub } = storeToRefs(authStore)
 </script>
 
 <template>
@@ -23,7 +23,7 @@ const { isMember, canManageMembers } = storeToRefs(authStore)
         <div class="space-y-6">
           <DashboardMyKids v-if="isMember" :slug="slug" />
           
-          <DashboardOverview v-if="canManageMembers" :slug="slug" />
+          <DashboardOverview v-if="canManageClub" :slug="slug" />
 
           <template v-if="authStore.currentUser?.role === 'TEAM'">
             <div class="grid gap-4 desktop:grid-cols-3">
