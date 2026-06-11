@@ -96,14 +96,14 @@ export default defineEventHandler(async (event) => {
         : null,
     ])
 
-    if (memberId) {
-      userId = memberId
-    } else if (managerId) {
+    if (managerId) {
       const managerUser = await findOrCreateManagerUser(managerId, club.id)
       if (managerUser) userId = managerUser.id
     } else if (teamId) {
       const teamUser = await findTeamUser(teamId, club.id)
       if (teamUser) userId = teamUser.id
+    } else if (memberId) {
+      userId = memberId
     }
   } else {
     const usersWithLocalData = await prisma.user.findMany({
@@ -118,32 +118,19 @@ export default defineEventHandler(async (event) => {
       )
     })
 
-    if (memberMatch) {
+    const managers = await prisma.manager.findMany({
+      where: { clubId: club.id, localData: { not: Prisma.DbNull } },
+    })
+    const managerMatch = managers.find((m) => {
+      const d = m.localData as Record<string, unknown> | null
+      return d && (d.email as string)?.toLowerCase() === normalizedEmail
+    })
+
+    if (managerMatch) {
+      const managerUser = await findOrCreateManagerUser(managerMatch.id, club.id)
+      if (managerUser) userId = managerUser.id
+    } else if (memberMatch) {
       userId = memberMatch.id
-    } else {
-      const managers = await prisma.manager.findMany({
-        where: { clubId: club.id, localData: { not: Prisma.DbNull } },
-      })
-      const managerMatch = managers.find((m) => {
-        const d = m.localData as Record<string, unknown> | null
-        return d && (d.email as string)?.toLowerCase() === normalizedEmail
-      })
-      if (managerMatch) {
-        const managerUser = await findOrCreateManagerUser(managerMatch.id, club.id)
-        if (managerUser) userId = managerUser.id
-      } else {
-        const teamMembers = await prisma.team.findMany({
-          where: { clubId: club.id, localData: { not: Prisma.DbNull } },
-        })
-        const teamMatch = teamMembers.find((m) => {
-          const d = m.localData as Record<string, unknown> | null
-          return d && (d.email as string)?.toLowerCase() === normalizedEmail
-        })
-        if (teamMatch) {
-          const teamUser = await findTeamUser(teamMatch.id, club.id)
-          if (teamUser) userId = teamUser.id
-        }
-      }
     }
   }
 
