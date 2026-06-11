@@ -4,34 +4,50 @@ useHead({ title: 'Einblicke – Brumm' })
 
 const screens = [
   {
-    src: '/screens/dashboard.png',
-    label: 'Dashboard',
-    description: 'Überblick über aktive Kinder, Gruppen und aktuelle Mitteilungen.',
+    src: '/images/preview/admin.webp',
+    label: 'Admin-Bereich',
+    description: 'Zugriff auf Mitglieder, Team, Gruppen und Vereinseinstellungen.',
   },
   {
-    src: '/screens/members.png',
+    src: '/images/preview/manager-dashboard.webp',
+    label: 'Vorstand-Dashboard',
+    description: 'Kennzahlen, aktive Kinder und anstehende Aufgaben auf einen Blick.',
+  },
+  {
+    src: '/images/preview/manager-member-list.webp',
     label: 'Kinderliste',
-    description: 'Alle Kinder auf einen Blick – mit Status, Gruppe und Vertragsende.',
+    description: 'Alle Kinder mit Status, Gruppe und Vertragsende.',
   },
   {
-    src: '/screens/member-detail.png',
-    label: 'Kind-Details',
-    description: 'Stammdaten, Vertragsunterlagen und Kontaktdaten des Erziehungsberechtigten.',
+    src: '/images/preview/manager-calculations-month.webp',
+    label: 'Berechnung – Monat',
+    description:
+      'KitaFöG-konforme Berechnung der Kostenerstattung und des Personalschlüssels – monatsgenau.',
   },
   {
-    src: '/screens/calculations.png',
-    label: 'Berechnung',
-    description: 'Kostenerstattung nach KitaFöG und Personalschlüssel – monatsgenau.',
+    src: '/images/preview/manager-calculations-year.webp',
+    label: 'Berechnung – Jahr',
+    description: 'Jahresübersicht der Einnahmen und Personalstunden.',
   },
   {
-    src: '/screens/wall.png',
-    label: 'Aktuell',
-    description: 'Dokumente und Links für alle Mitglieder an einem Ort.',
+    src: '/images/preview/member-dashboard.webp',
+    label: 'Eltern-Dashboard',
+    description: 'Eltern sehen den aktuellen Status ihrer Kinder und aktuelle Mitteilungen.',
   },
   {
-    src: '/screens/login.png',
-    label: 'Anmeldung',
-    description: 'Magic-Link-Login oder PIN – auch als installierte App auf dem Handy.',
+    src: '/images/preview/member-onboarding.webp',
+    label: 'Onboarding',
+    description: 'Vertragsunterlagen einreichen – geführt, Schritt für Schritt.',
+  },
+  {
+    src: '/images/preview/team.webp',
+    label: 'Team',
+    description: 'Gruppenübersicht und Geburtstage für das pädagogische Team.',
+  },
+  {
+    src: '/images/preview/login-pin.webp',
+    label: 'PIN-Anmeldung',
+    description: 'Geräteerkennung und PIN – schnell anmelden ohne Passwort.',
   },
 ]
 </script>
@@ -49,7 +65,7 @@ const screens = [
           <p class="font-semibold text-gray-900">{{ screen.label }}</p>
           <p class="mt-0.5 text-sm text-gray-500">{{ screen.description }}</p>
         </figcaption>
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+        <div class="overflow-hidden rounded-md border border-gray-200 bg-gray-50 shadow-md">
           <img
             :src="screen.src"
             :alt="screen.label"
