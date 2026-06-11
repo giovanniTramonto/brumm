@@ -24,6 +24,11 @@ useHead({ title: 'Impressum – Brumm' })
       Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
     </p>
 
+    <h2 class="mt-8 text-xl font-semibold text-gray-900">Haftungsausschluss</h2>
+    <p class="mt-4 text-gray-500 leading-relaxed">
+      Die Inhalte dieser Software wurden mit größtmöglicher Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte – insbesondere der Berechnungen nach KitaFöG – wird keine Gewähr übernommen. Die Berechnungen sind als Orientierungshilfe gedacht und ersetzen keine verbindliche Auskunft durch den zuständigen Träger oder die zuständige Behörde.
+    </p>
+
     <p class="mt-8 text-sm text-gray-500 leading-relaxed">
       Quelle: <a href="https://www.e-recht24.de" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded">e-recht24.de <span aria-hidden="true">↗</span><span class="sr-only"> (öffnet in neuem Tab)</span></a>
     </p>

@@ -1,6 +1,8 @@
 # Brumm
 
-Verwaltungssoftware für Berliner Kindergarten-Vereine. Mehrere Vereine laufen auf einer Instanz – jeder mit eigenem Slug und getrennten Daten.
+Brumm ist eine Verwaltungssoftware für Berliner Elterninitiativ-Kindertagesstätten (EKT) – von der Mitgliederverwaltung über Vertragsunterlagen bis zur KitaFöG-Berechnung.
+
+Mehrere Vereine laufen auf einer Instanz – jeder mit eigenem Slug und getrennten Daten.
 
 **Datentrennung**: Neon speichert ausschließlich technische Auth-Daten. Alle persönlichen Mitgliederdaten (Name, Geburtsdatum, E-Mails, Telefonnummern) sowie Vorstandsdaten leben pro Verein in Google Sheets – kein globaler Service Account, keine persönlichen Daten in der zentralen Datenbank.
 

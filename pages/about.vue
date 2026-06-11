@@ -8,7 +8,7 @@ useHead({ title: 'Über Brumm' })
     <section aria-labelledby="what-is-brumm">
       <h1 id="what-is-brumm" class="text-3xl font-bold text-gray-900">Was ist Brumm?</h1>
       <p class="mt-6 text-gray-500 leading-relaxed">
-        Brumm ist eine Verwaltungssoftware speziell für Berliner Elterninitiativ-Kindertagesstätten. Berliner Kita-Abläufe automatisieren – Bär? Auto? Brumm, brumm.
+        Brumm ist eine Verwaltungssoftware speziell für Berliner Elterninitiativ-Kindertagesstätten.<br>Berliner Kita-Abläufe automatisieren – Bär? Auto? Brumm, brumm.
       </p>
     </section>
 
@@ -16,6 +16,9 @@ useHead({ title: 'Über Brumm' })
       <h2 id="manage-on-the-side" class="text-xl font-semibold text-gray-900">Kita verwalten, nebenbei</h2>
       <p class="mt-4 text-gray-500 leading-relaxed">
         Elterninitiativ-Kitas stemmen viel Verwaltung mit wenig Zeit. Brumm nimmt einen Großteil davon ab: Mitglieder verwalten, Vertragsunterlagen einreichen, Kostenerstattungen berechnen – alles an einem Ort, ohne Papierkram. Berliner Besonderheiten wie KitaFöG-Kostensätze, ndH-Zuschläge und die Personalschlüsselberechnung nach Senatsvorgaben sind bereits eingebaut.
+      </p>
+      <p class="mt-4 text-gray-500 leading-relaxed">
+        Aktuell ist Brumm auf Elterninitiativ-Kindertageseinrichtungen (EKT) ausgerichtet. Eine Erweiterung für andere Trägerschaften ist in Planung. Brumm funktioniert auch als installierte App auf dem Handy (PWA) – ohne App Store.
       </p>
     </section>
 
