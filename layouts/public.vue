@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const navLinks = [
   { to: '/about', label: 'Über Brumm' },
+  { to: '/preview', label: 'Einblicke' },
   { to: '/guide', label: 'Anleitung' },
   { to: '/login', label: 'Anmelden' },
 ]
