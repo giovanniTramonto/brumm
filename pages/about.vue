@@ -6,9 +6,12 @@ useHead({ title: 'Über Brumm' })
 <template>
   <main id="main-content" class="mx-auto max-w-5xl px-6 py-12 tablet:py-24">
     <section aria-labelledby="what-is-brumm">
-      <h1 id="what-is-brumm" class="text-3xl font-bold text-gray-900">Was ist Brumm?</h1>
+      <h1 id="what-is-brumm" class="flex items-center gap-3 text-3xl font-bold text-gray-900">
+        Was ist Brumm?
+        <BounceEmoji />
+      </h1>
       <p class="mt-6 text-gray-500 leading-relaxed">
-        Brumm ist eine Verwaltungssoftware speziell für Berliner Elterninitiativ-Kindertagesstätten.<br>Berliner Kita-Abläufe automatisieren – Bär? Auto? Brumm, brumm.
+        Brumm ist eine kostenlose Verwaltungssoftware speziell für Berliner Elterninitiativ-Kindertagesstätten.<br>Berliner Kita-Abläufe automatisieren – Bär? Auto? Brumm, brumm.
       </p>
     </section>
 
@@ -25,7 +28,7 @@ useHead({ title: 'Über Brumm' })
     <section class="mt-8" aria-labelledby="data-ownership">
       <h2 id="data-ownership" class="text-xl font-semibold text-gray-900">Daten bleiben beim Verein</h2>
       <p class="mt-4 text-gray-500 leading-relaxed">
-        Alle persönlichen Daten – Mitgliederinformationen, Vertragsunterlagen, Dokumente – werden ausschließlich in einem Cloud-Ordner des Vereins gespeichert, nicht auf Brumm-Servern. Der Verein behält jederzeit die volle Kontrolle. Aktuell wird Google Workspace unterstützt; weitere Anbieter sollen demnächst folgen.
+        Alle persönlichen Daten – Mitgliederinformationen, Vertragsunterlagen, Dokumente – werden ausschließlich in einem Cloud-Ordner des Vereins gespeichert, nicht auf Brumm-Servern. Der Verein behält jederzeit die volle Kontrolle. Aktuell wird Google Workspace unterstützt; weitere Anbieter sollen demnächst folgen. Google Workspace ist für gemeinnützige Vereine kostenlos.
       </p>
     </section>
 
