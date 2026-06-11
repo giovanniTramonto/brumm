@@ -49,6 +49,7 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
+      navigateFallback: '',
       globPatterns: ['**/*.{js,css,woff2}'],
       runtimeCaching: [
         {
