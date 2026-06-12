@@ -16,6 +16,7 @@ export const magicLinkSchema = z.object({
 
 export const pinSchema = z.object({
   pin: z.string().regex(/^\d{4}$/, 'PIN muss genau 4 Ziffern sein'),
+  userId: z.string().optional(),
 })
 
 const contractEndField = z

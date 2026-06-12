@@ -17,8 +17,11 @@ const { data: clubsData } = await useFetch<{ clubs: { name: string; slug: string
 const clubName = computed(() => clubsData.value?.clubs.find((c) => c.slug === slug)?.name ?? slug)
 
 const deviceStatus = await authStore.checkDevice(slug)
-const showPinLogin = ref(deviceStatus.hasDevice)
-const isDeviceLocked = ref(deviceStatus.isLocked)
+const deviceSessions = ref(deviceStatus.sessions)
+
+// Which session the user selected (auto-selected if only one)
+const selectedSession = ref(deviceSessions.value.length === 1 ? deviceSessions.value[0] : null)
+const showPinLogin = ref(deviceSessions.value.length > 0)
 
 // Email-Login State
 const email = ref('')
@@ -59,11 +62,18 @@ const pinInput = ref<{ focus: () => void } | null>(null)
 const pinForgotSent = ref(false)
 const pinForgotLoading = ref(false)
 
+const isDeviceLocked = computed(() => !!selectedSession.value?.isLocked)
+
 onMounted(() => {
-  if (showPinLogin.value && !isDeviceLocked.value) {
+  if (showPinLogin.value && selectedSession.value && !isDeviceLocked.value) {
     nextTick(() => pinInput.value?.focus())
   }
 })
+
+function onSelectSession(session: (typeof deviceSessions.value)[number]) {
+  selectedSession.value = session
+  nextTick(() => pinInput.value?.focus())
+}
 
 async function onSubmit() {
   if (!email.value) return
@@ -85,11 +95,11 @@ async function onSubmit() {
 }
 
 async function onPinSubmit() {
-  if (pin.value.length !== 4) return
+  if (pin.value.length !== 4 || !selectedSession.value) return
   pinLoading.value = true
   pinError.value = null
   try {
-    await authStore.loginWithPin(slug, pin.value)
+    await authStore.loginWithPin(slug, pin.value, selectedSession.value.userId)
     await navigateTo(`/ini/${slug}/dashboard`, { replace: true })
   } catch (err: unknown) {
     pinError.value =
@@ -97,7 +107,8 @@ async function onPinSubmit() {
       'Fehler bei der Anmeldung'
     const statusCode = (err as { data?: { statusCode?: number } })?.data?.statusCode
     if (statusCode === 403) {
-      isDeviceLocked.value = true
+      if (selectedSession.value)
+        selectedSession.value = { ...selectedSession.value, isLocked: true }
     }
     pin.value = ''
     nextTick(() => pinInput.value?.focus())
@@ -109,11 +120,21 @@ async function onPinSubmit() {
 async function onPinForgot() {
   pinForgotLoading.value = true
   try {
-    await $fetch(`/api/ini/${slug}/auth/pin-forgot`, { method: 'POST' })
+    await $fetch(`/api/ini/${slug}/auth/pin-forgot`, {
+      method: 'POST',
+      body: selectedSession.value ? { userId: selectedSession.value.userId } : {},
+    })
     pinForgotSent.value = true
   } finally {
     pinForgotLoading.value = false
   }
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  MEMBER: 'Elternteil',
+  MANAGER: 'Vorstand',
+  TEAM: 'Team',
+  SUPERUSER: 'Admin',
 }
 </script>
 
@@ -125,44 +146,77 @@ async function onPinForgot() {
       <!-- PIN-Login -->
       <template v-if="showPinLogin">
         <div class="rounded-lg px-6 tablet:bg-white tablet:py-6 tablet:shadow-sm tablet:ring-1 tablet:ring-gray-900/5" aria-live="polite" aria-atomic="true">
-          <h2 class="mb-1 hidden text-xl font-semibold text-gray-900 tablet:block">Willkommen zurück</h2>
-          <p class="mb-6 hidden text-sm text-gray-600 tablet:block">Gib deinen PIN ein.</p>
 
-          <template v-if="isDeviceLocked">
-            <div role="alert" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
-              Zu viele Fehlversuche. Bitte melde dich per E-Mail an.
+          <!-- Account-Selector (mehrere Sessions) -->
+          <template v-if="!selectedSession">
+            <h2 class="mb-1 text-xl font-semibold text-gray-900">Willkommen zurück</h2>
+            <p class="mb-5 text-sm text-gray-600">Mit welchem Account möchtest du dich anmelden?</p>
+            <div class="space-y-2">
+              <button
+                v-for="session in deviceSessions"
+                :key="session.userId"
+                class="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 text-left hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                @click="onSelectSession(session)"
+              >
+                <span class="font-medium text-gray-900">{{ session.displayName || ROLE_LABELS[session.role] || session.role }}</span>
+                <span class="ml-3 shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">{{ ROLE_LABELS[session.role] || session.role }}</span>
+              </button>
             </div>
-            <button class="btn-primary w-full" @click="showPinLogin = false; isDeviceLocked = false">
-              Per E-Mail anmelden
-            </button>
+            <div class="mt-6 text-center text-xs text-gray-400">
+              <button class="hover:text-gray-600" @click="showPinLogin = false; pin = ''">
+                Per E-Mail anmelden
+              </button>
+            </div>
           </template>
 
+          <!-- PIN-Eingabe -->
           <template v-else>
-            <div class="space-y-4">
-              <PinInput ref="pinInput" v-model="pin" :disabled="pinLoading" showSubmit @complete="onPinSubmit" />
-              <div v-if="pinError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                {{ pinError }}
+            <h2 class="mb-1 hidden text-xl font-semibold text-gray-900 tablet:block">Willkommen zurück</h2>
+            <p v-if="deviceSessions.length > 1" class="mb-1 text-sm text-gray-500">
+              {{ selectedSession.displayName || ROLE_LABELS[selectedSession.role] }}
+              <button class="ml-1 text-gray-400 underline hover:text-gray-600" @click="selectedSession = null; pin = ''">
+                wechseln
+              </button>
+            </p>
+            <p class="mb-6 hidden text-sm text-gray-600 tablet:block">Gib deinen PIN ein.</p>
+
+            <template v-if="isDeviceLocked">
+              <div role="alert" class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
+                Zu viele Fehlversuche. Bitte melde dich per E-Mail an.
               </div>
-              <div v-if="pinLoading" class="text-center text-sm text-gray-400">Wird geprüft…</div>
+              <button class="btn-primary w-full" @click="showPinLogin = false; selectedSession = null">
+                Per E-Mail anmelden
+              </button>
+            </template>
+
+            <template v-else>
+              <div class="space-y-4">
+                <PinInput ref="pinInput" v-model="pin" :disabled="pinLoading" showSubmit @complete="onPinSubmit" />
+                <div v-if="pinError" role="alert" class="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                  {{ pinError }}
+                </div>
+                <div v-if="pinLoading" class="text-center text-sm text-gray-400">Wird geprüft…</div>
+              </div>
+            </template>
+
+            <div class="mt-8 space-y-2 text-center text-xs text-gray-400">
+              <template v-if="pinForgotSent">
+                <p class="text-gray-500">Link gesendet! Prüfe deine E-Mails.</p>
+              </template>
+              <template v-else>
+                <div class="flex justify-center gap-4">
+                  <button class="hover:text-gray-600" @click="showPinLogin = false; selectedSession = null; pin = ''">
+                    Per E-Mail anmelden
+                  </button>
+                  <span>·</span>
+                  <button class="hover:text-gray-600" :disabled="pinForgotLoading" @click="onPinForgot">
+                    {{ pinForgotLoading ? 'Wird gesendet…' : 'PIN löschen' }}
+                  </button>
+                </div>
+              </template>
             </div>
           </template>
 
-          <div class="mt-8 space-y-2 text-center text-xs text-gray-400">
-            <template v-if="pinForgotSent">
-              <p class="text-gray-500">Link gesendet! Prüfe deine E-Mails.</p>
-            </template>
-            <template v-else>
-              <div class="flex justify-center gap-4">
-                <button class="hover:text-gray-600" @click="showPinLogin = false; pin = ''">
-                  Per E-Mail anmelden
-                </button>
-                <span>·</span>
-                <button class="hover:text-gray-600" :disabled="pinForgotLoading" @click="onPinForgot">
-                  {{ pinForgotLoading ? 'Wird gesendet…' : 'PIN löschen' }}
-                </button>
-              </div>
-            </template>
-          </div>
         </div>
       </template>
 

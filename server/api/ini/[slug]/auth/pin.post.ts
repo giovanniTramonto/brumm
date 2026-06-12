@@ -1,18 +1,17 @@
-import { createId } from '@paralleldrive/cuid2'
+import { setDeviceIdCookie } from '~/server/utils/deviceSession'
 import { getMemberData } from '~/server/utils/memberData'
 import { verifyPin } from '~/server/utils/pinHash'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, pinSchema } from '~/server/utils/schemas'
 
-const DEVICE_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000
 const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 const MAX_ATTEMPTS = 3
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
 
-  const deviceToken = getCookie(event, 'device_token')
-  if (!deviceToken) {
+  const deviceId = getCookie(event, 'device_id')
+  if (!deviceId) {
     throw createError({ statusCode: 400, statusMessage: 'Kein Gerät registriert' })
   }
 
@@ -21,13 +20,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
+  const { pin, userId } = parsed.data
+
+  const where = userId
+    ? { deviceId, userId, clubId: club.id, expiresAt: { gt: new Date() } }
+    : { deviceId, clubId: club.id, expiresAt: { gt: new Date() } }
+
   const deviceSession = await prisma.deviceSession.findFirst({
-    where: { deviceToken, clubId: club.id, expiresAt: { gt: new Date() } },
+    where,
     include: { user: { include: { emails: true } } },
   })
 
   if (!deviceSession) {
-    deleteCookie(event, 'device_token', { path: '/' })
+    deleteCookie(event, 'device_id', { path: '/' })
     throw createError({ statusCode: 401, statusMessage: 'Gerät nicht erkannt' })
   }
 
@@ -38,7 +43,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const isValid = await verifyPin(parsed.data.pin, deviceSession.pinHash)
+  const isValid = await verifyPin(pin, deviceSession.pinHash)
 
   if (!isValid) {
     const newAttempts = deviceSession.failedAttempts + 1
@@ -64,9 +69,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const newDeviceToken = createId()
-  const deviceExpiresAt = new Date(Date.now() + DEVICE_MAX_AGE_MS)
   const sessionExpiresAt = new Date(Date.now() + SESSION_MAX_AGE_MS)
+  const deviceExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
 
   await prisma.session.deleteMany({ where: { userId: deviceSession.userId } })
 
@@ -76,7 +80,7 @@ export default defineEventHandler(async (event) => {
     }),
     prisma.deviceSession.update({
       where: { id: deviceSession.id },
-      data: { deviceToken: newDeviceToken, failedAttempts: 0, expiresAt: deviceExpiresAt },
+      data: { failedAttempts: 0, expiresAt: deviceExpiresAt },
     }),
   ])
 
@@ -88,13 +92,8 @@ export default defineEventHandler(async (event) => {
     path: '/',
   })
 
-  setCookie(event, 'device_token', newDeviceToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    expires: deviceExpiresAt,
-    path: '/',
-  })
+  // Refresh device_id cookie expiry
+  setDeviceIdCookie(event, deviceId, deviceExpiresAt)
 
   const user = deviceSession.user
   if (user.role === 'MEMBER') {

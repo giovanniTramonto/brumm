@@ -179,6 +179,8 @@ model DeviceSession {
   userId         String
   clubId         String
   deviceToken    String    @unique
+  deviceId       String    @default("")
+  displayName    String    @default("")
   pinHash        String
   failedAttempts Int       @default(0)
   lockedAt       DateTime?
@@ -187,6 +189,8 @@ model DeviceSession {
 
   user User @relation(fields: [userId], references: [id])
   club Club @relation(fields: [clubId], references: [id])
+
+  @@index([deviceId, clubId])
 }
 
 enum Role {

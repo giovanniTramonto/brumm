@@ -105,6 +105,7 @@ export default async function handler() {
         await removeMemberFromSheet(oauthToken, storageConfig.membersSheetId, user.id)
       }
 
+      await prisma.deviceSession.deleteMany({ where: { userId: user.id } })
       await prisma.session.deleteMany({ where: { userId: user.id } })
       await prisma.magicLink.deleteMany({ where: { userId: user.id } })
       await prisma.invite.deleteMany({ where: { userId: user.id } })

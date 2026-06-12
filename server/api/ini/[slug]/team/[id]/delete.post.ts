@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
   await prisma.team.delete({ where: { id: teamId } })
 
   if (teamUser) {
+    await prisma.deviceSession.deleteMany({ where: { userId: teamUser.id } })
     await prisma.session.deleteMany({ where: { userId: teamUser.id } })
     await prisma.magicLink.deleteMany({ where: { userId: teamUser.id } })
     await prisma.user.delete({ where: { id: teamUser.id } })

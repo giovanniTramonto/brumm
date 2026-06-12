@@ -18,20 +18,25 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function checkDevice(slug: string): Promise<{ hasDevice: boolean; isLocked: boolean }> {
+  async function checkDevice(slug: string): Promise<{
+    sessions: { userId: string; displayName: string; role: string; isLocked: boolean }[]
+  }> {
     try {
-      return await $fetch(`/api/ini/${slug}/auth/device`)
+      const url = `/api/ini/${slug}/auth/device` as string
+      return await $fetch<{
+        sessions: { userId: string; displayName: string; role: string; isLocked: boolean }[]
+      }>(url)
     } catch {
-      return { hasDevice: false, isLocked: false }
+      return { sessions: [] }
     }
   }
 
-  async function loginWithPin(slug: string, pin: string): Promise<void> {
+  async function loginWithPin(slug: string, pin: string, userId?: string): Promise<void> {
     isLoading.value = true
     try {
       const data = await $fetch<{ user: AuthUser; club: Club }>(`/api/ini/${slug}/auth/pin`, {
         method: 'POST',
-        body: { pin },
+        body: { pin, ...(userId ? { userId } : {}) },
       })
       currentUser.value = data.user
       currentClub.value = data.club

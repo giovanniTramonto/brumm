@@ -10,6 +10,13 @@ const schema = z.object({
     .regex(/^\d{6}$/),
 })
 
+const ROLE_LABELS: Record<string, string> = {
+  MEMBER: 'Elternteil',
+  MANAGER: 'Vorstand',
+  TEAM: 'Team',
+  SUPERUSER: 'Admin',
+}
+
 export default defineEventHandler(async (event) => {
   const club = event.context.club
 
@@ -51,10 +58,23 @@ export default defineEventHandler(async (event) => {
     await prisma.deviceSession.deleteMany({
       where: { deviceToken: magicLink.pendingDeviceTokenToDelete },
     })
+    deleteCookie(event, 'device_id', { path: '/' })
     deleteCookie(event, 'device_token', { path: '/' })
   }
 
-  await maybeCreateDeviceSession(event, magicLink.userId, club.id, magicLink.pendingPinHash ?? null)
+  let displayName = ROLE_LABELS[magicLink.user.role] ?? ''
+  if (magicLink.pendingPinHash && magicLink.user.role === 'MEMBER') {
+    const data = await getMemberData(magicLink.userId, club)
+    if (data?.guardian1Name) displayName = data.guardian1Name
+  }
+
+  await maybeCreateDeviceSession(
+    event,
+    magicLink.userId,
+    club.id,
+    magicLink.pendingPinHash ?? null,
+    displayName,
+  )
 
   const user = await prisma.user.findUnique({
     where: { id: magicLink.userId },

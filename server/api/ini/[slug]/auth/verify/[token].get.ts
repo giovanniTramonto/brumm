@@ -3,6 +3,13 @@ import { getMemberData } from '~/server/utils/memberData'
 import { assertValidTransition } from '~/server/utils/memberStatus'
 import { prisma } from '~/server/utils/prisma'
 
+const ROLE_LABELS: Record<string, string> = {
+  MEMBER: 'Elternteil',
+  MANAGER: 'Vorstand',
+  TEAM: 'Team',
+  SUPERUSER: 'Admin',
+}
+
 export default defineEventHandler(async (event) => {
   const club = event.context.club
   const token = getRouterParam(event, 'token')
@@ -43,7 +50,14 @@ export default defineEventHandler(async (event) => {
       await prisma.deviceSession.deleteMany({
         where: { deviceToken: magicLink.pendingDeviceTokenToDelete },
       })
+      deleteCookie(event, 'device_id', { path: '/' })
       deleteCookie(event, 'device_token', { path: '/' })
+    }
+
+    let displayName = ROLE_LABELS[magicLink.user.role] ?? ''
+    if (magicLink.pendingPinHash && magicLink.user.role === 'MEMBER') {
+      const data = await getMemberData(magicLink.userId, club)
+      if (data?.guardian1Name) displayName = data.guardian1Name
     }
 
     await maybeCreateDeviceSession(
@@ -51,6 +65,7 @@ export default defineEventHandler(async (event) => {
       magicLink.userId,
       club.id,
       magicLink.pendingPinHash ?? null,
+      displayName,
     )
 
     const user = await prisma.user.findUnique({
