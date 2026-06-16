@@ -58,6 +58,7 @@ export function getAgeGroupBreakdown(
 
 export interface ReimbursementResult {
   baseTotal: number
+  mealTotal: number
   ndhSurchargeTotal: number
   qmSurchargeTotal: number
   integrationASurchargeTotal: number
@@ -204,7 +205,7 @@ export function calculateReimbursement(
       unknownCareCount++
       continue
     }
-    baseTotal += baseRate
+    baseTotal += baseRate - rates.mealAllowance
     childCount++
     if (m.surcharges.includes('ndhs')) ndhChildCount++
     if (m.surcharges.includes('qm')) qmChildCount++
@@ -220,9 +221,11 @@ export function calculateReimbursement(
   const integrationBSurchargeTotal = integrationBChildCount * rates.surcharges.integration_b.rate
   const surchargeTotal =
     ndhSurchargeTotal + qmSurchargeTotal + integrationASurchargeTotal + integrationBSurchargeTotal
+  const mealTotal = childCount * rates.mealAllowance
 
   return {
     baseTotal,
+    mealTotal,
     ndhSurchargeTotal,
     qmSurchargeTotal,
     integrationASurchargeTotal,

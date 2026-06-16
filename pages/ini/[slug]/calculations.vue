@@ -150,6 +150,8 @@ const monthlyMembershipFees = computed(
   () => activeCount.value * (authStore.currentClub?.membershipFee ?? 0),
 )
 
+const monthlyMealFees = computed(() => reimbursement.value?.mealTotal ?? 0)
+
 const annualMembershipFees = computed(() => {
   const fee = authStore.currentClub?.membershipFee ?? 0
   if (fee === 0) return 0
@@ -158,6 +160,10 @@ const annualMembershipFees = computed(() => {
     (_, i) => countContractActiveMembers(membersStore.members, displayYear.value, i + 1) * fee,
   ).reduce((sum, v) => sum + v, 0)
 })
+
+const annualMealFees = computed(
+  () => annualReimbursement.value?.months.reduce((sum, m) => sum + m.mealTotal, 0) ?? 0,
+)
 
 const membershipFeeInput = ref<string>(
   authStore.currentClub?.membershipFee != null ? String(authStore.currentClub.membershipFee) : '',
@@ -263,7 +269,7 @@ async function onSaveMembershipFee() {
                 </div>
                 <div class="text-right">
                   <p class="text-sm text-gray-500">Gesamteinnahmen</p>
-                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ formatEur(reimbursement.total + monthlyMembershipFees) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ formatEur(reimbursement.total + monthlyMembershipFees + monthlyMealFees) }}</p>
                 </div>
               </div>
               <div v-if="reimbursement.baseTotal > 0 || monthlyMembershipFees > 0" class="mt-4 space-y-1 border-t pt-3 text-sm text-gray-600">
@@ -300,9 +306,17 @@ async function onSaveMembershipFee() {
                   <span>Gesamterstattung (Land Berlin)</span>
                   <span class="font-mono">{{ formatEur(reimbursement.total) }}</span>
                 </div>
-                <div v-if="monthlyMembershipFees > 0" class="flex justify-between font-medium text-gray-700">
+                <div v-if="monthlyMembershipFees > 0 || monthlyMealFees > 0" class="flex justify-between font-medium text-gray-700">
                   <span>Mitgliedsbeiträge</span>
+                  <span class="font-mono">{{ formatEur(monthlyMembershipFees + monthlyMealFees) }}</span>
+                </div>
+                <div v-if="monthlyMembershipFees > 0" class="flex justify-between pl-3 text-xs text-gray-500">
+                  <span><span class="mr-1 text-gray-300">└</span>Beitrag</span>
                   <span class="font-mono">{{ formatEur(monthlyMembershipFees) }}</span>
+                </div>
+                <div v-if="monthlyMealFees > 0" class="flex justify-between pl-3 text-xs text-gray-500">
+                  <span><span class="mr-1 text-gray-300">└</span>Essen ({{ reimbursement.childCount }} {{ reimbursement.childCount === 1 ? 'Kind' : 'Kinder' }})</span>
+                  <span class="font-mono">{{ formatEur(monthlyMealFees) }}</span>
                 </div>
               </div>
               <p v-if="reimbursement.childCount === 0" class="mt-2 text-sm text-gray-500">
@@ -351,13 +365,13 @@ async function onSaveMembershipFee() {
           <template v-if="annualReimbursement">
             <div class="mb-4 flex items-baseline justify-between">
               <h2 class="text-sm font-medium text-gray-900">Einnahmen {{ annualReimbursement.year }}</h2>
-              <p class="font-mono text-2xl font-bold text-gray-900">{{ formatEur(annualReimbursement.total + annualMembershipFees) }}</p>
+              <p class="font-mono text-2xl font-bold text-gray-900">{{ formatEur(annualReimbursement.total + annualMembershipFees + annualMealFees) }}</p>
             </div>
             <div class="overflow-x-auto">
             <div class="annual-grid grid grid-cols-12 gap-1 border-t pt-3">
               <div v-for="(m, i) in annualReimbursement.months" :key="i" class="text-center">
                 <p class="text-xs text-gray-400">{{ MONTH_LABELS[i] }}</p>
-                <p class="mt-0.5 text-xs font-medium text-gray-700">{{ formatEur(m.total + countContractActiveMembers(membersStore.members, displayYear, i + 1) * (authStore.currentClub?.membershipFee ?? 0)) }}</p>
+                <p class="mt-0.5 text-xs font-medium text-gray-700">{{ formatEur(m.total + m.mealTotal + countContractActiveMembers(membersStore.members, displayYear, i + 1) * (authStore.currentClub?.membershipFee ?? 0)) }}</p>
                 <p class="mt-0.5 text-xs text-gray-400">{{ countContractActiveMembers(membersStore.members, displayYear, i + 1) }}</p>
                 <div :class="[annualRateSources.perMonth[i], 'mt-1.5 h-1 rounded-full']" />
               </div>
