@@ -12,6 +12,7 @@ const slug = route.params.slug as string
 const authStore = useAuthStore()
 
 const groups = ref<Group[]>([])
+const hasTemplates = ref(true)
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
 const created = ref<{ id: string; name: string } | null>(null)
@@ -76,11 +77,16 @@ const guardian2Fields = computed({
 const isNoInviteWorkflow = computed(() => !form.sendInvite)
 
 onMounted(async () => {
-  const [groupsData] = await Promise.all([
+  const [groupsData, templatesData] = await Promise.all([
     $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`),
+    $fetch<{ templates: unknown[] }>(`/api/ini/${slug}/contract-templates`),
     membersStore.fetchMembers(slug),
   ])
   groups.value = groupsData.groups
+  hasTemplates.value = templatesData.templates.length > 0
+  if (!hasTemplates.value) {
+    form.sendInvite = false
+  }
 })
 
 async function onSubmit() {
@@ -229,12 +235,15 @@ async function onSubmit() {
         <input v-model="form.address" type="text" class="input mt-1" />
       </div>
 
-      <label v-if="!isSuperUserGuardian" class="flex items-center gap-2 text-sm text-gray-700">
-        <input v-model="form.sendInvite" type="checkbox" class="h-4 w-4 rounded border-gray-300" />
-        Einladung senden
+      <label v-if="!isSuperUserGuardian" class="flex items-center gap-2 text-sm text-gray-700" :class="{ 'opacity-50': !hasTemplates }">
+        <input v-model="form.sendInvite" type="checkbox" class="h-4 w-4 rounded border-gray-300" :disabled="!hasTemplates" />
+        Eltern zum Unterlagen-Upload einladen
       </label>
 
-      <p v-if="isNoInviteWorkflow && !isSuperUserGuardian" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+      <p v-if="!hasTemplates && !isSuperUserGuardian" class="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+        Ohne <NuxtLink :to="`/ini/${slug}/contract-templates`" class="underline">Vertragsvorlagen</NuxtLink> kann beim Anlegen keine Einladung gesendet werden. Du kannst die Unterlagen selbst hinzufügen.
+      </p>
+      <p v-else-if="isNoInviteWorkflow && !isSuperUserGuardian" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
         Es wird keine E-Mail-Einladung versendet.
       </p>
       <p v-if="hasSuperUserEmail" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
