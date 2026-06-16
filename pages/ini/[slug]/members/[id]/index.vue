@@ -2,7 +2,7 @@
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 import type { Group, Member } from '~/types'
-import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
+import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL, SURCHARGE_OPTIONS } from '~/utils/config'
 import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
 definePageMeta({ middleware: ['auth'] })
@@ -143,13 +143,6 @@ async function onMarkRead(templateId: string) {
     readMap[templateId] = false
   }
 }
-
-const SURCHARGE_OPTIONS = [
-  { key: 'ndhs', label: 'NdHS' },
-  { key: 'qm', label: 'QM/MSS' },
-  { key: 'integration_a', label: 'Integration Typ A' },
-  { key: 'integration_b', label: 'Integration Typ B' },
-]
 
 const hasChanges = computed(() => {
   const m = member.value

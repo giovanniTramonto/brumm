@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import type { Group } from '~/types'
+import { SURCHARGE_OPTIONS } from '~/utils/config'
 import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
-
-const SURCHARGE_OPTIONS = [{ key: 'ndhs', label: 'NdHS' }]
 
 definePageMeta({ middleware: ['auth'] })
 
