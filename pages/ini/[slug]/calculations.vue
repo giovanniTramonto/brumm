@@ -267,56 +267,58 @@ async function onSaveMembershipFee() {
               </div>
               <div v-if="reimbursement.baseTotal > 0 || monthlyMembershipFees > 0" class="space-y-3 border-t pt-3 text-sm text-gray-600">
 
-                <!-- Grunderstattung (Land Berlin) -->
+                <!-- Erstattungen -->
                 <div class="space-y-1">
-                  <div class="flex justify-between font-medium text-gray-700">
-                    <span>Grunderstattung (Land Berlin)</span>
-                    <span class="font-mono whitespace-nowrap">{{ formatEur(reimbursement.baseTotal) }}<span class="pl-1">€</span></span>
+                  <p class="font-medium text-gray-700">Erstattungen</p>
+                  <div class="flex justify-between pl-3 text-gray-500">
+                    <span><span class="mr-1 text-gray-300">└</span>Grunderstattung (Land Berlin)</span>
+                    <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(reimbursement.baseTotal) }}<span class="pl-1">€</span></span>
                   </div>
-                </div>
-
-                <!-- Zuschläge -->
-                <template v-if="reimbursement.surchargeTotal > 0 || reimbursement.ndhChildCount > 0">
-                  <div class="space-y-1">
-                    <div class="flex justify-between font-medium text-gray-700">
-                      <span>Zuschläge</span>
-                      <span class="font-mono whitespace-nowrap">{{ formatEur(reimbursement.surchargeTotal) }}<span class="pl-1">€</span></span>
+                  <template v-if="reimbursement.surchargeTotal > 0 || reimbursement.ndhChildCount > 0">
+                    <div class="flex justify-between pl-3 text-gray-500">
+                      <span><span class="mr-1 text-gray-300">└</span>Zuschläge</span>
+                      <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(reimbursement.surchargeTotal) }}<span class="pl-1">€</span></span>
                     </div>
-                    <div v-if="reimbursement.ndhSurchargeTotal > 0" class="flex justify-between pl-3 text-xs text-gray-500">
+                    <div v-if="reimbursement.ndhSurchargeTotal > 0" class="flex justify-between pl-6 text-xs text-gray-500">
                       <span><span class="mr-1 text-gray-300">└</span>ndH ({{ reimbursement.ndhChildCount }} {{ reimbursement.ndhChildCount === 1 ? 'Kind' : 'Kinder' }})</span>
                       <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(reimbursement.ndhSurchargeTotal) }}<span class="pl-1">€</span></span>
                     </div>
-                    <div v-else-if="reimbursement.ndhChildCount > 0" class="pl-3 text-xs text-gray-400">
+                    <div v-else-if="reimbursement.ndhChildCount > 0" class="pl-6 text-xs text-gray-400">
                       <span class="mr-1 text-gray-300">└</span>ndH nicht angerechnet (unter 40 % Schwellenwert)
                     </div>
-                    <div v-if="reimbursement.qmSurchargeTotal > 0" class="flex justify-between pl-3 text-xs text-gray-500">
+                    <div v-if="reimbursement.qmSurchargeTotal > 0" class="flex justify-between pl-6 text-xs text-gray-500">
                       <span><span class="mr-1 text-gray-300">└</span>QM/MSS ({{ reimbursement.qmChildCount }} {{ reimbursement.qmChildCount === 1 ? 'Kind' : 'Kinder' }})</span>
                       <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(reimbursement.qmSurchargeTotal) }}<span class="pl-1">€</span></span>
                     </div>
-                    <div v-if="reimbursement.integrationASurchargeTotal > 0" class="flex justify-between pl-3 text-xs text-gray-500">
+                    <div v-if="reimbursement.integrationASurchargeTotal > 0" class="flex justify-between pl-6 text-xs text-gray-500">
                       <span><span class="mr-1 text-gray-300">└</span>Integration Typ A ({{ reimbursement.integrationAChildCount }} {{ reimbursement.integrationAChildCount === 1 ? 'Kind' : 'Kinder' }})</span>
                       <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(reimbursement.integrationASurchargeTotal) }}<span class="pl-1">€</span></span>
                     </div>
-                    <div v-if="reimbursement.integrationBSurchargeTotal > 0" class="flex justify-between pl-3 text-xs text-gray-500">
+                    <div v-if="reimbursement.integrationBSurchargeTotal > 0" class="flex justify-between pl-6 text-xs text-gray-500">
                       <span><span class="mr-1 text-gray-300">└</span>Integration Typ B ({{ reimbursement.integrationBChildCount }} {{ reimbursement.integrationBChildCount === 1 ? 'Kind' : 'Kinder' }})</span>
                       <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(reimbursement.integrationBSurchargeTotal) }}<span class="pl-1">€</span></span>
                     </div>
+                  </template>
+                  <div class="flex justify-between text-gray-500">
+                    <span>Gesamt</span>
+                    <span class="font-mono whitespace-nowrap font-bold">{{ formatEur(reimbursement.total) }}<span class="pl-1">€</span></span>
                   </div>
-                </template>
+                </div>
 
-                <!-- Mitgliedsbeiträge -->
-                <div v-if="monthlyMembershipFees > 0 || monthlyMealFees > 0" class="space-y-1">
-                  <div class="flex justify-between font-medium text-gray-700">
-                    <span>Mitgliedsbeiträge</span>
-                    <span class="font-mono whitespace-nowrap">{{ formatEur(monthlyMembershipFees + monthlyMealFees) }}<span class="pl-1">€</span></span>
-                  </div>
+                <!-- Beteiligung -->
+                <div v-if="monthlyMembershipFees > 0 || monthlyMealFees > 0" class="space-y-1 border-t pt-3">
+                  <p class="font-medium text-gray-700">Beteiligung</p>
                   <div v-if="monthlyMembershipFees > 0" class="flex justify-between pl-3 text-xs text-gray-500">
-                    <span><span class="mr-1 text-gray-300">└</span>Beitrag</span>
+                    <span><span class="mr-1 text-gray-300">└</span>Mitgliedsbeitrag</span>
                     <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(monthlyMembershipFees) }}<span class="pl-1">€</span></span>
                   </div>
                   <div v-if="monthlyMealFees > 0" class="flex justify-between pl-3 text-xs text-gray-500">
                     <span><span class="mr-1 text-gray-300">└</span>23&nbsp;€ Beteiligung an Verpflegung ({{ reimbursement.childCount }} {{ reimbursement.childCount === 1 ? 'Kind' : 'Kinder' }})</span>
                     <span class="font-mono whitespace-nowrap text-gray-400">{{ formatEur(monthlyMealFees) }}<span class="pl-1">€</span></span>
+                  </div>
+                  <div class="flex justify-between text-gray-500">
+                    <span>Gesamt</span>
+                    <span class="font-mono whitespace-nowrap font-bold">{{ formatEur(monthlyMembershipFees + monthlyMealFees) }}<span class="pl-1">€</span></span>
                   </div>
                 </div>
 
@@ -471,11 +473,10 @@ async function onSaveMembershipFee() {
         <p class="mb-2 text-xs font-medium">Hinweise zur Berechnung</p>
         <ul class="list-disc space-y-1 pl-4 text-xs">
           <li>Einnahmezahlen auf volle Euro gerundet</li>
-          <li>Inkl. gesetzliche Elternbeteiligung an Verpflegungskosten ({{ getMealAllowance(currentYear, currentMonth) }} €)</li>
-          <li>Inkl. Zahlung für Praxisunterstützungssystem (3,75 €/Kind/Monat)</li>
           <li>Sätze gemäß jeweiligem RV Tag (siehe Periodenmarkierung in der Jahresansicht)</li>
+          <li>Die Grunderstattung enthält die Zahlung für Praxisunterstützungssystem (3,75 €/Kind/Monat)</li>
+          <li>Kalkulation nach Roland Kern, DaKS e.V. (Stand 27.3.26)</li>
         </ul>
-        <p class="mt-2 text-xs">Quelle: Roland Kern, DaKS e.V. (Stand 27.3.26)</p>
       </FootnoteCard>
     </template>
   </div>
