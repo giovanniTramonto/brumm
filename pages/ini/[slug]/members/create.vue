@@ -240,7 +240,8 @@ async function onSubmit() {
       </label>
 
       <p v-if="!hasTemplates && !isSuperUserGuardian" class="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
-        Ohne <NuxtLink :to="`/ini/${slug}/contract-templates`" class="underline">Vertragsvorlagen</NuxtLink> kann beim Anlegen keine Einladung gesendet werden. Du kannst die Unterlagen selbst hinzufügen.
+        Ohne <NuxtLink :to="`/ini/${slug}/contract-templates`" class="underline" target="_blank" rel="noopener noreferrer">Vertragsvorlagen ↗</NuxtLink> kann beim Anlegen keine Einladung an die Eltern gesendet werden.<br />
+        Du kannst die Unterlagen des Kindes im nächtsen Schritt selbst hinzufügen.
       </p>
       <p v-else-if="isNoInviteWorkflow && !isSuperUserGuardian" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
         Es wird keine E-Mail-Einladung versendet.
