@@ -28,10 +28,11 @@ export default defineEventHandler(async (event) => {
   try {
     testSql = postgres(parsed.data.dsn, { max: 1, connect_timeout: 5 })
     await testSql`SELECT 1`
-  } catch {
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err)
     throw createError({
       statusCode: 422,
-      statusMessage: 'Verbindung fehlgeschlagen. Bitte prüfe den Connection String.',
+      statusMessage: `Verbindung fehlgeschlagen: ${detail}`,
     })
   } finally {
     await testSql?.end()
