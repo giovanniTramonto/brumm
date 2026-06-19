@@ -1,7 +1,16 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, OAuthTokens, TeamData } from '~/types'
+import { getClubDb, getClubDbType } from './clubDatabase'
 import { createTeamStructure } from './storage/googleDrive'
+import {
+  pgDeleteTeamMember,
+  pgFindTeamMemberIdByEmail,
+  pgGetAllTeamMembers,
+  pgGetTeamMember,
+  pgSaveTeamMember,
+  pgUpdateTeamMember,
+} from './storage/postgres/team'
 import {
   createTeamSheet,
   getAllTeamMembersFromSheet,
@@ -63,6 +72,11 @@ export async function getTeamMemberData(
     return localDataToTeamData(teamId, member.localData)
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetTeamMember(sql, teamId)
+  }
+
   const config = await ensureTeamStorage(club)
   if (!config.teamSheetId) return null
   const tokens = getTokens(club.oauthToken)
@@ -80,6 +94,11 @@ export async function getAllTeamMemberData(club: ClubForData): Promise<TeamData[
     })
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetAllTeamMembers(sql)
+  }
+
   const config = getStorageConfig(club.storageConfig) as GoogleDriveConfig
   if (!config.teamSheetId) return []
 
@@ -93,6 +112,12 @@ export async function saveTeamMemberData(data: TeamData, club: ClubForData): Pro
       where: { id: data.teamId },
       data: { localData: data as unknown as Prisma.InputJsonValue },
     })
+    return
+  }
+
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgSaveTeamMember(sql, data)
     return
   }
 
@@ -117,6 +142,12 @@ export async function updateTeamMemberData(
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgUpdateTeamMember(sql, teamId, updates)
+    return
+  }
+
   const config = getStorageConfig(club.storageConfig) as GoogleDriveConfig
   if (!config.teamSheetId) return
 
@@ -133,10 +164,27 @@ export async function deleteTeamMemberData(teamId: string, club: ClubForData): P
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgDeleteTeamMember(sql, teamId)
+    return
+  }
+
   const config = getStorageConfig(club.storageConfig) as GoogleDriveConfig
   const tokens = getTokens(club.oauthToken)
 
   if (config.teamSheetId) {
     await removeTeamMemberFromSheet({ tokens, teamSheetId: config.teamSheetId, teamId })
   }
+}
+
+export async function findTeamMemberIdByEmailPg(
+  clubId: string,
+  email: string,
+): Promise<string | null> {
+  if ((await getClubDbType(clubId)) === 'POSTGRES') {
+    const sql = await getClubDb(clubId)
+    return pgFindTeamMemberIdByEmail(sql, email)
+  }
+  return null
 }

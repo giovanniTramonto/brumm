@@ -34,17 +34,17 @@ export default defineEventHandler(async (event) => {
     prisma.documentTemplate.findMany({
       where: { clubId: club.id },
       orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, documentType: true, driveFileId: true, driveFileName: true },
+      select: { id: true, name: true, documentType: true, fileName: true, s3Key: true },
     }),
     prisma.memberDocument.findMany({
       where: { memberId, template: { clubId: club.id } },
       select: {
         id: true,
         templateId: true,
-        filename: true,
+        fileName: true,
         uploadedAt: true,
         readAt: true,
-        driveFileId: true,
+        s3Key: true,
       },
     }),
   ])
@@ -53,8 +53,12 @@ export default defineEventHandler(async (event) => {
 
   const result = templates.map((t) => ({
     ...t,
-    hasFile: !!t.driveFileId,
-    submission: submissionMap.get(t.id) ?? null,
+    hasFile: !!(t.s3Key || t.fileName),
+    submission: (() => {
+      const s = submissionMap.get(t.id)
+      if (!s) return null
+      return { ...s, hasFile: !!(s.s3Key || s.fileName) }
+    })(),
   }))
 
   const uploadRequired = result.filter(

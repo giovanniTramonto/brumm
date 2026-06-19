@@ -1,5 +1,7 @@
 import { getMemberData } from '~/server/utils/memberData'
+import { getClubStorageType } from '~/server/utils/s3Client'
 import { listMemberDocuments } from '~/server/utils/storage/googleDrive'
+import { s3ListFiles } from '~/server/utils/storage/s3/files'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -35,6 +37,11 @@ export default defineEventHandler(async (event) => {
 
   if (!club.isSetupDone) {
     return { documents: [] }
+  }
+
+  if ((await getClubStorageType(club.id)) === 'S3') {
+    const documents = await s3ListFiles(club.id, `members/${memberId}/contract`)
+    return { documents }
   }
 
   const tokens = club.oauthToken as OAuthTokens

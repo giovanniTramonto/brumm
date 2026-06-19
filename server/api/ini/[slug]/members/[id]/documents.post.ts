@@ -1,6 +1,8 @@
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
+import { getClubStorageType } from '~/server/utils/s3Client'
 import { uploadMemberDocument } from '~/server/utils/storage/googleDrive'
+import { s3UploadFile } from '~/server/utils/storage/s3/files'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -57,6 +59,17 @@ export default defineEventHandler(async (event) => {
   const filePart = formData?.find((p) => p.name === 'file')
   if (!filePart?.data || !filePart.filename) {
     throw createError({ statusCode: 400, statusMessage: 'Keine Datei hochgeladen' })
+  }
+
+  if ((await getClubStorageType(club.id)) === 'S3') {
+    const result = await s3UploadFile(
+      club.id,
+      `members/${memberId}/contract`,
+      filePart.data,
+      filePart.type ?? 'application/octet-stream',
+      filePart.filename,
+    )
+    return { document: { id: result.fileId, name: filePart.filename } }
   }
 
   const tokens = club.oauthToken as OAuthTokens

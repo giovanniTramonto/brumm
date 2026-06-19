@@ -2,6 +2,7 @@ import { createId } from '@paralleldrive/cuid2'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, Group, GroupData, OAuthTokens } from '~/types'
+import { getClubDb, getClubDbType } from './clubDatabase'
 import { createGroupsStructure } from './storage/googleDrive'
 import {
   createGroupsSheet,
@@ -10,6 +11,13 @@ import {
   updateGroupInSheet,
   writeGroupToSheet,
 } from './storage/groupsSheet'
+import {
+  pgCreateGroup,
+  pgDeleteGroup,
+  pgGetAllGroups,
+  pgGetGroup,
+  pgUpdateGroup,
+} from './storage/postgres/groups'
 
 type ClubForData = {
   id: string
@@ -54,6 +62,11 @@ async function ensureGroupsStorage(club: ClubForData): Promise<GroupsConfig> {
 }
 
 export async function getAllGroups(club: ClubForData): Promise<Group[]> {
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetAllGroups(sql)
+  }
+
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
   const rows = await getAllGroupsFromSheet({ tokens, groupsSheetId: config.groupsSheetId })
@@ -64,6 +77,11 @@ export async function createGroup(
   club: ClubForData,
   params: { name: string; email?: string | null },
 ): Promise<Group> {
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgCreateGroup(sql, createId(), params)
+  }
+
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
   const data: GroupData = {
@@ -76,6 +94,11 @@ export async function createGroup(
 }
 
 export async function getGroup(club: ClubForData, groupId: string): Promise<Group | null> {
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetGroup(sql, groupId)
+  }
+
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
   const rows = await getAllGroupsFromSheet({ tokens, groupsSheetId: config.groupsSheetId })
@@ -88,6 +111,11 @@ export async function updateGroup(
   groupId: string,
   updates: Partial<Pick<GroupData, 'name' | 'email'>>,
 ): Promise<Group | null> {
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgUpdateGroup(sql, groupId, updates)
+  }
+
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
   await updateGroupInSheet({ tokens, groupsSheetId: config.groupsSheetId, groupId, updates })
@@ -95,6 +123,12 @@ export async function updateGroup(
 }
 
 export async function deleteGroup(club: ClubForData, groupId: string): Promise<void> {
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgDeleteGroup(sql, groupId)
+    return
+  }
+
   const config = await ensureGroupsStorage(club)
   const tokens = getTokens(club.oauthToken)
   await removeGroupFromSheet({ tokens, groupsSheetId: config.groupsSheetId, groupId })

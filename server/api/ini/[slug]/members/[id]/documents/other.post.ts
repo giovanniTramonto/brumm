@@ -1,6 +1,8 @@
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
+import { getClubStorageType } from '~/server/utils/s3Client'
 import { uploadOtherDocument } from '~/server/utils/storage/googleDrive'
+import { s3UploadFile } from '~/server/utils/storage/s3/files'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
 
@@ -58,6 +60,17 @@ export default defineEventHandler(async (event) => {
       statusCode: 413,
       statusMessage: `Datei zu groß (max. ${MAX_UPLOAD_SIZE_LABEL})`,
     })
+  }
+
+  if ((await getClubStorageType(club.id)) === 'S3') {
+    const result = await s3UploadFile(
+      club.id,
+      `members/${memberId}/other`,
+      filePart.data,
+      filePart.type ?? 'application/octet-stream',
+      filePart.filename,
+    )
+    return { document: { id: result.fileId, name: filePart.filename } }
   }
 
   const tokens = club.oauthToken as OAuthTokens

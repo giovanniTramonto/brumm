@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, ManagerData, OAuthTokens } from '~/types'
+import { getClubDb, getClubDbType } from './clubDatabase'
 import { createManagersStructure } from './storage/googleDrive'
 import {
   createManagersSheet,
@@ -10,6 +11,14 @@ import {
   updateManagerInSheet,
   writeManagerToSheet,
 } from './storage/managersSheet'
+import {
+  pgDeleteManager,
+  pgFindManagerIdByEmail,
+  pgGetAllManagers,
+  pgGetManager,
+  pgSaveManager,
+  pgUpdateManager,
+} from './storage/postgres/managers'
 
 type ClubForData = {
   id: string
@@ -66,6 +75,11 @@ export async function getManagerData(
     return localDataToManagerData(managerId, manager.localData)
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetManager(sql, managerId)
+  }
+
   const config = await ensureManagersStorage(club)
   if (!config.managersSheetId) return null
   const tokens = getTokens(club.oauthToken)
@@ -81,6 +95,11 @@ export async function getAllManagerData(club: ClubForData): Promise<ManagerData[
       const data = localDataToManagerData(m.id, m.localData)
       return data ? [data] : []
     })
+  }
+
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetAllManagers(sql)
   }
 
   const config = getStorageConfig(club.storageConfig) as GoogleDriveConfig
@@ -99,10 +118,15 @@ export async function saveManagerData(data: ManagerData, club: ClubForData): Pro
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgSaveManager(sql, data)
+    return
+  }
+
   const config = await ensureManagersStorage(club)
   if (!config.managersSheetId) return
   const tokens = getTokens(club.oauthToken)
-
   await writeManagerToSheet({ tokens, managersSheetId: config.managersSheetId, data })
 }
 
@@ -118,6 +142,12 @@ export async function updateManagerData(
       where: { id: managerId },
       data: { localData: { ...existing, ...updates } as unknown as Prisma.InputJsonValue },
     })
+    return
+  }
+
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgUpdateManager(sql, managerId, updates)
     return
   }
 
@@ -142,10 +172,27 @@ export async function deleteManagerData(managerId: string, club: ClubForData): P
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgDeleteManager(sql, managerId)
+    return
+  }
+
   const config = getStorageConfig(club.storageConfig) as GoogleDriveConfig
   const tokens = getTokens(club.oauthToken)
 
   if (config.managersSheetId) {
     await removeManagerFromSheet({ tokens, managersSheetId: config.managersSheetId, managerId })
   }
+}
+
+export async function findManagerIdByEmailPg(
+  clubId: string,
+  email: string,
+): Promise<string | null> {
+  if ((await getClubDbType(clubId)) === 'POSTGRES') {
+    const sql = await getClubDb(clubId)
+    return pgFindManagerIdByEmail(sql, email)
+  }
+  return null
 }

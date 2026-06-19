@@ -11,8 +11,8 @@ export default defineEventHandler(async (event) => {
       name: true,
       ref: true,
       documentType: true,
-      driveFileId: true,
-      driveFileName: true,
+      fileName: true,
+      s3Key: true,
       createdAt: true,
     },
   })

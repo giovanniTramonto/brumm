@@ -279,6 +279,38 @@ export async function listOtherDocuments(params: {
   }))
 }
 
+export async function findDriveFileByName(
+  drive: ReturnType<typeof getDriveClientFromTokens>,
+  folderId: string,
+  name: string,
+): Promise<string | null> {
+  const escaped = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  const result = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `'${folderId}' in parents and name = '${escaped}' and trashed = false`,
+    fields: 'files(id)',
+    pageSize: 1,
+  })
+  return result.data.files?.[0]?.id ?? null
+}
+
+export async function findMemberContractFileId(params: {
+  tokens: OAuthTokens
+  membersFolderId: string
+  storageRef: string
+  fileName: string
+}): Promise<string | null> {
+  const contractFolderId = await findContractFolderId({
+    tokens: params.tokens,
+    membersFolderId: params.membersFolderId,
+    storageRef: params.storageRef,
+  })
+  if (!contractFolderId) return null
+  const drive = getDriveClientFromTokens(params.tokens)
+  return findDriveFileByName(drive, contractFolderId, params.fileName)
+}
+
 export async function deleteDriveFile(params: {
   tokens: OAuthTokens
   fileId: string

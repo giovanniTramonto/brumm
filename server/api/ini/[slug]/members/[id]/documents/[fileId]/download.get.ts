@@ -1,5 +1,7 @@
 import { getMemberData } from '~/server/utils/memberData'
+import { getClubStorageType } from '~/server/utils/s3Client'
 import { downloadDriveFile } from '~/server/utils/storage/googleDrive'
+import { decodeS3FileId, s3GetPresignedUrl } from '~/server/utils/storage/s3/files'
 import type { OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -27,6 +29,11 @@ export default defineEventHandler(async (event) => {
     if (!isGuardian) {
       throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
     }
+  }
+
+  if ((await getClubStorageType(club.id)) === 'S3') {
+    const url = await s3GetPresignedUrl(club.id, decodeS3FileId(fileId))
+    return sendRedirect(event, url, 302)
   }
 
   const tokens = club.oauthToken as OAuthTokens

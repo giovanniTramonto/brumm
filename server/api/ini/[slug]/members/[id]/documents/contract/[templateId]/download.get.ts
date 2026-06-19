@@ -1,6 +1,9 @@
+import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
-import { downloadDriveFile } from '~/server/utils/storage/googleDrive'
-import type { OAuthTokens } from '~/types'
+import { getClubStorageType } from '~/server/utils/s3Client'
+import { downloadDriveFile, findMemberContractFileId } from '~/server/utils/storage/googleDrive'
+import { s3GetPresignedUrl } from '~/server/utils/storage/s3/files'
+import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -19,16 +22,29 @@ export default defineEventHandler(async (event) => {
   const submission = await prisma.memberDocument.findUnique({
     where: { memberId_templateId: { memberId, templateId } },
   })
-  if (!submission?.driveFileId) {
+  if (!submission?.fileName) {
     throw createError({ statusCode: 404, statusMessage: 'Dokument nicht gefunden' })
   }
 
-  const tokens = club.oauthToken as OAuthTokens
-  const { buffer, filename, mimeType } = await downloadDriveFile({
-    tokens,
-    fileId: submission.driveFileId,
-  })
+  if (submission.s3Key && (await getClubStorageType(club.id)) === 'S3') {
+    const url = await s3GetPresignedUrl(club.id, submission.s3Key)
+    return sendRedirect(event, url, 302)
+  }
 
+  const tokens = club.oauthToken as OAuthTokens
+  const storageConfig = club.storageConfig as GoogleDriveConfig
+  const md = await getMemberData(memberId, club)
+  if (!md) throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
+
+  const fileId = await findMemberContractFileId({
+    tokens,
+    membersFolderId: storageConfig.membersFolderId,
+    storageRef: md.storageRef,
+    fileName: submission.fileName,
+  })
+  if (!fileId) throw createError({ statusCode: 404, statusMessage: 'Datei nicht gefunden' })
+
+  const { buffer, filename, mimeType } = await downloadDriveFile({ tokens, fileId })
   setHeader(event, 'Content-Type', mimeType)
   setHeader(event, 'Content-Disposition', `inline; filename="${encodeURIComponent(filename)}"`)
   return buffer

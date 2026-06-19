@@ -1,12 +1,16 @@
 import { Prisma } from '@prisma/client'
+import { getClubDbType } from '~/server/utils/clubDatabase'
 import { sendMagicLink } from '~/server/utils/email'
 import { createMagicLink } from '~/server/utils/magicLink'
+import { findManagerIdByEmailPg } from '~/server/utils/managerData'
+import { findMemberIdByEmail } from '~/server/utils/memberData'
 import { hashPin } from '~/server/utils/pinHash'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, magicLinkSchema } from '~/server/utils/schemas'
 import { findManagerIdByEmail } from '~/server/utils/storage/managersSheet'
 import { findUserIdByEmail } from '~/server/utils/storage/sheets'
 import { findTeamMemberIdByEmail } from '~/server/utils/storage/teamSheet'
+import { findTeamMemberIdByEmailPg } from '~/server/utils/teamData'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 async function findOrCreateManagerUser(managerId: string, clubId: string) {
@@ -68,10 +72,26 @@ export default defineEventHandler(async (event) => {
     return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
   }
 
-  // Second: search in Sheets (setup done) or localData (setup not done)
+  // Second: search in Postgres, Sheets (setup done) or localData (setup not done)
   let userId: string | null = null
 
-  if (club.isSetupDone && club.storageConfig && club.oauthToken) {
+  if (club.isSetupDone && (await getClubDbType(club.id)) === 'POSTGRES') {
+    const [memberId, managerId, teamId] = await Promise.all([
+      findMemberIdByEmail(club.id, normalizedEmail),
+      findManagerIdByEmailPg(club.id, normalizedEmail),
+      findTeamMemberIdByEmailPg(club.id, normalizedEmail),
+    ])
+
+    if (managerId) {
+      const managerUser = await findOrCreateManagerUser(managerId, club.id)
+      if (managerUser) userId = managerUser.id
+    } else if (teamId) {
+      const teamUser = await findTeamUser(teamId, club.id)
+      if (teamUser) userId = teamUser.id
+    } else if (memberId) {
+      userId = memberId
+    }
+  } else if (club.isSetupDone && club.storageConfig && club.oauthToken) {
     const storageConfig = club.storageConfig as unknown as GoogleDriveConfig
     const tokens = club.oauthToken as unknown as OAuthTokens
     const [memberId, managerId, teamId] = await Promise.all([

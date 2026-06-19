@@ -1,7 +1,17 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
+import { getClubDb, getClubDbType } from './clubDatabase'
 import { withGoogleErrorHandling } from './googleAuth'
+import {
+  pgBatchUpdateMembers,
+  pgDeleteMember,
+  pgFindUserIdByEmail,
+  pgGetAllMembers,
+  pgGetMember,
+  pgSaveMember,
+  pgUpdateMember,
+} from './storage/postgres/members'
 import {
   batchUpdateMembersInSheet,
   getAllMembersFromSheet,
@@ -53,12 +63,17 @@ function localDataToMemberData(userId: string, localData: unknown): MemberData |
 
 export async function getMemberData(
   userId: string,
-  club: { isSetupDone: boolean; storageConfig: unknown; oauthToken: unknown },
+  club: { isSetupDone: boolean; storageConfig: unknown; oauthToken: unknown; id: string },
 ): Promise<MemberData | null> {
   if (!club.isSetupDone) {
     const user = await prisma.user.findUnique({ where: { id: userId } })
     if (!user?.localData) return null
     return localDataToMemberData(userId, user.localData)
+  }
+
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetMember(sql, userId)
   }
 
   const tokens = getTokens(club.oauthToken)
@@ -88,6 +103,11 @@ export async function getAllMemberData(
         const data = localDataToMemberData(u.id, u.localData)
         return data ? [data] : []
       })
+  }
+
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    return pgGetAllMembers(sql, userIds)
   }
 
   const tokens = getTokens(club.oauthToken)
@@ -122,6 +142,12 @@ export async function saveMemberData(data: MemberData, club: ClubForData): Promi
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgSaveMember(sql, data)
+    return
+  }
+
   const tokens = getTokens(club.oauthToken)
   const membersSheetId = getMembersSheetId(club.storageConfig)
   await withGoogleErrorHandling(() => writeMemberToSheet({ tokens, membersSheetId, data }))
@@ -133,6 +159,12 @@ export async function deleteMemberData(userId: string, club: ClubForData): Promi
       where: { id: userId },
       data: { localData: Prisma.DbNull },
     })
+    return
+  }
+
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgDeleteMember(sql, userId)
     return
   }
 
@@ -165,6 +197,12 @@ export async function batchUpdateMembersData(
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgBatchUpdateMembers(sql, updates, expectedLastEditedAt)
+    return
+  }
+
   const tokens = getTokens(club.oauthToken)
   const membersSheetId = getMembersSheetId(club.storageConfig)
   await withGoogleErrorHandling(() =>
@@ -189,9 +227,23 @@ export async function updateMemberData(
     return
   }
 
+  if ((await getClubDbType(club.id)) === 'POSTGRES') {
+    const sql = await getClubDb(club.id)
+    await pgUpdateMember(sql, userId, updates, expectedLastEditedAt)
+    return
+  }
+
   const tokens = getTokens(club.oauthToken)
   const membersSheetId = getMembersSheetId(club.storageConfig)
   await withGoogleErrorHandling(() =>
     updateMemberInSheet({ tokens, membersSheetId, userId, updates, expectedLastEditedAt }),
   )
+}
+
+export async function findMemberIdByEmail(clubId: string, email: string): Promise<string | null> {
+  if ((await getClubDbType(clubId)) === 'POSTGRES') {
+    const sql = await getClubDb(clubId)
+    return pgFindUserIdByEmail(sql, email)
+  }
+  return null
 }

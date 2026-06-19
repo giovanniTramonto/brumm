@@ -4,16 +4,17 @@ Brumm ist eine Verwaltungssoftware für Berliner Elterninitiativ-Kindertagesstä
 
 Mehrere Vereine laufen auf einer Instanz – jeder mit eigenem Slug und getrennten Daten.
 
-**Datentrennung**: Neon speichert ausschließlich technische Auth-Daten. Alle persönlichen Mitgliederdaten (Name, Geburtsdatum, E-Mails, Telefonnummern) sowie Vorstandsdaten leben pro Verein in Google Sheets – kein globaler Service Account, keine persönlichen Daten in der zentralen Datenbank.
+**Datentrennung**: Die zentrale Datenbank speichert ausschließlich technische Auth-Daten. Persönliche Mitgliederdaten (Name, Geburtsdatum, E-Mails, Telefonnummern) sowie Vorstandsdaten leben standardmäßig pro Verein in Google Sheets. Optional kann jeder Verein auf ein eigenes PostgreSQL-Backend (für Daten) und S3-kompatiblen Storage (für Dateien) umstellen – kein globaler Service Account, keine persönlichen Daten in der zentralen Datenbank.
 
 ## Stack
 
 - **Nuxt 3** – SPA + PWA (`@vite-pwa/nuxt`, App Shell Caching, Offline-Fallback)
-- **Prisma + Neon** – PostgreSQL (nur Auth/Tech-Daten, Multi-Tenant via `clubId`)
-- **Google Drive + Sheets** – Persönliche Mitgliederdaten, Storage pro Verein (OAuth 2.0)
+- **Prisma + PostgreSQL** – Zentrale DB (nur Auth/Tech-Daten, Multi-Tenant via `clubId`)
+- **Google Drive + Sheets** – Standard-Backend für Mitgliederdaten und Dateien (OAuth 2.0)
+- **PostgreSQL + S3** – Optionales Backend pro Verein (umstellbar in den Einstellungen)
 - **Resend** – Transaktionale E-Mails
 - **Tailwind CSS + Reka UI** – UI
-- **Netlify** – Hosting + Scheduled Functions
+- **Netlify** – Hosting + Scheduled Functions + deploy-succeeded Hook
 
 ## Setup
 
@@ -28,7 +29,7 @@ npm run dev
 npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
 ```
 
-Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallback in `User.localData` (Neon) gespeichert und nach dem Storage-Onboarding automatisch nach Sheets migriert.
+Ohne Google-Credentials (kein Onboarding) werden Mitgliederdaten als Dev-Fallback in `User.localData` (DB) gespeichert und nach dem Storage-Onboarding automatisch nach Sheets migriert.
 
 ## URL-Struktur
 

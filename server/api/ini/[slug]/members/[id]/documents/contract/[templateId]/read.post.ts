@@ -1,6 +1,13 @@
+import { getDriveClientFromTokens } from '~/server/utils/googleAuth'
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
-import { copyFileToMemberDocuments } from '~/server/utils/storage/googleDrive'
+import { getClubStorageType } from '~/server/utils/s3Client'
+import {
+  copyFileToMemberDocuments,
+  findDriveFileByName,
+  getOrCreateTemplateSubfolder,
+} from '~/server/utils/storage/googleDrive'
+import { s3CopyFile } from '~/server/utils/storage/s3/files'
 import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
@@ -48,33 +55,50 @@ export default defineEventHandler(async (event) => {
     return { submission: existing }
   }
 
-  let driveFileId: string | null = null
+  let newS3Key: string | null = null
+  const fileName: string | null = template.fileName
 
-  if (club.isSetupDone && template.driveFileId && template.driveFileName) {
-    const tokens = club.oauthToken as OAuthTokens
-    const storageConfig = club.storageConfig as GoogleDriveConfig
+  if (club.isSetupDone && template.fileName) {
     const memberData = await getMemberData(memberId, club)
     if (memberData?.storageRef) {
-      driveFileId = await copyFileToMemberDocuments({
-        tokens,
-        membersFolderId: storageConfig.membersFolderId,
-        storageRef: memberData.storageRef,
-        sourceFileId: template.driveFileId,
-        filename: template.driveFileName,
-      })
+      if ((await getClubStorageType(club.id)) === 'S3' && template.s3Key) {
+        try {
+          const result = await s3CopyFile(club.id, template.s3Key, `members/${memberId}/contract`)
+          newS3Key = result.key
+        } catch {
+          // non-fatal: submission recorded without file copy
+        }
+      } else if ((await getClubStorageType(club.id)) !== 'S3') {
+        const tokens = club.oauthToken as OAuthTokens
+        const storageConfig = club.storageConfig as GoogleDriveConfig
+        try {
+          const drive = getDriveClientFromTokens(tokens)
+          const subfolderId = await getOrCreateTemplateSubfolder({
+            tokens,
+            templatesFolderId: storageConfig.templatesFolderId,
+            ref: template.ref,
+          })
+          const sourceFileId = await findDriveFileByName(drive, subfolderId, template.fileName)
+          if (sourceFileId) {
+            await copyFileToMemberDocuments({
+              tokens,
+              membersFolderId: storageConfig.membersFolderId,
+              storageRef: memberData.storageRef,
+              sourceFileId,
+              filename: template.fileName,
+            })
+          }
+        } catch {
+          // non-fatal
+        }
+      }
     }
   }
 
   const submission = await prisma.memberDocument.upsert({
     where: { memberId_templateId: { memberId, templateId } },
-    create: {
-      memberId,
-      templateId,
-      readAt: new Date(),
-      driveFileId,
-      filename: template.driveFileName,
-    },
-    update: { readAt: new Date(), driveFileId, filename: template.driveFileName },
+    create: { memberId, templateId, readAt: new Date(), s3Key: newS3Key, fileName },
+    update: { readAt: new Date(), s3Key: newS3Key, fileName },
   })
 
   return { submission }

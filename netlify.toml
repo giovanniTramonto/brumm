@@ -1,5 +1,5 @@
 [build]
-  command = "prisma db push && npm run build"
+  command = "prisma migrate deploy && npm run build"
   publish = "dist"
 
 [build.environment]

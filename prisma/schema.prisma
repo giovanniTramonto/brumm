@@ -28,6 +28,8 @@ model Club {
   team              Team[]
   documents         Document[]
   deviceSessions    DeviceSession[]
+  clubDatabase      ClubDatabase?
+  clubFileStorage   ClubFileStorage?
 }
 
 model User {
@@ -105,15 +107,15 @@ model Session {
 }
 
 model DocumentTemplate {
-  id            String           @id @default(cuid())
-  clubId        String
-  name          String
-  ref           String
-  order         Int              @default(0)
-  documentType  String?
-  driveFileId   String?
-  driveFileName String?
-  createdAt     DateTime         @default(now())
+  id           String           @id @default(cuid())
+  clubId       String
+  name         String
+  ref          String
+  order        Int              @default(0)
+  documentType String?
+  fileName     String?
+  s3Key        String?
+  createdAt    DateTime         @default(now())
 
   club        Club             @relation(fields: [clubId], references: [id])
   submissions MemberDocument[]
@@ -122,14 +124,15 @@ model DocumentTemplate {
 }
 
 model Document {
-  id          String   @id @default(cuid())
-  clubId      String
-  name        String
-  order       Int      @default(0)
-  type        String   @default("document")
-  driveFileId String?
-  url         String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  clubId    String
+  name      String
+  order     Int      @default(0)
+  type      String   @default("document")
+  fileName  String?
+  s3Key     String?
+  url       String?
+  createdAt DateTime @default(now())
 
   club Club @relation(fields: [clubId], references: [id])
 }
@@ -160,13 +163,13 @@ model Team {
 }
 
 model MemberDocument {
-  id          String    @id @default(cuid())
-  memberId    String
-  templateId  String
-  driveFileId String?
-  filename    String?
-  uploadedAt  DateTime  @default(now())
-  readAt      DateTime?
+  id         String    @id @default(cuid())
+  memberId   String
+  templateId String
+  fileName   String?
+  s3Key      String?
+  uploadedAt DateTime  @default(now())
+  readAt     DateTime?
 
   member   User             @relation(fields: [memberId], references: [id])
   template DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
@@ -208,8 +211,63 @@ enum MemberStatus {
   DEACTIVATED
 }
 
+model ClubDatabase {
+  id                  String      @id @default(cuid())
+  clubId              String      @unique
+  type                DataBackend @default(GOOGLE_SHEETS)
+  encryptedDsn        String?
+  pendingEncryptedDsn String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id])
+}
+
+model ClubFileStorage {
+  id                     String      @id @default(cuid())
+  clubId                 String      @unique
+  type                   FileBackend @default(GOOGLE_DRIVE)
+  encryptedConfig        String?
+  pendingEncryptedConfig String?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  club Club @relation(fields: [clubId], references: [id])
+}
+
+model AuditLog {
+  id        String        @id @default(cuid())
+  clubId    String?
+  event     String
+  severity  AuditSeverity @default(INFO)
+  ip        String?
+  path      String?
+  userId    String?
+  metadata  Json?
+  createdAt DateTime      @default(now())
+
+  @@index([clubId, createdAt])
+  @@index([createdAt])
+}
+
 enum Storage {
   GOOGLE_DRIVE
   S3
   R2
+}
+
+enum DataBackend {
+  GOOGLE_SHEETS
+  POSTGRES
+}
+
+enum FileBackend {
+  GOOGLE_DRIVE
+  S3
+}
+
+enum AuditSeverity {
+  INFO
+  WARN
+  ERROR
 }
