@@ -73,7 +73,7 @@ export default async () => {
     try {
       if (!record.encryptedDsn) continue
       const dsn = decrypt(record.encryptedDsn)
-      sql = postgres(dsn, { max: 2, connect_timeout: 10 })
+      sql = postgres(dsn, { max: 2, connect_timeout: 10, ssl: { rejectUnauthorized: false } })
       const result = await runMigrations(sql)
 
       if (result.failed) {

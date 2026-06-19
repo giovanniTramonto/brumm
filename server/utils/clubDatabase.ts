@@ -16,10 +16,7 @@ export async function getClubDb(clubId: string): Promise<Sql> {
   }
 
   const dsn = decrypt(record.encryptedDsn)
-  const url = new URL(dsn)
-  const sslmode = url.searchParams.get('sslmode')
-  const ssl = sslmode === 'require' || sslmode === 'verify-full' || sslmode === 'verify-ca'
-  const sql = postgres(dsn, { max: 5, idle_timeout: 30, ssl })
+  const sql = postgres(dsn, { max: 5, idle_timeout: 30, ssl: { rejectUnauthorized: false } })
 
   clientCache.set(clubId, sql)
   return sql

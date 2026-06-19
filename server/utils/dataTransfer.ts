@@ -91,7 +91,11 @@ export async function transferSheetsToPostgres(clubId: string): Promise<void> {
 
   if (!record.pendingEncryptedDsn) throw new Error('Kein ausstehender DSN.')
 
-  const targetSql = postgres(decrypt(record.pendingEncryptedDsn), { max: 5, idle_timeout: 30 })
+  const targetSql = postgres(decrypt(record.pendingEncryptedDsn), {
+    max: 5,
+    idle_timeout: 30,
+    ssl: { rejectUnauthorized: false },
+  })
 
   try {
     await runMigrations(targetSql)
@@ -137,7 +141,11 @@ export async function transferPostgresToPostgres(clubId: string): Promise<void> 
 
   const sourceSql = await getClubDb(clubId)
   const targetDsn = decrypt(record.pendingEncryptedDsn)
-  const targetSql = postgres(targetDsn, { max: 5, idle_timeout: 30 })
+  const targetSql = postgres(targetDsn, {
+    max: 5,
+    idle_timeout: 30,
+    ssl: { rejectUnauthorized: false },
+  })
 
   try {
     // Apply migrations to target DB first
