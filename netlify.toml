@@ -10,9 +10,6 @@
   function = "cleanup"
   schedule = "0 2 * * *"
 
-[functions]
-  included_files = ["server/utils/migrations/sql/**"]
-
 [[headers]]
   for = "/*"
   [headers.values]
