@@ -26,7 +26,10 @@ export default defineEventHandler(async (event) => {
   // Verify connection before saving
   let testSql: ReturnType<typeof postgres> | undefined
   try {
-    testSql = postgres(parsed.data.dsn, { max: 1, connect_timeout: 5 })
+    const url = new URL(parsed.data.dsn)
+    const sslmode = url.searchParams.get('sslmode')
+    const ssl = sslmode === 'require' || sslmode === 'verify-full' || sslmode === 'verify-ca'
+    testSql = postgres(parsed.data.dsn, { max: 1, connect_timeout: 5, ssl })
     await testSql`SELECT 1`
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err)
