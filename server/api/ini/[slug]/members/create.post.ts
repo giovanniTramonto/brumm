@@ -2,9 +2,8 @@ import { sendInviteEmail } from '~/server/utils/email'
 import { saveMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { createMemberSchema, formatZodError } from '~/server/utils/schemas'
-import { initUserStorage } from '~/server/utils/storage'
 import { buildStorageRef, generateStorageId } from '~/server/utils/storageRef'
-import type { GoogleDriveConfig, MemberData, OAuthTokens } from '~/types'
+import type { MemberData } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -97,19 +96,6 @@ export default defineEventHandler(async (event) => {
       statusCode: 500,
       statusMessage: 'Fehler beim Speichern der Mitgliedsdaten. Bitte versuche es erneut.',
     })
-  }
-
-  if (club.isSetupDone && club.storageConfig && club.oauthToken) {
-    try {
-      const tokens = club.oauthToken as unknown as OAuthTokens
-      await initUserStorage({
-        memberData,
-        storageConfig: club.storageConfig as unknown as GoogleDriveConfig,
-        tokens,
-      })
-    } catch (err) {
-      console.error('Storage-Initialisierung fehlgeschlagen:', err)
-    }
   }
 
   let emailError: string | null = null

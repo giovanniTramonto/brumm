@@ -16,10 +16,7 @@ useHead({ title: 'Anleitung – Brumm' })
       <p class="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500">Einmalige Einrichtung</p>
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
         <li>Kita unter <NuxtLink to="/register" class="text-primary-600 hover:underline font-medium">/register</NuxtLink> registrieren – du erhältst einen Einrichtungs-Link per E-Mail.</li>
-        <li>
-          Im Onboarding Datenspeicher verbinden (aktuell wird ausschließlich Google Workspace unterstützt) und die ID der Geteilten Ablage (Shared Drive) eingeben.
-          <NuxtLink to="/faq#google-workspace" class="text-primary-600 hover:underline">→ Google Workspace einrichten</NuxtLink>
-        </li>
+        <li>Unter <strong class="text-gray-700">Einstellungen</strong> PostgreSQL-Datenbankverbindung und S3-Zugangsdaten einrichten.</li>
         <li>Unter <strong class="text-gray-700">Vorstand</strong> Vorstandsmitglieder, unter <strong class="text-gray-700">Team</strong> pädagogische Fachkräfte und unter <strong class="text-gray-700">Gruppen</strong> Betreuungsgruppen anlegen.</li>
       </ol>
     </section>

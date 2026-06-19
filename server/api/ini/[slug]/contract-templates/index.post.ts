@@ -1,9 +1,6 @@
 import { prisma } from '~/server/utils/prisma'
-import { getClubStorageType } from '~/server/utils/s3Client'
-import { uploadTemplateFile } from '~/server/utils/storage/googleDrive'
 import { s3UploadFile } from '~/server/utils/storage/s3/files'
 import { generateStorageId } from '~/server/utils/storageRef'
-import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -33,30 +30,15 @@ export default defineEventHandler(async (event) => {
   let fileName: string | null = null
   let s3Key: string | null = null
 
-  if (filePart?.data && filePart.filename && club.isSetupDone) {
-    if ((await getClubStorageType(club.id)) === 'S3') {
-      const result = await s3UploadFile(
-        club.id,
-        `contract-templates/${ref}`,
-        filePart.data,
-        filePart.type ?? 'application/octet-stream',
-        filePart.filename,
-      )
-      s3Key = result.key
-    } else {
-      const tokens = club.oauthToken as OAuthTokens
-      const storageConfig = club.storageConfig as GoogleDriveConfig
-      if (!storageConfig.templatesFolderId)
-        throw createError({ statusCode: 500, statusMessage: 'Templates-Ordner nicht konfiguriert' })
-      await uploadTemplateFile({
-        tokens,
-        templatesFolderId: storageConfig.templatesFolderId,
-        ref,
-        filename: filePart.filename,
-        mimeType: filePart.type ?? 'application/octet-stream',
-        buffer: filePart.data,
-      })
-    }
+  if (filePart?.data && filePart.filename) {
+    const result = await s3UploadFile(
+      club.id,
+      `contract-templates/${ref}`,
+      filePart.data,
+      filePart.type ?? 'application/octet-stream',
+      filePart.filename,
+    )
+    s3Key = result.key
     fileName = filePart.filename
   }
 

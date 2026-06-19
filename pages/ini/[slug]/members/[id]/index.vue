@@ -40,7 +40,7 @@ type TemplateEntry = {
     filename: string | null
     uploadedAt: string
     readAt: string | null
-    driveFileId: string | null
+    s3Key: string | null
   } | null
 }
 const memberDocTemplates = ref<TemplateEntry[]>([])
@@ -120,8 +120,9 @@ const visibleTemplates = computed(() => {
 const filteredDocuments = computed(() => {
   const submittedIds = new Set(
     memberDocTemplates.value
-      .map((t) => t.submission?.driveFileId)
-      .filter((id): id is string => !!id),
+      .map((t) => t.submission?.s3Key)
+      .filter((k): k is string => !!k)
+      .map((k) => btoa(k).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')),
   )
   return documents.value.filter((d) => !submittedIds.has(d.id))
 })
@@ -1105,7 +1106,7 @@ async function onSubmit() {
                     class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
                   >✓ Gelesen</span>
                   <a
-                    v-if="t.submission?.driveFileId"
+                    v-if="t.submission?.s3Key"
                     :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
                     class="btn-secondary py-1 text-xs"
                     target="_blank"

@@ -8,8 +8,6 @@ const PUBLIC_ROUTES = [
   /^\/api\/login\/lookup$/,
   /^\/api\/ini\/[^/]+\/auth\/magic-link$/,
   /^\/api\/ini\/[^/]+\/auth\/verify\//,
-  /^\/api\/ini\/[^/]+\/auth\/google$/,
-  /^\/api\/auth\/google\/callback$/,
   /^\/api\/ini\/[^/]+\/auth\/device$/,
   /^\/api\/ini\/[^/]+\/auth\/pin$/,
   /^\/api\/ini\/[^/]+\/auth\/pin-forgot$/,

@@ -10,15 +10,11 @@ datasource db {
 }
 
 model Club {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  name             String
-  storageType   Storage?
-  storageConfig Json?
-  oauthToken    Json?
-  isSetupDone   Boolean  @default(false)
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
   membershipFee Float?
-  createdAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
 
   users             User[]
   sessions          Session[]
@@ -39,7 +35,6 @@ model User {
   status    MemberStatus @default(REGISTERED)
   storageId String?
 
-  localData               Json?
   isMemberManager         Boolean   @default(false)
   hasSubmittedDocuments   Boolean   @default(false)
   deactivatedAt           DateTime?
@@ -142,7 +137,6 @@ model Manager {
   clubId          String
   storageId       String
   isMemberManager Boolean  @default(false)
-  localData       Json?
   createdAt       DateTime @default(now())
 
   club Club @relation(fields: [clubId], references: [id])
@@ -154,7 +148,6 @@ model Team {
   id        String   @id @default(cuid())
   clubId    String
   storageId String
-  localData Json?
   createdAt DateTime @default(now())
 
   club Club @relation(fields: [clubId], references: [id])
@@ -214,7 +207,7 @@ enum MemberStatus {
 model ClubDatabase {
   id                  String      @id @default(cuid())
   clubId              String      @unique
-  type                DataBackend @default(GOOGLE_SHEETS)
+  type                DataBackend @default(POSTGRES)
   encryptedDsn        String?
   pendingEncryptedDsn String?
   createdAt           DateTime    @default(now())
@@ -226,7 +219,7 @@ model ClubDatabase {
 model ClubFileStorage {
   id                     String      @id @default(cuid())
   clubId                 String      @unique
-  type                   FileBackend @default(GOOGLE_DRIVE)
+  type                   FileBackend @default(S3)
   encryptedConfig        String?
   pendingEncryptedConfig String?
   createdAt              DateTime    @default(now())
@@ -250,19 +243,11 @@ model AuditLog {
   @@index([createdAt])
 }
 
-enum Storage {
-  GOOGLE_DRIVE
-  S3
-  R2
-}
-
 enum DataBackend {
-  GOOGLE_SHEETS
   POSTGRES
 }
 
 enum FileBackend {
-  GOOGLE_DRIVE
   S3
 }
 

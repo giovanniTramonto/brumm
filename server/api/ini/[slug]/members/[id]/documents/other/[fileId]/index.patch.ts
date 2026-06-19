@@ -1,9 +1,6 @@
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
-import { getClubStorageType } from '~/server/utils/s3Client'
-import { updateDriveFile } from '~/server/utils/storage/googleDrive'
 import { decodeS3FileId, s3DeleteFile, s3UploadFile } from '~/server/utils/storage/s3/files'
-import type { OAuthTokens } from '~/types'
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
 
 export default defineEventHandler(async (event) => {
@@ -14,10 +11,6 @@ export default defineEventHandler(async (event) => {
 
   if (!memberId || !fileId) {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
-  }
-
-  if (!club.isSetupDone) {
-    throw createError({ statusCode: 400, statusMessage: 'Storage nicht eingerichtet' })
   }
 
   const canUploadAll =
@@ -63,28 +56,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if ((await getClubStorageType(club.id)) === 'S3') {
-    // Delete old key, upload new — list re-fetch will show updated file
-    await s3DeleteFile(club.id, decodeS3FileId(fileId))
-    await s3UploadFile(
-      club.id,
-      `members/${memberId}/other`,
-      filePart.data,
-      filePart.type ?? 'application/octet-stream',
-      filePart.filename,
-    )
-    return { ok: true }
-  }
-
-  const tokens = club.oauthToken as OAuthTokens
-
-  await updateDriveFile({
-    tokens,
-    fileId,
-    filename: filePart.filename,
-    mimeType: filePart.type ?? 'application/octet-stream',
-    buffer: filePart.data,
-  })
+  await s3DeleteFile(club.id, decodeS3FileId(fileId))
+  await s3UploadFile(
+    club.id,
+    `members/${memberId}/other`,
+    filePart.data,
+    filePart.type ?? 'application/octet-stream',
+    filePart.filename,
+  )
 
   return { ok: true }
 })

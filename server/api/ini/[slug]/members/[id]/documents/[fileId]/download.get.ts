@@ -1,8 +1,5 @@
 import { getMemberData } from '~/server/utils/memberData'
-import { getClubStorageType } from '~/server/utils/s3Client'
-import { downloadDriveFile } from '~/server/utils/storage/googleDrive'
 import { decodeS3FileId, s3GetPresignedUrl } from '~/server/utils/storage/s3/files'
-import type { OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -31,15 +28,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  if ((await getClubStorageType(club.id)) === 'S3') {
-    const url = await s3GetPresignedUrl(club.id, decodeS3FileId(fileId))
-    return sendRedirect(event, url, 302)
-  }
-
-  const tokens = club.oauthToken as OAuthTokens
-  const { buffer, filename, mimeType } = await downloadDriveFile({ tokens, fileId })
-
-  setHeader(event, 'Content-Type', mimeType)
-  setHeader(event, 'Content-Disposition', `inline; filename="${encodeURIComponent(filename)}"`)
-  return buffer
+  const url = await s3GetPresignedUrl(club.id, decodeS3FileId(fileId))
+  return sendRedirect(event, url, 302)
 })

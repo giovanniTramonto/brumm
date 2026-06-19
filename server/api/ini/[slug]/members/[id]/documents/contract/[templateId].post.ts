@@ -1,9 +1,6 @@
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
-import { getClubStorageType } from '~/server/utils/s3Client'
-import { findMemberContractFileId, uploadMemberDocument } from '~/server/utils/storage/googleDrive'
 import { s3DeleteFile, s3UploadFile } from '~/server/utils/storage/s3/files'
-import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL } from '~/utils/config'
 
 export default defineEventHandler(async (event) => {
@@ -14,10 +11,6 @@ export default defineEventHandler(async (event) => {
 
   if (!memberId || !templateId) {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
-  }
-
-  if (!club.isSetupDone) {
-    throw createError({ statusCode: 400, statusMessage: 'Storage nicht eingerichtet' })
   }
 
   const canUploadAll = currentUser.role === 'SUPERUSER' || currentUser.role === 'TEAM'
@@ -67,68 +60,30 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const md = await getMemberData(memberId, club)
-  if (!md) {
-    throw createError({ statusCode: 404, statusMessage: 'Mitgliedsdaten nicht gefunden' })
-  }
-
   const existing = await prisma.memberDocument.findUnique({
     where: { memberId_templateId: { memberId, templateId } },
   })
 
-  let newS3Key: string | null = null
-
-  if ((await getClubStorageType(club.id)) === 'S3') {
-    if (existing?.s3Key) {
-      try {
-        await s3DeleteFile(club.id, existing.s3Key)
-      } catch {
-        // ignore if already deleted
-      }
+  if (existing?.s3Key) {
+    try {
+      await s3DeleteFile(club.id, existing.s3Key)
+    } catch {
+      // ignore if already deleted
     }
-    const result = await s3UploadFile(
-      club.id,
-      `members/${memberId}/contract`,
-      filePart.data,
-      filePart.type ?? 'application/octet-stream',
-      filePart.filename,
-    )
-    newS3Key = result.key
-  } else {
-    const tokens = club.oauthToken as OAuthTokens
-    const storageConfig = club.storageConfig as GoogleDriveConfig
-
-    if (existing?.fileName) {
-      try {
-        const existingId = await findMemberContractFileId({
-          tokens,
-          membersFolderId: storageConfig.membersFolderId,
-          storageRef: md.storageRef,
-          fileName: existing.fileName,
-        })
-        if (existingId) {
-          const drive = (await import('~/server/utils/googleAuth')).getDriveClientFromTokens(tokens)
-          await drive.files.delete({ fileId: existingId, supportsAllDrives: true })
-        }
-      } catch {
-        // ignore if already deleted
-      }
-    }
-
-    await uploadMemberDocument({
-      tokens,
-      membersFolderId: storageConfig.membersFolderId,
-      storageRef: md.storageRef,
-      filename: filePart.filename,
-      mimeType: filePart.type ?? 'application/octet-stream',
-      buffer: filePart.data,
-    })
   }
+
+  const result = await s3UploadFile(
+    club.id,
+    `members/${memberId}/contract`,
+    filePart.data,
+    filePart.type ?? 'application/octet-stream',
+    filePart.filename,
+  )
 
   const submission = await prisma.memberDocument.upsert({
     where: { memberId_templateId: { memberId, templateId } },
-    create: { memberId, templateId, s3Key: newS3Key, fileName: filePart.filename },
-    update: { s3Key: newS3Key, fileName: filePart.filename, uploadedAt: new Date() },
+    create: { memberId, templateId, s3Key: result.key, fileName: filePart.filename },
+    update: { s3Key: result.key, fileName: filePart.filename, uploadedAt: new Date() },
   })
 
   return { submission }

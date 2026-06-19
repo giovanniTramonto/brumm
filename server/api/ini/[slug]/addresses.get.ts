@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       users.map((u) => u.id),
       club,
     ),
-    club.isSetupDone ? getAllGroups(club).catch(() => []) : Promise.resolve([]),
+    getAllGroups(club).catch(() => []),
   ])
 
   const addresses = memberDataList

@@ -1,81 +1,54 @@
+import { DeleteObjectsCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
 import { PrismaClient } from '@prisma/client'
-import { google } from 'googleapis'
-import type { GoogleDriveConfig, OAuthTokens } from '../../types/index'
+import postgres from 'postgres'
+import { decrypt } from '../../server/utils/encryption'
 
 const prisma = new PrismaClient()
 
-function getGoogleAuth(tokens: OAuthTokens) {
-  const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+async function deleteS3MemberFiles(clubId: string, memberId: string): Promise<void> {
+  const record = await prisma.clubFileStorage.findUnique({ where: { clubId } })
+  if (!record?.encryptedConfig) return
+
+  const config = JSON.parse(decrypt(record.encryptedConfig)) as {
+    endpoint?: string
+    bucket: string
+    region: string
+    accessKeyId: string
+    secretAccessKey: string
+  }
+
+  const client = new S3Client({
+    region: config.region,
+    credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey },
+    ...(config.endpoint ? { endpoint: config.endpoint, forcePathStyle: true } : {}),
+  })
+
+  const prefix = `members/${memberId}/`
+  const list = await client.send(
+    new ListObjectsV2Command({ Bucket: config.bucket, Prefix: prefix }),
   )
-  auth.setCredentials(tokens)
-  return auth
+  const keys = (list.Contents ?? [])
+    .filter((o): o is typeof o & { Key: string } => !!o.Key)
+    .map((o) => ({ Key: o.Key }))
+
+  if (keys.length > 0) {
+    await client.send(
+      new DeleteObjectsCommand({ Bucket: config.bucket, Delete: { Objects: keys } }),
+    )
+  }
 }
 
-async function deleteFromDrive(tokens: OAuthTokens, folderId: string): Promise<void> {
-  const auth = getGoogleAuth(tokens)
-  const drive = google.drive({ version: 'v3', auth })
+async function deleteMemberFromClubDb(clubId: string, userId: string): Promise<void> {
+  const record = await prisma.clubDatabase.findUnique({ where: { clubId } })
+  if (!record?.encryptedDsn) return
+
+  const dsn = decrypt(record.encryptedDsn)
+  const sql = postgres(dsn, { max: 1, idle_timeout: 10, ssl: { rejectUnauthorized: false } })
   try {
-    await drive.files.delete({ fileId: folderId, supportsAllDrives: true })
-  } catch {
-    // Ordner bereits gelöscht oder nicht vorhanden
+    await sql`DELETE FROM members WHERE user_id = ${userId}`
+  } finally {
+    await sql.end()
   }
-}
-
-async function findAndDeleteMemberFolder(
-  tokens: OAuthTokens,
-  membersFolderId: string,
-  storageId: string,
-): Promise<void> {
-  const auth = getGoogleAuth(tokens)
-  const drive = google.drive({ version: 'v3', auth })
-  const result = await drive.files.list({
-    supportsAllDrives: true,
-    includeItemsFromAllDrives: true,
-    q: `name contains '${storageId}' and mimeType = 'application/vnd.google-apps.folder' and '${membersFolderId}' in parents and trashed = false`,
-    fields: 'files(id)',
-  })
-  const folder = result.data.files?.[0]
-  if (folder?.id) {
-    await deleteFromDrive(tokens, folder.id)
-  }
-}
-
-async function removeMemberFromSheet(
-  tokens: OAuthTokens,
-  membersSheetId: string,
-  userId: string,
-): Promise<void> {
-  const auth = getGoogleAuth(tokens)
-  const sheets = google.sheets({ version: 'v4', auth })
-
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: membersSheetId,
-    range: 'A:A',
-  })
-
-  const rows = response.data.values ?? []
-  const rowIndex = rows.findIndex((row) => row[0] === userId)
-  if (rowIndex === -1) return
-
-  await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: membersSheetId,
-    requestBody: {
-      requests: [
-        {
-          deleteDimension: {
-            range: {
-              sheetId: 0,
-              dimension: 'ROWS',
-              startIndex: rowIndex,
-              endIndex: rowIndex + 1,
-            },
-          },
-        },
-      ],
-    },
-  })
 }
 
 export default async function handler() {
@@ -88,7 +61,7 @@ export default async function handler() {
       status: 'DEACTIVATED',
       deactivatedAt: { lte: oneYearAgo },
     },
-    include: { club: true },
+    select: { id: true, clubId: true },
   })
 
   console.log(`DSGVO-Cleanup: ${expiredUsers.length} Mitglieder zu bereinigen`)
@@ -97,13 +70,10 @@ export default async function handler() {
 
   for (const user of expiredUsers) {
     try {
-      const storageConfig = user.club.storageConfig as unknown as GoogleDriveConfig | null
-      const oauthToken = user.club.oauthToken as unknown as OAuthTokens | null
-
-      if (storageConfig && oauthToken && user.storageId) {
-        await findAndDeleteMemberFolder(oauthToken, storageConfig.membersFolderId, user.storageId)
-        await removeMemberFromSheet(oauthToken, storageConfig.membersSheetId, user.id)
-      }
+      await Promise.allSettled([
+        deleteS3MemberFiles(user.clubId, user.id),
+        deleteMemberFromClubDb(user.clubId, user.id),
+      ])
 
       await prisma.deviceSession.deleteMany({ where: { userId: user.id } })
       await prisma.session.deleteMany({ where: { userId: user.id } })

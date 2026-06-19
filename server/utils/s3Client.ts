@@ -14,11 +14,6 @@ type S3Config = {
 export type CachedS3 = { client: S3Client; bucket: string }
 const cache = new Map<string, CachedS3>()
 
-export async function getClubStorageType(clubId: string): Promise<'GOOGLE_DRIVE' | 'S3'> {
-  const record = await prisma.clubFileStorage.findUnique({ where: { clubId } })
-  return record?.type ?? 'GOOGLE_DRIVE'
-}
-
 export async function getClubS3(clubId: string): Promise<CachedS3> {
   const hit = cache.get(clubId)
   if (hit) return hit

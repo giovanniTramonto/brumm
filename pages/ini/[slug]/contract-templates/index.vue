@@ -13,8 +13,8 @@ type Template = {
   id: string
   name: string
   documentType: string | null
-  driveFileId: string | null
-  driveFileName: string | null
+  s3Key: string | null
+  fileName: string | null
 }
 
 const templates = ref<Template[]>([])
@@ -229,17 +229,17 @@ async function onDelete(template: Template) {
               </button>
 
               <template v-if="template.documentType !== 'submit'">
-                <span v-if="template.driveFileName" class="whitespace-nowrap text-xs text-gray-500">
-                  {{ template.driveFileName }}
+                <span v-if="template.fileName" class="whitespace-nowrap text-xs text-gray-500">
+                  {{ template.fileName }}
                 </span>
                 <span v-else class="whitespace-nowrap text-xs text-gray-400">Keine Vorlage</span>
 
                 <label
                   class="btn-secondary cursor-pointer py-1 text-xs"
                   :class="{ 'opacity-50': uploadingId === template.id }"
-                  :aria-label="`${template.driveFileId ? 'Ersetzen' : 'Hochladen'}: ${template.name}`"
+                  :aria-label="`${template.s3Key ? 'Ersetzen' : 'Hochladen'}: ${template.name}`"
                 >
-                  {{ uploadingId === template.id ? '…' : template.driveFileId ? 'Ersetzen' : 'Hochladen' }}
+                  {{ uploadingId === template.id ? '…' : template.s3Key ? 'Ersetzen' : 'Hochladen' }}
                   <input
                     type="file"
                     accept=".pdf,.docx"

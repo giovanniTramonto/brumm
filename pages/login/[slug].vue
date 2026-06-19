@@ -41,10 +41,7 @@ async function onVerifyOtp() {
   otpError.value = null
   try {
     await authStore.verifyOtp(slug, otpCode.value)
-    const target = authStore.currentClub?.isSetupDone
-      ? `/ini/${slug}/dashboard`
-      : `/ini/${slug}/settings/onboarding`
-    await navigateTo(target, { replace: true })
+    await navigateTo(`/ini/${slug}/dashboard`, { replace: true })
   } catch (err: unknown) {
     otpError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??

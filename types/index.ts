@@ -1,28 +1,5 @@
 export type Role = 'SUPERUSER' | 'TEAM' | 'MEMBER' | 'MANAGER'
-export type Storage = 'GOOGLE_DRIVE' | 'S3' | 'R2'
 export type MemberStatus = 'PENDING_INVITE' | 'REGISTERED' | 'ACTIVE' | 'INACTIVE' | 'DEACTIVATED'
-
-export interface GoogleDriveConfig {
-  rootFolderId: string
-  membersFolderId: string
-  membersSheetId: string
-  templatesFolderId?: string
-  managersFolderId?: string
-  managersSheetId?: string
-  groupsFolderId?: string
-  groupsSheetId?: string
-  documentsFolderId?: string
-  teamFolderId?: string
-  teamSheetId?: string
-}
-
-export interface OAuthTokens {
-  access_token: string | null
-  refresh_token: string
-  expiry_date: number
-  token_type: string
-  scope: string
-}
 
 export interface S3Config {
   accessKeyId: string
@@ -31,15 +8,10 @@ export interface S3Config {
   bucket: string
 }
 
-export type StorageConfig = GoogleDriveConfig | S3Config
-
 export interface Club {
   id: string
   slug: string
   name: string
-  storageType: Storage | null
-  storageConfig: StorageConfig | null
-  isSetupDone: boolean
   membershipFee: number | null
   createdAt: string
 }
@@ -64,7 +36,6 @@ export interface User {
   isMemberManager: boolean
   storageId: string | null
   deactivatedAt: string | null
-  localData?: Record<string, unknown> | null
   createdAt: string
   emails?: UserEmail[]
 }

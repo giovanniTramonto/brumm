@@ -1,9 +1,6 @@
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
-import { getClubStorageType } from '~/server/utils/s3Client'
-import { uploadMemberDocument } from '~/server/utils/storage/googleDrive'
 import { s3UploadFile } from '~/server/utils/storage/s3/files'
-import type { GoogleDriveConfig, OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -12,10 +9,6 @@ export default defineEventHandler(async (event) => {
 
   if (!memberId) {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
-  }
-
-  if (!club.isSetupDone) {
-    throw createError({ statusCode: 400, statusMessage: 'Storage nicht eingerichtet' })
   }
 
   const member = await prisma.user.findFirst({ where: { id: memberId, clubId: club.id } })
@@ -61,28 +54,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Keine Datei hochgeladen' })
   }
 
-  if ((await getClubStorageType(club.id)) === 'S3') {
-    const result = await s3UploadFile(
-      club.id,
-      `members/${memberId}/contract`,
-      filePart.data,
-      filePart.type ?? 'application/octet-stream',
-      filePart.filename,
-    )
-    return { document: { id: result.fileId, name: filePart.filename } }
-  }
-
-  const tokens = club.oauthToken as OAuthTokens
-  const storageConfig = club.storageConfig as GoogleDriveConfig
-
-  const uploaded = await uploadMemberDocument({
-    tokens,
-    membersFolderId: storageConfig.membersFolderId,
-    storageRef: md.storageRef,
-    filename: filePart.filename,
-    mimeType: filePart.type ?? 'application/octet-stream',
-    buffer: filePart.data,
-  })
-
-  return { document: uploaded }
+  const result = await s3UploadFile(
+    club.id,
+    `members/${memberId}/contract`,
+    filePart.data,
+    filePart.type ?? 'application/octet-stream',
+    filePart.filename,
+  )
+  return { document: { id: result.fileId, name: filePart.filename } }
 })

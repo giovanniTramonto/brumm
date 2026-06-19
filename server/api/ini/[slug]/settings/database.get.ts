@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const record = await prisma.clubDatabase.findUnique({ where: { clubId: club.id } })
 
   return {
-    type: record?.type ?? 'GOOGLE_SHEETS',
+    type: record?.type ?? 'POSTGRES',
     hasDsn: !!record?.encryptedDsn,
     hasPending: !!record?.pendingEncryptedDsn,
   }

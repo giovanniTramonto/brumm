@@ -1,8 +1,7 @@
 import { sendMemberRemovedEmail } from '~/server/utils/email'
 import { deleteMemberData, getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
-import { deleteMemberFolder, findMemberFolderId } from '~/server/utils/storage/googleDrive'
-import type { GoogleDriveConfig, OAuthTokens } from '~/types'
+import { s3DeleteByPrefix } from '~/server/utils/storage/s3/files'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -27,17 +26,10 @@ export default defineEventHandler(async (event) => {
 
   const memberData = await getMemberData(memberId, club)
 
-  if (club.isSetupDone && memberData?.storageRef) {
-    const tokens = club.oauthToken as OAuthTokens
-    const storageConfig = club.storageConfig as GoogleDriveConfig
-    const folderId = await findMemberFolderId({
-      tokens,
-      membersFolderId: storageConfig.membersFolderId,
-      storageRef: memberData.storageRef,
-    })
-    if (folderId) {
-      await deleteMemberFolder({ tokens, folderId })
-    }
+  try {
+    await s3DeleteByPrefix(club.id, `members/${memberId}`)
+  } catch {
+    // non-fatal: S3 cleanup failure should not block DB deletion
   }
 
   const anyInvite = await prisma.invite.findFirst({ where: { userId: memberId } })

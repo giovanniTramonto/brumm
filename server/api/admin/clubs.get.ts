@@ -8,6 +8,7 @@ export default defineEventHandler(async (event) => {
     orderBy: { createdAt: 'desc' },
     include: {
       _count: { select: { users: true } },
+      clubDatabase: { select: { encryptedDsn: true } },
       users: {
         where: { role: 'SUPERUSER' },
         select: {
@@ -19,9 +20,13 @@ export default defineEventHandler(async (event) => {
 
   return {
     clubs: clubs.map((c) => ({
-      ...c,
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      createdAt: c.createdAt,
+      hasDsn: !!c.clubDatabase?.encryptedDsn,
       superuserHasLoggedIn: c.users.some((u) => u.magicLinks.length > 0),
-      users: undefined,
+      _count: c._count,
     })),
   }
 })

@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const record = await prisma.clubFileStorage.findUnique({ where: { clubId: club.id } })
 
   return {
-    type: record?.type ?? 'GOOGLE_DRIVE',
+    type: record?.type ?? 'S3',
     hasConfig: !!record?.encryptedConfig,
     hasPending: !!record?.pendingEncryptedConfig,
   }

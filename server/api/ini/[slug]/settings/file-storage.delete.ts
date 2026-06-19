@@ -11,8 +11,8 @@ export default defineEventHandler(async (event) => {
 
   await prisma.clubFileStorage.upsert({
     where: { clubId: club.id },
-    create: { clubId: club.id, type: 'GOOGLE_DRIVE' },
-    update: { type: 'GOOGLE_DRIVE', encryptedConfig: null, pendingEncryptedConfig: null },
+    create: { clubId: club.id, type: 'S3' },
+    update: { type: 'S3', encryptedConfig: null, pendingEncryptedConfig: null },
   })
 
   invalidateS3Cache(club.id)

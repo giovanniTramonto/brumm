@@ -10,7 +10,8 @@
       "!**/prisma/migrations",
       "!**/.netlify",
       "!**/playwright-report",
-      "!**/test-results"
+      "!**/test-results",
+      "!**/.claude/worktrees"
     ]
   },
   "formatter": {

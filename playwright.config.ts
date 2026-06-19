@@ -31,8 +31,6 @@ export default defineConfig({
       EMAIL_FROM: env('EMAIL_FROM'),
       ADMIN_SECRET: env('ADMIN_SECRET'),
       APP_URL: env('APP_URL'),
-      GOOGLE_CLIENT_ID: env('GOOGLE_CLIENT_ID'),
-      GOOGLE_CLIENT_SECRET: env('GOOGLE_CLIENT_SECRET'),
     },
   },
   globalSetup: './tests/global-setup.ts',

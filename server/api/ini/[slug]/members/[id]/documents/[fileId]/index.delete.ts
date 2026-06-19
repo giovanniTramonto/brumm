@@ -1,8 +1,5 @@
 import { prisma } from '~/server/utils/prisma'
-import { getClubStorageType } from '~/server/utils/s3Client'
-import { deleteDriveFile } from '~/server/utils/storage/googleDrive'
 import { decodeS3FileId, s3DeleteFile } from '~/server/utils/storage/s3/files'
-import type { OAuthTokens } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -12,10 +9,6 @@ export default defineEventHandler(async (event) => {
 
   if (!memberId || !fileId) {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
-  }
-
-  if (!club.isSetupDone) {
-    throw createError({ statusCode: 400, statusMessage: 'Storage nicht eingerichtet' })
   }
 
   const canManageMembers =
@@ -31,12 +24,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
-  if ((await getClubStorageType(club.id)) === 'S3') {
-    await s3DeleteFile(club.id, decodeS3FileId(fileId))
-  } else {
-    const tokens = club.oauthToken as OAuthTokens
-    await deleteDriveFile({ tokens, fileId })
-  }
+  await s3DeleteFile(club.id, decodeS3FileId(fileId))
 
   return { ok: true }
 })

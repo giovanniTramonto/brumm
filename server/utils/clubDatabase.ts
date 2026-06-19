@@ -16,15 +16,10 @@ export async function getClubDb(clubId: string): Promise<Sql> {
   }
 
   const dsn = decrypt(record.encryptedDsn)
-  const sql = postgres(dsn, { max: 5, idle_timeout: 30, ssl: { rejectUnauthorized: false } })
+  const sql = postgres(dsn, { max: 5, idle_timeout: 30 })
 
   clientCache.set(clubId, sql)
   return sql
-}
-
-export async function getClubDbType(clubId: string): Promise<'GOOGLE_SHEETS' | 'POSTGRES'> {
-  const record = await prisma.clubDatabase.findUnique({ where: { clubId } })
-  return record?.type ?? 'GOOGLE_SHEETS'
 }
 
 // Runs pending migrations; used by deploy-succeeded hook and lazy fallback

@@ -5,8 +5,7 @@ interface ClubWithCount {
   id: string
   slug: string
   name: string
-  storageType: string | null
-  isSetupDone: boolean
+  hasDsn: boolean
   superuserHasLoggedIn: boolean
   createdAt: string
   _count: { users: number }
@@ -141,12 +140,12 @@ async function onDeleteClub(clubId: string) {
                   <td class="px-4 py-3 font-medium text-gray-900">{{ club.name }}</td>
                   <td class="px-4 py-3 font-mono text-gray-600">{{ club.slug }}</td>
                   <td class="px-4 py-3 text-gray-600">{{ club._count.users }}</td>
-                  <td class="px-4 py-3 text-gray-600">{{ club.storageType ?? "–" }}</td>
+                  <td class="px-4 py-3 text-gray-600">{{ club.hasDsn ? 'PostgreSQL + S3' : '–' }}</td>
                   <td class="px-4 py-3">
                     <span
                       class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
                       :class="
-                        club.isSetupDone
+                        club.hasDsn
                           ? 'bg-green-100 text-green-800'
                           : club.superuserHasLoggedIn
                             ? 'bg-blue-100 text-blue-800'
@@ -154,7 +153,7 @@ async function onDeleteClub(clubId: string) {
                       "
                     >
                       {{
-                        club.isSetupDone
+                        club.hasDsn
                           ? "Aktiv"
                           : club.superuserHasLoggedIn
                             ? "Einrichtung ausstehend"
@@ -165,7 +164,7 @@ async function onDeleteClub(clubId: string) {
                   <td class="px-4 py-3 text-right">
                     <div class="flex justify-end gap-2">
                       <button
-                        v-if="!club.isSetupDone && !club.superuserHasLoggedIn && !resendedClubs.has(club.id)"
+                        v-if="!club.hasDsn && !club.superuserHasLoggedIn && !resendedClubs.has(club.id)"
                         class="btn-secondary py-1 text-xs"
                         :disabled="isResendLoading === club.id"
                         @click="onResendInvite(club.id)"
