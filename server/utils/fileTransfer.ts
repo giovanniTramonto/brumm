@@ -282,6 +282,70 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
     }
   }
 
+  // 2b. Raw Drive contract folder files (kein-invite uploads — no MemberDocument record)
+  // List every member's contract/ folder and upload files not already covered above.
+  // documents.get.ts reads from the S3 prefix directly, so no DB record is needed here.
+  const handledContractFiles = new Map<string, Set<string>>() // memberId → filenames in S3
+  for (const doc of memberDocs) {
+    const fileName = doc.fileName ?? doc.template.fileName
+    if (doc.s3Key && fileName) {
+      const existing = handledContractFiles.get(doc.memberId)
+      if (existing) {
+        existing.add(fileName)
+      } else {
+        handledContractFiles.set(doc.memberId, new Set([fileName]))
+      }
+    }
+  }
+
+  if (storageConfig?.membersFolderId) {
+    const allMembers = await prisma.user.findMany({ where: { clubId, role: 'MEMBER' } })
+    const { listMemberDocuments } = await import('./storage/googleDrive')
+    for (const member of allMembers) {
+      const md = memberDataMap.get(member.id) ?? (await getMemberData(member.id, club))
+      if (!md?.storageRef) continue
+      try {
+        const contractFiles = await listMemberDocuments({
+          tokens,
+          membersFolderId: storageConfig.membersFolderId,
+          storageRef: md.storageRef,
+        })
+        const alreadyHandled = handledContractFiles.get(member.id) ?? new Set<string>()
+        for (const file of contractFiles) {
+          if (alreadyHandled.has(file.name)) continue
+          const s3Prefix = `members/${member.id}/contract`
+          try {
+            const { buffer, mimeType } = await downloadDriveFile({ tokens, fileId: file.id })
+            const key = await uploadBuffer(client, bucket, s3Prefix, buffer, mimeType, file.name)
+            result.memberDocs.ok++
+            result.memberDocs.log.push({
+              name: file.name,
+              source: `drive:${file.id}`,
+              dest: key,
+              status: 'transferred',
+            })
+          } catch (err) {
+            const error = err instanceof Error ? err.message : String(err)
+            result.memberDocs.failed++
+            result.memberDocs.errors.push(`${member.id}/${file.name}: ${error}`)
+            result.memberDocs.log.push({
+              name: file.name,
+              source: `drive:${file.id}`,
+              dest: `${s3Prefix}/<uid>/${file.name}`,
+              status: 'failed',
+              error,
+            })
+          }
+        }
+      } catch (err) {
+        result.memberDocs.failed++
+        result.memberDocs.errors.push(
+          `listing ${md.storageRef}/contract: ${err instanceof Error ? err.message : String(err)}`,
+        )
+      }
+    }
+  }
+
   // 3. Club wall documents
   const wallDocs = await prisma.document.findMany({ where: { clubId, type: 'document' } })
   const stripExt = (s: string) => s.replace(/\.[^.]+$/, '')
