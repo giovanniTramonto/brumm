@@ -21,7 +21,9 @@ export default defineEventHandler(async (event) => {
     where: { clubId: club.id, event: { in: ['FILE_TRANSFER_DONE', 'FILE_TRANSFER_FAILED'] } },
     orderBy: { createdAt: 'desc' },
   })
-  const isRunning = running && (!completed || running.createdAt > completed.createdAt)
+  const TRANSFER_TIMEOUT_MS = 30 * 60 * 1000
+  const isStale = running && Date.now() - running.createdAt.getTime() > TRANSFER_TIMEOUT_MS
+  const isRunning = !isStale && running && (!completed || running.createdAt > completed.createdAt)
 
   if (isRunning) {
     throw createError({ statusCode: 409, statusMessage: 'Ein Transfer läuft bereits.' })

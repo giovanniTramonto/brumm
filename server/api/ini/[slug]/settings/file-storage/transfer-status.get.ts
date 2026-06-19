@@ -32,5 +32,13 @@ export default defineEventHandler(async (event) => {
     const meta = last.metadata as { reason?: string } | null
     return { status: 'failed', reason: meta?.reason, at: last.createdAt }
   }
+  const TIMEOUT_MS = 20 * 60 * 1000
+  if (Date.now() - last.createdAt.getTime() > TIMEOUT_MS) {
+    return {
+      status: 'failed',
+      reason: 'Transfer-Timeout (Netlify-Limit erreicht)',
+      at: last.createdAt,
+    }
+  }
   return { status: 'running' }
 })
