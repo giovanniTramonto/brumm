@@ -32,6 +32,7 @@ export type TransferResult = {
   memberDocs: Section
   wallDocs: Section
   otherDocs: Section
+  _debug: Record<string, string | number | boolean | null>
 }
 
 function makeSection(): Section {
@@ -76,10 +77,16 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
     memberDocs: makeSection(),
     wallDocs: makeSection(),
     otherDocs: makeSection(),
+    _debug: {
+      templatesFolderIdSet: !!storageConfig?.templatesFolderId,
+      membersFolderIdSet: !!storageConfig?.membersFolderId,
+    },
   }
 
   // 1. Contract template files
   const templates = await prisma.documentTemplate.findMany({ where: { clubId } })
+  result._debug.templatesInDb = templates.length
+
   for (const template of templates) {
     if (template.s3Key) {
       result.templates.ok++
@@ -91,7 +98,17 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
       })
       continue
     }
-    if (!storageConfig.templatesFolderId) continue
+    if (!storageConfig?.templatesFolderId) {
+      result.templates.failed++
+      result.templates.errors.push(`${template.name}: templatesFolderId nicht konfiguriert`)
+      result.templates.log.push({
+        name: template.name,
+        source: 'drive:?',
+        status: 'failed',
+        error: 'templatesFolderId nicht konfiguriert',
+      })
+      continue
+    }
     try {
       const { getOrCreateTemplateSubfolder, listFolderFiles } = await import(
         './storage/googleDrive'
@@ -153,6 +170,8 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
     where: { member: { clubId } },
     include: { template: { select: { fileName: true, ref: true } } },
   })
+  result._debug.memberDocsInDb = memberDocs.length
+
   const memberIds = [...new Set(memberDocs.map((d) => d.memberId))]
   const memberDataMap = new Map<string, Awaited<ReturnType<typeof getMemberData>>>()
   await Promise.all(
@@ -161,6 +180,7 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
       if (md) memberDataMap.set(memberId, md)
     }),
   )
+  result._debug.membersInDataDb = memberDataMap.size
 
   for (const doc of memberDocs) {
     const s3Prefix = `members/${doc.memberId}/contract`
@@ -177,7 +197,18 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
     }
 
     const md = memberDataMap.get(doc.memberId)
-    if (!md?.storageRef) continue
+    if (!md?.storageRef) {
+      result.memberDocs.failed++
+      result.memberDocs.errors.push(`member ${doc.memberId}: storageRef nicht gefunden`)
+      result.memberDocs.log.push({
+        name: doc.fileName ?? doc.template.fileName ?? doc.id,
+        source: `drive:member=${doc.memberId}`,
+        dest: `${s3Prefix}/<uid>/?`,
+        status: 'failed',
+        error: `storageRef nicht gefunden (memberId=${doc.memberId}, inMap=${memberDataMap.has(doc.memberId)})`,
+      })
+      continue
+    }
 
     // Resolve filename: doc.fileName → template.fileName → Drive template subfolder listing
     // (old records have null fileName because only driveFileId was stored before migration)
