@@ -71,25 +71,27 @@ export default defineEventHandler(async (event) => {
       } else if ((await getClubStorageType(club.id)) !== 'S3') {
         const tokens = club.oauthToken as OAuthTokens
         const storageConfig = club.storageConfig as GoogleDriveConfig
-        try {
-          const drive = getDriveClientFromTokens(tokens)
-          const subfolderId = await getOrCreateTemplateSubfolder({
-            tokens,
-            templatesFolderId: storageConfig.templatesFolderId,
-            ref: template.ref,
-          })
-          const sourceFileId = await findDriveFileByName(drive, subfolderId, template.fileName)
-          if (sourceFileId) {
-            await copyFileToMemberDocuments({
+        if (storageConfig.templatesFolderId) {
+          try {
+            const drive = getDriveClientFromTokens(tokens)
+            const subfolderId = await getOrCreateTemplateSubfolder({
               tokens,
-              membersFolderId: storageConfig.membersFolderId,
-              storageRef: memberData.storageRef,
-              sourceFileId,
-              filename: template.fileName,
+              templatesFolderId: storageConfig.templatesFolderId,
+              ref: template.ref,
             })
+            const sourceFileId = await findDriveFileByName(drive, subfolderId, template.fileName)
+            if (sourceFileId) {
+              await copyFileToMemberDocuments({
+                tokens,
+                membersFolderId: storageConfig.membersFolderId,
+                storageRef: memberData.storageRef,
+                sourceFileId,
+                filename: template.fileName,
+              })
+            }
+          } catch {
+            // non-fatal
           }
-        } catch {
-          // non-fatal
         }
       }
     }

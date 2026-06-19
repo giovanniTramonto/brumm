@@ -295,6 +295,20 @@ export async function findDriveFileByName(
   return result.data.files?.[0]?.id ?? null
 }
 
+export async function listFolderFiles(
+  drive: ReturnType<typeof getDriveClientFromTokens>,
+  folderId: string,
+): Promise<Array<{ id: string; name: string }>> {
+  const result = await drive.files.list({
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+    fields: 'files(id, name)',
+    pageSize: 100,
+  })
+  return (result.data.files ?? []).map((f) => ({ id: f.id ?? '', name: f.name ?? '' }))
+}
+
 export async function findMemberContractFileId(params: {
   tokens: OAuthTokens
   membersFolderId: string

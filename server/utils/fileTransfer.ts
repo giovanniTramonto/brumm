@@ -81,11 +81,10 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
   // 1. Contract template files
   const templates = await prisma.documentTemplate.findMany({ where: { clubId } })
   for (const template of templates) {
-    if (!template.fileName) continue
     if (template.s3Key) {
       result.templates.ok++
       result.templates.log.push({
-        name: template.fileName,
+        name: template.fileName ?? template.name,
         source: `s3:${template.s3Key}`,
         dest: template.s3Key,
         status: 'already_in_s3',
@@ -93,16 +92,28 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
       continue
     }
     if (!storageConfig.templatesFolderId) continue
-    const dest = `contract-templates/${template.id}/<uid>/${template.fileName}`
     try {
-      const { getOrCreateTemplateSubfolder } = await import('./storage/googleDrive')
+      const { getOrCreateTemplateSubfolder, listFolderFiles } = await import(
+        './storage/googleDrive'
+      )
       const subfolderId = await getOrCreateTemplateSubfolder({
         tokens,
         templatesFolderId: storageConfig.templatesFolderId,
         ref: template.ref,
       })
-      const fileId = await findDriveFileByName(drive, subfolderId, template.fileName)
-      if (!fileId) throw new Error('Datei nicht in Drive gefunden')
+      // If fileName is known, find by name; otherwise take the first file in the subfolder
+      let fileId: string | null = null
+      let resolvedFileName = template.fileName
+      if (resolvedFileName) {
+        fileId = await findDriveFileByName(drive, subfolderId, resolvedFileName)
+      } else {
+        const files = await listFolderFiles(drive, subfolderId)
+        if (files.length > 0) {
+          fileId = files[0].id ?? null
+          resolvedFileName = files[0].name ?? null
+        }
+      }
+      if (!fileId || !resolvedFileName) throw new Error('Datei nicht in Drive gefunden')
       const { buffer, mimeType } = await downloadDriveFile({ tokens, fileId })
       const key = await uploadBuffer(
         client,
@@ -110,24 +121,27 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
         `contract-templates/${template.id}`,
         buffer,
         mimeType,
-        template.fileName,
+        resolvedFileName,
       )
-      await prisma.documentTemplate.update({ where: { id: template.id }, data: { s3Key: key } })
+      await prisma.documentTemplate.update({
+        where: { id: template.id },
+        data: { s3Key: key, fileName: resolvedFileName },
+      })
       result.templates.ok++
       result.templates.log.push({
-        name: template.fileName,
+        name: resolvedFileName,
         source: `drive:${fileId}`,
-        dest,
+        dest: `contract-templates/${template.id}/<uid>/${resolvedFileName}`,
         status: 'transferred',
       })
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err)
       result.templates.failed++
-      result.templates.errors.push(`${template.fileName}: ${error}`)
+      result.templates.errors.push(`${template.name}: ${error}`)
       result.templates.log.push({
-        name: template.fileName,
+        name: template.fileName ?? template.name,
         source: `drive:ref=${template.ref}`,
-        dest,
+        dest: `contract-templates/${template.id}/<uid>/${template.fileName ?? '?'}`,
         status: 'failed',
         error,
       })
@@ -137,7 +151,7 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
   // 2. Member contract document submissions
   const memberDocs = await prisma.memberDocument.findMany({
     where: { member: { clubId } },
-    include: { template: { select: { fileName: true } } },
+    include: { template: { select: { fileName: true, ref: true } } },
   })
   const memberIds = [...new Set(memberDocs.map((d) => d.memberId))]
   const memberDataMap = new Map<string, Awaited<ReturnType<typeof getMemberData>>>()
@@ -149,42 +163,76 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
   )
 
   for (const doc of memberDocs) {
-    // fileName may be null for read-type submissions created before the schema migration
-    // (old read.post.ts only stored driveFileId, not filename) — fall back to template fileName
-    const fileName = doc.fileName ?? doc.template.fileName
-    if (!fileName) continue
+    const s3Prefix = `members/${doc.memberId}/contract`
+
     if (doc.s3Key) {
       result.memberDocs.ok++
       result.memberDocs.log.push({
-        name: fileName,
+        name: doc.fileName ?? doc.template.fileName ?? doc.id,
         source: `s3:${doc.s3Key}`,
         dest: doc.s3Key,
         status: 'already_in_s3',
       })
       continue
     }
+
     const md = memberDataMap.get(doc.memberId)
     if (!md?.storageRef) continue
-    const s3Prefix = `members/${doc.memberId}/contract`
-    const dest = `${s3Prefix}/<uid>/${fileName}`
+
+    // Resolve filename: doc.fileName → template.fileName → Drive template subfolder listing
+    // (old records have null fileName because only driveFileId was stored before migration)
+    let resolvedFileName = doc.fileName ?? doc.template.fileName
+    if (!resolvedFileName && storageConfig.templatesFolderId) {
+      try {
+        const { getOrCreateTemplateSubfolder, listFolderFiles } = await import(
+          './storage/googleDrive'
+        )
+        const subfolderId = await getOrCreateTemplateSubfolder({
+          tokens,
+          templatesFolderId: storageConfig.templatesFolderId,
+          ref: doc.template.ref,
+        })
+        const files = await listFolderFiles(drive, subfolderId)
+        if (files.length > 0) resolvedFileName = files[0].name
+      } catch {
+        // resolvedFileName stays null; will be counted as failed below
+      }
+    }
+
+    const displayName = resolvedFileName ?? doc.id
+    const dest = `${s3Prefix}/<uid>/${displayName}`
+
+    if (!resolvedFileName) {
+      result.memberDocs.failed++
+      result.memberDocs.errors.push(`doc ${doc.id}: Dateiname nicht ermittelbar`)
+      result.memberDocs.log.push({
+        name: displayName,
+        source: `drive:member=${doc.memberId}`,
+        dest,
+        status: 'failed',
+        error: 'Dateiname nicht ermittelbar',
+      })
+      continue
+    }
+
     try {
       const { findMemberContractFileId } = await import('./storage/googleDrive')
       const fileId = await findMemberContractFileId({
         tokens,
         membersFolderId: storageConfig.membersFolderId,
         storageRef: md.storageRef,
-        fileName,
+        fileName: resolvedFileName,
       })
       if (!fileId) throw new Error('Datei nicht in Drive gefunden')
       const { buffer, mimeType } = await downloadDriveFile({ tokens, fileId })
-      const key = await uploadBuffer(client, bucket, s3Prefix, buffer, mimeType, fileName)
+      const key = await uploadBuffer(client, bucket, s3Prefix, buffer, mimeType, resolvedFileName)
       await prisma.memberDocument.update({
         where: { id: doc.id },
-        data: { s3Key: key, fileName },
+        data: { s3Key: key, fileName: resolvedFileName },
       })
       result.memberDocs.ok++
       result.memberDocs.log.push({
-        name: fileName,
+        name: resolvedFileName,
         source: `drive:${fileId}`,
         dest,
         status: 'transferred',
@@ -194,7 +242,7 @@ export async function transferDriveToS3(clubId: string): Promise<TransferResult>
       result.memberDocs.failed++
       result.memberDocs.errors.push(`doc ${doc.id}: ${error}`)
       result.memberDocs.log.push({
-        name: fileName,
+        name: displayName,
         source: `drive:member=${doc.memberId}`,
         dest,
         status: 'failed',
