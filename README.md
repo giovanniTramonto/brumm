@@ -29,7 +29,7 @@ npm run dev
 npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
 ```
 
-Nach dem Start PostgreSQL-DSN und S3-Zugangsdaten unter `/ini/{slug}/settings` eintragen. Für lokales Docker reicht `postgresql://brumm:brumm@localhost:5433/brumm` als Club-DSN – kein `sslmode` nötig.
+Nach dem Start PostgreSQL-DSN und S3-Zugangsdaten unter `/ini/{slug}/settings` eintragen. Für lokales Docker als Club-DSN `?sslmode=disable` anhängen: `postgresql://brumm:brumm@localhost:5433/brumm?sslmode=disable`. Beim Speichern der DSN werden ausstehende Club-DB-Migrationen automatisch ausgeführt.
 
 ## URL-Struktur
 

@@ -1,6 +1,6 @@
 import postgres from 'postgres'
 import { z } from 'zod'
-import { invalidateClubDb } from '~/server/utils/clubDatabase'
+import { invalidateClubDb, migrateClubDb } from '~/server/utils/clubDatabase'
 import { encrypt } from '~/server/utils/encryption'
 import { prisma } from '~/server/utils/prisma'
 
@@ -25,10 +25,13 @@ export default defineEventHandler(async (event) => {
   // Verify connection before saving
   let testSql: ReturnType<typeof postgres> | undefined
   try {
+    const dsnUrl = new URL(parsed.data.dsn.replace(/^postgres:\/\//, 'postgresql://'))
+    const sslMode = dsnUrl.searchParams.get('sslmode')
+    const ssl = sslMode === 'disable' ? false : { rejectUnauthorized: false }
     testSql = postgres(parsed.data.dsn, {
       max: 1,
       connect_timeout: 5,
-      ssl: { rejectUnauthorized: false },
+      ssl,
     })
     await testSql`SELECT 1`
   } catch (err) {
@@ -46,6 +49,7 @@ export default defineEventHandler(async (event) => {
     data: { encryptedDsn: encrypt(parsed.data.dsn) },
   })
   invalidateClubDb(club.id)
+  await migrateClubDb(club.id)
 
   return { ok: true }
 })
