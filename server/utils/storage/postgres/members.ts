@@ -137,6 +137,11 @@ export async function pgBatchUpdateMembers(
   })
 }
 
+export async function pgGetAllMembersForClub(sql: Sql): Promise<MemberData[]> {
+  const rows = await sql<Row[]>`SELECT * FROM members`
+  return rows.map(rowToMemberData)
+}
+
 export async function pgFindUserIdByEmail(sql: Sql, email: string): Promise<string | null> {
   const rows = await sql<{ user_id: string }[]>`
     SELECT user_id FROM members WHERE email1 = ${email} OR email2 = ${email} LIMIT 1

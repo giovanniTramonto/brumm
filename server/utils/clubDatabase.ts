@@ -11,22 +11,28 @@ export function invalidateClubDb(clubId: string): void {
   clientCache.delete(clubId)
 }
 
-export async function getClubDb(clubId: string): Promise<Sql> {
+export async function getClubDb(clubId: string, knownEncryptedDsn?: string): Promise<Sql> {
   const cached = clientCache.get(clubId)
   if (cached) return cached
 
   const promise = (async () => {
-    const record = await prisma.club.findUnique({
-      where: { id: clubId },
-      select: { encryptedDsn: true },
-    })
-    if (!record?.encryptedDsn) {
+    let encryptedDsn: string | null | undefined
+    if (knownEncryptedDsn !== undefined) {
+      encryptedDsn = knownEncryptedDsn
+    } else {
+      const record = await prisma.club.findUnique({
+        where: { id: clubId },
+        select: { encryptedDsn: true },
+      })
+      encryptedDsn = record?.encryptedDsn
+    }
+    if (!encryptedDsn) {
       throw createError({
         statusCode: 503,
         statusMessage: 'Keine Postgres-Datenbank konfiguriert.',
       })
     }
-    const dsn = decrypt(record.encryptedDsn)
+    const dsn = decrypt(encryptedDsn)
     return postgres(dsn, { max: 5, idle_timeout: 30 })
   })()
 

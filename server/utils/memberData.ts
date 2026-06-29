@@ -5,6 +5,7 @@ import {
   pgDeleteMember,
   pgFindUserIdByEmail,
   pgGetAllMembers,
+  pgGetAllMembersForClub,
   pgGetMember,
   pgSaveMember,
   pgUpdateMember,
@@ -24,6 +25,11 @@ export async function getAllMemberData(
 ): Promise<MemberData[]> {
   const sql = await getClubDb(club.id)
   return pgGetAllMembers(sql, userIds)
+}
+
+export async function getAllMemberDataForClub(club: { id: string }): Promise<MemberData[]> {
+  const sql = await getClubDb(club.id)
+  return pgGetAllMembersForClub(sql)
 }
 
 export async function saveMemberData(data: MemberData, club: { id: string }): Promise<void> {

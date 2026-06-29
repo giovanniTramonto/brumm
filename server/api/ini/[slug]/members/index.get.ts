@@ -1,6 +1,6 @@
 import { getAllGroups } from '~/server/utils/groupData'
 import { getAllManagerData } from '~/server/utils/managerData'
-import { getAllMemberData } from '~/server/utils/memberData'
+import { getAllMemberDataForClub } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import type { Member } from '~/types'
 
@@ -8,34 +8,33 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
 
-  const users = await prisma.user.findMany({
-    where: { clubId: club.id },
-    select: {
-      id: true,
-      clubId: true,
-      role: true,
-      status: true,
-      storageId: true,
-      isMemberManager: true,
-      createdAt: true,
-      hasSubmittedDocuments: true,
-      deactivatedAt: true,
-    },
-  })
+  const [[users, memberManagerRecords], [allMemberData, groups, allManagerData]] =
+    await Promise.all([
+      Promise.all([
+        prisma.user.findMany({
+          where: { clubId: club.id },
+          select: {
+            id: true,
+            clubId: true,
+            role: true,
+            status: true,
+            storageId: true,
+            isMemberManager: true,
+            createdAt: true,
+            hasSubmittedDocuments: true,
+            deactivatedAt: true,
+          },
+        }),
+        prisma.manager.findMany({
+          where: { clubId: club.id, isMemberManager: true },
+          select: { id: true },
+        }),
+      ]),
+      Promise.all([getAllMemberDataForClub(club), getAllGroups(club), getAllManagerData(club)]),
+    ])
 
-  const userIds = users.map((u) => u.id)
-  const [memberDataList, groups, memberManagerRecords, allManagerData] = await Promise.all([
-    getAllMemberData(userIds, club),
-    getAllGroups(club),
-    prisma.manager.findMany({
-      where: { clubId: club.id, isMemberManager: true },
-      select: { id: true },
-    }),
-    getAllManagerData(club),
-  ])
   const groupMap = new Map(groups.map((g) => [g.id, g]))
-
-  const memberDataMap = new Map(memberDataList.map((md) => [md.userId, md]))
+  const memberDataMap = new Map(allMemberData.map((md) => [md.userId, md]))
 
   let guardianEmails: Set<string> | null = null
   if (currentUser.role === 'MEMBER') {

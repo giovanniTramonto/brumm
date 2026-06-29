@@ -1,24 +1,22 @@
 import { getAllGroups } from '~/server/utils/groupData'
-import { getAllMemberData } from '~/server/utils/memberData'
+import { getAllMemberDataForClub } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
 
-  const users = await prisma.user.findMany({
-    where: { clubId: club.id, role: 'MEMBER', status: { in: ['ACTIVE', 'INACTIVE'] } },
-    select: { id: true },
-  })
-
-  const [memberDataList, groups] = await Promise.all([
-    getAllMemberData(
-      users.map((u) => u.id),
-      club,
-    ),
-    getAllGroups(club).catch(() => []),
+  const [users, [allMemberData, groups]] = await Promise.all([
+    prisma.user.findMany({
+      where: { clubId: club.id, role: 'MEMBER', status: { in: ['ACTIVE', 'INACTIVE'] } },
+      select: { id: true },
+    }),
+    Promise.all([getAllMemberDataForClub(club), getAllGroups(club).catch(() => [])]),
   ])
 
-  const addresses = memberDataList
+  const activeIds = new Set(users.map((u) => u.id))
+
+  const addresses = allMemberData
+    .filter((md) => activeIds.has(md.userId))
     .map((md) => ({
       firstName: md.firstName,
       lastName: md.lastName,

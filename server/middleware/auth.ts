@@ -1,3 +1,4 @@
+import { getClubDb } from '~/server/utils/clubDatabase'
 import { prisma } from '~/server/utils/prisma'
 
 const PUBLIC_ROUTES = [
@@ -16,27 +17,35 @@ const PUBLIC_ROUTES = [
 
 export default defineEventHandler(async (event) => {
   const path = getRequestURL(event).pathname
-
-  const isPublic = PUBLIC_ROUTES.some((pattern) => pattern.test(path))
-  if (isPublic) return
-
   if (!path.startsWith('/api/')) return
 
+  const isPublic = PUBLIC_ROUTES.some((pattern) => pattern.test(path))
+  const slug = path.match(/^\/api\/ini\/([^/]+)/)?.[1]
   const token = getCookie(event, 'session_token')
-  if (!token) {
-    throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
+
+  const [sessionResult, clubResult] = await Promise.all([
+    !isPublic && token
+      ? prisma.session.findUnique({ where: { token }, include: { user: true } })
+      : Promise.resolve(null),
+    slug ? prisma.club.findUnique({ where: { slug } }) : Promise.resolve(null),
+  ])
+
+  if (!isPublic) {
+    if (!token) throw createError({ statusCode: 401, statusMessage: 'Nicht angemeldet' })
+    if (!sessionResult || sessionResult.expiresAt < new Date()) {
+      deleteCookie(event, 'session_token')
+      throw createError({ statusCode: 401, statusMessage: 'Sitzung abgelaufen' })
+    }
+    event.context.user = sessionResult.user
+    event.context.session = sessionResult
   }
 
-  const session = await prisma.session.findUnique({
-    where: { token },
-    include: { user: true },
-  })
-
-  if (!session || session.expiresAt < new Date()) {
-    deleteCookie(event, 'session_token')
-    throw createError({ statusCode: 401, statusMessage: 'Sitzung abgelaufen' })
+  if (slug) {
+    if (!clubResult) throw createError({ statusCode: 404, statusMessage: 'Verein nicht gefunden' })
+    event.context.club = clubResult
+    // Warm up club DB connection early; handlers await the same cached Promise
+    if (clubResult.encryptedDsn) {
+      getClubDb(clubResult.id, clubResult.encryptedDsn).catch(() => {})
+    }
   }
-
-  event.context.user = session.user
-  event.context.session = session
 })
