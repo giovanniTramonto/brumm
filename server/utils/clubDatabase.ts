@@ -3,26 +3,36 @@ import { decrypt } from './encryption'
 import { runMigrations } from './migrations/runner'
 import { prisma } from './prisma'
 
-// Per-process client cache keyed by clubId — exported so endpoints can invalidate on DSN change
-export const clientCache = new Map<string, Sql>()
+// Caches a Promise<Sql> so concurrent callers share the same initialization
+// instead of each establishing their own connection.
+const clientCache = new Map<string, Promise<Sql>>()
+
+export function invalidateClubDb(clubId: string): void {
+  clientCache.delete(clubId)
+}
 
 export async function getClubDb(clubId: string): Promise<Sql> {
   const cached = clientCache.get(clubId)
   if (cached) return cached
 
-  const record = await prisma.club.findUnique({
-    where: { id: clubId },
-    select: { encryptedDsn: true },
-  })
-  if (!record?.encryptedDsn) {
-    throw createError({ statusCode: 503, statusMessage: 'Keine Postgres-Datenbank konfiguriert.' })
-  }
+  const promise = (async () => {
+    const record = await prisma.club.findUnique({
+      where: { id: clubId },
+      select: { encryptedDsn: true },
+    })
+    if (!record?.encryptedDsn) {
+      throw createError({
+        statusCode: 503,
+        statusMessage: 'Keine Postgres-Datenbank konfiguriert.',
+      })
+    }
+    const dsn = decrypt(record.encryptedDsn)
+    return postgres(dsn, { max: 5, idle_timeout: 30 })
+  })()
 
-  const dsn = decrypt(record.encryptedDsn)
-  const sql = postgres(dsn, { max: 5, idle_timeout: 30 })
-
-  clientCache.set(clubId, sql)
-  return sql
+  clientCache.set(clubId, promise)
+  promise.catch(() => clientCache.delete(clubId))
+  return promise
 }
 
 // Runs pending migrations; used by deploy-succeeded hook and lazy fallback

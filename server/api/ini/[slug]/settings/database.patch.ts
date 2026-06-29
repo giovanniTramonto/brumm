@@ -1,6 +1,6 @@
 import postgres from 'postgres'
 import { z } from 'zod'
-import { clientCache } from '~/server/utils/clubDatabase'
+import { invalidateClubDb } from '~/server/utils/clubDatabase'
 import { encrypt } from '~/server/utils/encryption'
 import { prisma } from '~/server/utils/prisma'
 
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     where: { id: club.id },
     data: { encryptedDsn: encrypt(parsed.data.dsn) },
   })
-  clientCache.delete(club.id)
+  invalidateClubDb(club.id)
 
   return { ok: true }
 })
