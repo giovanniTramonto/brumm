@@ -58,11 +58,7 @@ export default defineEventHandler(async (event) => {
       .filter((d) => memberManagerIds.has(d.managerId) && d.email)
       .map((d) => d.email)
   } else {
-    const superUserEmails = await prisma.userEmail.findMany({
-      where: { user: { clubId: club.id, role: 'SUPERUSER' } },
-      select: { email: true },
-    })
-    notifyEmails = superUserEmails.map((e) => e.email)
+    notifyEmails = club.adminEmail ? [club.adminEmail] : []
   }
 
   await prisma.user.update({

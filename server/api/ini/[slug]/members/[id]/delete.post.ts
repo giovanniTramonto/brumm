@@ -47,7 +47,6 @@ export default defineEventHandler(async (event) => {
   await prisma.invite.deleteMany({ where: { userId: memberId } })
   await prisma.magicLink.deleteMany({ where: { userId: memberId } })
   await prisma.memberDocument.deleteMany({ where: { memberId } })
-  await prisma.userEmail.deleteMany({ where: { userId: memberId } })
   await prisma.user.delete({ where: { id: memberId } })
 
   return { ok: true }

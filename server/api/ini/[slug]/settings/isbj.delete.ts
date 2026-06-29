@@ -1,3 +1,6 @@
+import { invalidateISBJCache } from '~/server/utils/isbjClient'
+import { prisma } from '~/server/utils/prisma'
+
 export default defineEventHandler(async (event) => {
   const user = event.context.user
   const club = event.context.club
@@ -6,5 +9,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  return { hasDsn: !!club.encryptedDsn }
+  await prisma.clubISBJConfig.deleteMany({ where: { clubId: club.id } })
+  invalidateISBJCache(club.id)
+  return { ok: true }
 })

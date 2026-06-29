@@ -8,7 +8,6 @@ export default defineEventHandler(async (event) => {
     orderBy: { createdAt: 'desc' },
     include: {
       _count: { select: { users: true } },
-      clubDatabase: { select: { encryptedDsn: true } },
       users: {
         where: { role: 'SUPERUSER' },
         select: {
@@ -24,7 +23,7 @@ export default defineEventHandler(async (event) => {
       slug: c.slug,
       name: c.name,
       createdAt: c.createdAt,
-      hasDsn: !!c.clubDatabase?.encryptedDsn,
+      hasDsn: !!c.encryptedDsn,
       superuserHasLoggedIn: c.users.some((u) => u.magicLinks.length > 0),
       _count: c._count,
     })),

@@ -25,18 +25,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Ungültige Eingabe' })
   }
 
-  await prisma.clubFileStorage.upsert({
-    where: { clubId: club.id },
-    create: {
-      clubId: club.id,
-      type: 'S3',
-      encryptedConfig: encrypt(JSON.stringify(parsed.data)),
-    },
-    update: {
-      type: 'S3',
-      encryptedConfig: encrypt(JSON.stringify(parsed.data)),
-      pendingEncryptedConfig: null,
-    },
+  await prisma.club.update({
+    where: { id: club.id },
+    data: { encryptedS3Config: encrypt(JSON.stringify(parsed.data)) },
   })
 
   invalidateS3Cache(club.id)

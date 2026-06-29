@@ -78,7 +78,6 @@ export default defineEventHandler(async (event) => {
 
   const user = await prisma.user.findUnique({
     where: { id: magicLink.userId },
-    include: { emails: true },
   })
   if (user?.role === 'MEMBER') {
     const memberData = await getMemberData(user.id, club)

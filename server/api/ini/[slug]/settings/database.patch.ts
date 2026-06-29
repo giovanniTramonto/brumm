@@ -41,10 +41,9 @@ export default defineEventHandler(async (event) => {
     await testSql?.end()
   }
 
-  await prisma.clubDatabase.upsert({
-    where: { clubId: club.id },
-    create: { clubId: club.id, type: 'POSTGRES', encryptedDsn: encrypt(parsed.data.dsn) },
-    update: { type: 'POSTGRES', encryptedDsn: encrypt(parsed.data.dsn), pendingEncryptedDsn: null },
+  await prisma.club.update({
+    where: { id: club.id },
+    data: { encryptedDsn: encrypt(parsed.data.dsn) },
   })
   clientCache.delete(club.id)
 

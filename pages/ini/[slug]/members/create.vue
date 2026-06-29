@@ -17,22 +17,20 @@ const error = ref<string | null>(null)
 const created = ref<{ id: string; name: string } | null>(null)
 const emailError = ref<string | null>(null)
 
-const superUserEmails = computed(
-  () => new Set((authStore.currentUser?.emails ?? []).map((e) => e.email.toLowerCase())),
-)
+const adminEmail = computed(() => authStore.currentClub?.adminEmail?.toLowerCase() ?? null)
 
 const isSuperUserGuardian = computed(() => {
+  if (!adminEmail.value) return false
   const e1 = form.email1.trim().toLowerCase()
   const e2 = form.email2.trim().toLowerCase()
-  const e1IsSuperUser = !!e1 && superUserEmails.value.has(e1)
-  const e2IsSuperUser = !e2 || superUserEmails.value.has(e2)
-  return e1IsSuperUser && e2IsSuperUser
+  return e1 === adminEmail.value && (!e2 || e2 === adminEmail.value)
 })
 
 const hasSuperUserEmail = computed(() => {
+  if (!adminEmail.value) return false
   const e1 = form.email1.trim().toLowerCase()
   const e2 = form.email2.trim().toLowerCase()
-  return (!!e1 && superUserEmails.value.has(e1)) || (!!e2 && superUserEmails.value.has(e2))
+  return e1 === adminEmail.value || e2 === adminEmail.value
 })
 
 const form = reactive({

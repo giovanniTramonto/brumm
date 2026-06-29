@@ -44,19 +44,11 @@ export default defineEventHandler(async (event) => {
 
   const emails = [email1.toLowerCase(), ...(email2 ? [email2.toLowerCase()] : [])]
 
-  const [superUserEmails, existingUserEmail] = await Promise.all([
-    prisma.userEmail.findMany({ where: { userId: currentUser.id }, select: { email: true } }),
-    prisma.userEmail.findFirst({ where: { email: { in: emails }, user: { clubId: club.id } } }),
-  ])
+  const adminEmail = club.adminEmail?.toLowerCase()
+  const hasSuperUserEmail = !!adminEmail && emails.includes(adminEmail)
+  const inviteEmails = emails.filter((e) => e !== adminEmail)
 
-  const superUserEmailSet = new Set(superUserEmails.map((e) => e.email.toLowerCase()))
-  const inviteEmails = emails.filter((e) => !superUserEmailSet.has(e))
-  const hasSuperUserEmail = emails.some((e) => superUserEmailSet.has(e))
-  const parentAlreadyRegistered =
-    !!existingUserEmail && inviteEmails.includes(existingUserEmail.email.toLowerCase())
-
-  const willHavePendingInvite =
-    !hasSuperUserEmail && sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered
+  const willHavePendingInvite = !hasSuperUserEmail && sendInvite && inviteEmails.length > 0
 
   const user = await prisma.user.create({
     data: {
@@ -111,7 +103,7 @@ export default defineEventHandler(async (event) => {
       },
     })
 
-    if (sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered) {
+    if (sendInvite && inviteEmails.length > 0) {
       const magicLink = await prisma.magicLink.create({
         data: {
           userId: user.id,
@@ -132,7 +124,7 @@ export default defineEventHandler(async (event) => {
         emailError = err instanceof Error ? err.message : 'Unbekannter Fehler'
       }
     }
-  } else if (sendInvite && inviteEmails.length > 0 && !parentAlreadyRegistered) {
+  } else if (sendInvite && inviteEmails.length > 0) {
     const invite = await prisma.invite.create({
       data: {
         clubId: club.id,

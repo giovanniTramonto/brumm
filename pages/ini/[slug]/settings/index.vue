@@ -44,9 +44,9 @@ async function onSaveName() {
 }
 
 // --- Datenbank ---
-type DbStatus = { type: 'POSTGRES'; hasDsn: boolean; hasPending: boolean }
+type DbStatus = { hasDsn: boolean }
 
-const dbStatus = ref<DbStatus>({ type: 'POSTGRES', hasDsn: false, hasPending: false })
+const dbStatus = ref<DbStatus>({ hasDsn: false })
 const isEditingDb = ref(false)
 const dsnInput = ref('')
 const isSavingDb = ref(false)
@@ -77,9 +77,9 @@ async function onSaveDb() {
 }
 
 // --- Datenspeicher ---
-type StorageStatus = { type: 'S3'; hasConfig: boolean; hasPending: boolean }
+type StorageStatus = { hasConfig: boolean }
 
-const storageStatus = ref<StorageStatus>({ type: 'S3', hasConfig: false, hasPending: false })
+const storageStatus = ref<StorageStatus>({ hasConfig: false })
 const isEditingStorage = ref(false)
 const s3Form = ref({ endpoint: '', bucket: '', region: '', accessKeyId: '', secretAccessKey: '' })
 const isSavingStorage = ref(false)
@@ -113,8 +113,105 @@ async function onSaveStorage() {
   }
 }
 
+// --- ISBJ ---
+type ISBJStatus = {
+  hasConfig: boolean
+  host?: string
+  username?: string
+  traegerNummer?: string
+  einrichtungsNummer?: string
+}
+
+const isbjStatus = ref<ISBJStatus>({ hasConfig: false })
+const isEditingISBJ = ref(false)
+const isTestingISBJ = ref(false)
+const isbjTestResult = ref<'ok' | 'error' | null>(null)
+const isbjTestMessage = ref('')
+const isbjForm = ref({
+  host: 'ds.traegerportal.isbj.verwalt-berlin.de',
+  username: '',
+  traegerNummer: '',
+  einrichtungsNummer: '',
+  apiKey: '',
+  certPassphrase: '',
+})
+const isbjCertFile = ref<File | null>(null)
+const isSavingISBJ = ref(false)
+const isbjError = ref('')
+const isDeletingISBJ = ref(false)
+
+async function fetchISBJStatus() {
+  isbjStatus.value = await $fetch<ISBJStatus>(`/api/ini/${slug}/settings/isbj`)
+}
+
+function onISBJCertSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  isbjCertFile.value = input.files?.[0] ?? null
+}
+
+async function onSaveISBJ() {
+  isSavingISBJ.value = true
+  isbjError.value = ''
+  try {
+    const form = new FormData()
+    form.append('host', isbjForm.value.host.trim())
+    form.append('username', isbjForm.value.username.trim())
+    form.append('traegerNummer', isbjForm.value.traegerNummer.trim())
+    form.append('einrichtungsNummer', isbjForm.value.einrichtungsNummer.trim())
+    if (isbjForm.value.apiKey.trim()) form.append('apiKey', isbjForm.value.apiKey.trim())
+    if (isbjForm.value.certPassphrase.trim())
+      form.append('certPassphrase', isbjForm.value.certPassphrase.trim())
+    if (isbjCertFile.value) form.append('cert', isbjCertFile.value, isbjCertFile.value.name)
+    await $fetch(`/api/ini/${slug}/settings/isbj`, { method: 'PATCH', body: form })
+    isEditingISBJ.value = false
+    isbjTestResult.value = null
+    isbjCertFile.value = null
+    isbjForm.value = {
+      host: 'ds.traegerportal.isbj.verwalt-berlin.de',
+      username: '',
+      traegerNummer: '',
+      einrichtungsNummer: '',
+      apiKey: '',
+      certPassphrase: '',
+    }
+    await fetchISBJStatus()
+  } catch (err) {
+    isbjError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
+  } finally {
+    isSavingISBJ.value = false
+  }
+}
+
+async function onTestISBJ() {
+  isTestingISBJ.value = true
+  isbjTestResult.value = null
+  isbjTestMessage.value = ''
+  try {
+    await $fetch(`/api/ini/${slug}/settings/isbj/test`, { method: 'POST' })
+    isbjTestResult.value = 'ok'
+  } catch (err) {
+    isbjTestResult.value = 'error'
+    isbjTestMessage.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Verbindungsfehler'
+  } finally {
+    isTestingISBJ.value = false
+  }
+}
+
+async function onDeleteISBJ() {
+  if (!confirm('ISBJ-Verbindung wirklich entfernen?')) return
+  isDeletingISBJ.value = true
+  try {
+    await $fetch(`/api/ini/${slug}/settings/isbj`, { method: 'DELETE' })
+    await fetchISBJStatus()
+  } finally {
+    isDeletingISBJ.value = false
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([fetchDbStatus(), fetchStorageStatus()])
+  await Promise.all([fetchDbStatus(), fetchStorageStatus(), fetchISBJStatus()])
 })
 </script>
 
@@ -255,6 +352,115 @@ onMounted(async () => {
           {{ storageStatus.hasConfig ? 'S3-Zugangsdaten ändern' : 'S3 einrichten' }}
         </button>
       </div>
+    </div>
+
+    <!-- ISBJ Trägerportal -->
+    <div class="card space-y-4">
+      <h2 class="font-semibold text-gray-900">ISBJ Trägerportal</h2>
+
+      <template v-if="isbjStatus.hasConfig && !isEditingISBJ">
+        <dl class="space-y-2 text-sm">
+          <div class="flex gap-2">
+            <dt class="w-40 shrink-0 text-gray-500">Benutzername</dt>
+            <dd class="text-gray-900">{{ isbjStatus.username }}</dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="w-40 shrink-0 text-gray-500">Trägernummer</dt>
+            <dd class="text-gray-900">{{ isbjStatus.traegerNummer }}</dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="w-40 shrink-0 text-gray-500">Einrichtungsnummer</dt>
+            <dd class="text-gray-900">{{ isbjStatus.einrichtungsNummer }}</dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="w-40 shrink-0 text-gray-500">Host</dt>
+            <dd class="font-mono text-xs text-gray-500">{{ isbjStatus.host }}</dd>
+          </div>
+          <div class="flex gap-2">
+            <dt class="w-40 shrink-0 text-gray-500">Zertifikat & API-Key</dt>
+            <dd class="text-xs text-gray-400">verschlüsselt gespeichert</dd>
+          </div>
+        </dl>
+
+        <div
+          v-if="isbjTestResult"
+          role="alert"
+          class="rounded-md p-3 text-sm"
+          :class="isbjTestResult === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+        >
+          {{ isbjTestResult === 'ok' ? 'Verbindung erfolgreich.' : isbjTestMessage }}
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button class="btn-secondary text-sm" :disabled="isTestingISBJ" @click="onTestISBJ">
+            {{ isTestingISBJ ? 'Wird getestet…' : 'Verbindung testen' }}
+          </button>
+          <button class="btn-secondary text-sm" @click="isEditingISBJ = true; isbjTestResult = null">
+            Zugangsdaten ändern
+          </button>
+          <button class="btn-danger text-sm" :disabled="isDeletingISBJ" @click="onDeleteISBJ">
+            {{ isDeletingISBJ ? '…' : 'Entfernen' }}
+          </button>
+        </div>
+      </template>
+
+      <form v-else-if="isEditingISBJ || !isbjStatus.hasConfig" class="space-y-3" @submit.prevent="onSaveISBJ">
+        <div class="grid gap-3 tablet:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">Benutzername</label>
+            <input v-model="isbjForm.username" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">Trägernummer</label>
+            <input v-model="isbjForm.traegerNummer" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">Einrichtungsnummer</label>
+            <input v-model="isbjForm.einrichtungsNummer" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">API-Key{{ isbjStatus.hasConfig ? ' (leer = unverändert)' : '' }}</label>
+            <input v-model="isbjForm.apiKey" type="password" class="input w-full font-mono text-sm" :required="!isbjStatus.hasConfig" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">
+              Zertifikat (PKCS12 / .p12){{ isbjStatus.hasConfig ? ' (leer = unverändert)' : '' }}
+            </label>
+            <label class="btn-secondary cursor-pointer text-sm">
+              {{ isbjCertFile ? isbjCertFile.name : 'Datei wählen' }}
+              <input
+                type="file"
+                accept=".p12,.pfx"
+                class="hidden"
+                :required="!isbjStatus.hasConfig"
+                @change="onISBJCertSelected"
+              />
+            </label>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">Zertifikat-Passwort{{ isbjStatus.hasConfig ? ' (leer = unverändert)' : '' }}</label>
+            <input v-model="isbjForm.certPassphrase" type="password" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
+          </div>
+          <div class="tablet:col-span-2">
+            <label class="mb-1 block text-xs text-gray-500">Host</label>
+            <input v-model="isbjForm.host" type="text" class="input w-full font-mono text-sm" required />
+          </div>
+        </div>
+        <p v-if="isbjError" class="text-xs text-red-600">{{ isbjError }}</p>
+        <div class="flex gap-2">
+          <button type="submit" class="btn-primary text-sm" :disabled="isSavingISBJ">
+            {{ isSavingISBJ ? 'Wird gespeichert…' : 'Speichern' }}
+          </button>
+          <button
+            v-if="isbjStatus.hasConfig"
+            type="button"
+            class="btn-secondary text-sm"
+            @click="isEditingISBJ = false; isbjError = ''"
+          >
+            Abbrechen
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Gefahrenbereich -->

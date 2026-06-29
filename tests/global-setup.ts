@@ -18,23 +18,19 @@ export default async function globalSetup() {
     prisma.magicLink.deleteMany(),
     prisma.invite.deleteMany(),
     prisma.memberDocument.deleteMany(),
-    prisma.userEmail.deleteMany(),
     prisma.user.deleteMany(),
     prisma.documentTemplate.deleteMany(),
     prisma.manager.deleteMany(),
     prisma.club.deleteMany(),
   ])
 
-  const club = await prisma.club.create({
-    data: { slug: 'test-kita', name: 'Test Kita' },
-  })
-
-  const superuser = await prisma.user.create({
-    data: { clubId: club.id, role: 'SUPERUSER' },
-  })
-
-  await prisma.userEmail.create({
-    data: { userId: superuser.id, email: 'admin@test.de', isPrimary: true },
+  await prisma.club.create({
+    data: {
+      slug: 'test-kita',
+      name: 'Test Kita',
+      adminEmail: 'admin@test.de',
+      users: { create: [{ role: 'SUPERUSER' }] },
+    },
   })
 
   await prisma.$disconnect()

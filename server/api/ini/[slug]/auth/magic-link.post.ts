@@ -44,26 +44,24 @@ export default defineEventHandler(async (event) => {
   const normalizedEmail = email.toLowerCase()
   const pendingPinHash = pin ? await hashPin(pin) : undefined
 
-  // First: check UserEmail in Neon (covers SUPERUSER)
-  const userEmail = await prisma.userEmail.findUnique({
-    where: { email: normalizedEmail },
-    include: { user: true },
-  })
-
-  if (userEmail && userEmail.user.clubId === club.id) {
-    const magicLink = await createMagicLink({
-      userId: userEmail.userId,
-      pendingPinHash,
-      withOtp: true,
-    })
-    await sendMagicLink({
-      to: email,
-      clubName: club.name,
-      clubSlug: club.slug,
-      token: magicLink.token,
-      otpCode: magicLink.otpCode ?? '',
-    })
-    return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
+  // First: check club adminEmail (covers SUPERUSER)
+  if (club.adminEmail === normalizedEmail) {
+    const superUser = await prisma.user.findFirst({ where: { clubId: club.id, role: 'SUPERUSER' } })
+    if (superUser) {
+      const magicLink = await createMagicLink({
+        userId: superUser.id,
+        pendingPinHash,
+        withOtp: true,
+      })
+      await sendMagicLink({
+        to: email,
+        clubName: club.name,
+        clubSlug: club.slug,
+        token: magicLink.token,
+        otpCode: magicLink.otpCode ?? '',
+      })
+      return { message: 'Falls diese E-Mail bekannt ist, wurde ein Link gesendet' }
+    }
   }
 
   // Second: search in Postgres

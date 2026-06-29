@@ -12,6 +12,7 @@ export interface Club {
   id: string
   slug: string
   name: string
+  adminEmail: string | null
   membershipFee: number | null
   createdAt: string
 }
@@ -37,7 +38,6 @@ export interface User {
   storageId: string | null
   deactivatedAt: string | null
   createdAt: string
-  emails?: UserEmail[]
 }
 
 export interface MemberData {
@@ -118,17 +118,8 @@ export interface TeamMember {
 }
 
 export interface AuthUser extends User {
-  emails: UserEmail[]
   firstName?: string | null
   lastName?: string | null
-}
-
-export interface UserEmail {
-  id: string
-  userId: string
-  email: string
-  isPrimary: boolean
-  createdAt: string
 }
 
 export interface Session {

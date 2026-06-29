@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
   const deviceSession = await prisma.deviceSession.findFirst({
     where,
-    include: { user: { include: { emails: true } } },
+    include: { user: true },
   })
 
   if (!deviceSession) {

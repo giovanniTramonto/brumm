@@ -9,10 +9,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  await prisma.clubFileStorage.upsert({
-    where: { clubId: club.id },
-    create: { clubId: club.id, type: 'S3' },
-    update: { type: 'S3', encryptedConfig: null, pendingEncryptedConfig: null },
+  await prisma.club.update({
+    where: { id: club.id },
+    data: { encryptedS3Config: null },
   })
 
   invalidateS3Cache(club.id)

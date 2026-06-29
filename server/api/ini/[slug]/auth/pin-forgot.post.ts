@@ -1,8 +1,10 @@
 import { z } from 'zod'
 import { sendPinDeleteLink } from '~/server/utils/email'
 import { createMagicLink } from '~/server/utils/magicLink'
+import { getManagerData } from '~/server/utils/managerData'
 import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
+import { getTeamMemberData } from '~/server/utils/teamData'
 
 const schema = z.object({
   userId: z.string().optional(),
@@ -25,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const deviceSession = await prisma.deviceSession.findFirst({
     where,
-    include: { user: { include: { emails: true } } },
+    include: { user: true },
   })
 
   if (!deviceSession) {
@@ -35,11 +37,27 @@ export default defineEventHandler(async (event) => {
   const user = deviceSession.user
   let email: string | null = null
 
-  if (user.emails.length > 0) {
-    email = user.emails.find((e) => e.isPrimary)?.email ?? user.emails[0].email
+  if (user.role === 'SUPERUSER') {
+    email = club.adminEmail ?? null
   } else if (user.role === 'MEMBER') {
     const memberData = await getMemberData(user.id, club)
     email = memberData?.email1 ?? null
+  } else if (user.role === 'MANAGER' && user.storageId) {
+    const manager = await prisma.manager.findFirst({
+      where: { storageId: user.storageId, clubId: club.id },
+    })
+    if (manager) {
+      const managerData = await getManagerData(manager.id, club)
+      email = managerData?.email ?? null
+    }
+  } else if (user.role === 'TEAM' && user.storageId) {
+    const team = await prisma.team.findFirst({
+      where: { storageId: user.storageId, clubId: club.id },
+    })
+    if (team) {
+      const teamData = await getTeamMemberData(team.id, club)
+      email = teamData?.email ?? null
+    }
   }
 
   if (!email) {

@@ -29,11 +29,7 @@ export default defineEventHandler(async (event) => {
 
   const session = await prisma.session.findUnique({
     where: { token },
-    include: {
-      user: {
-        include: { emails: true },
-      },
-    },
+    include: { user: true },
   })
 
   if (!session || session.expiresAt < new Date()) {

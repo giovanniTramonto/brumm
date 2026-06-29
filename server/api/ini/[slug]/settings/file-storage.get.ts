@@ -1,5 +1,3 @@
-import { prisma } from '~/server/utils/prisma'
-
 export default defineEventHandler(async (event) => {
   const user = event.context.user
   const club = event.context.club
@@ -8,11 +6,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  const record = await prisma.clubFileStorage.findUnique({ where: { clubId: club.id } })
-
-  return {
-    type: record?.type ?? 'S3',
-    hasConfig: !!record?.encryptedConfig,
-    hasPending: !!record?.pendingEncryptedConfig,
-  }
+  return { hasConfig: !!club.encryptedS3Config }
 })

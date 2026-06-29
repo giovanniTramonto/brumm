@@ -11,7 +11,7 @@ import { createId } from '@paralleldrive/cuid2'
 import { getClubS3 } from '../../s3Client'
 
 // S3 keys contain slashes and are not URL-safe as route params.
-// We encode/decode them as base64url for use in URLs and Neon storage.
+// We encode/decode them as base64url for use in URLs and DB storage.
 export function encodeS3FileId(key: string): string {
   return Buffer.from(key).toString('base64url')
 }

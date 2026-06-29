@@ -14,7 +14,7 @@ useHead({ title: 'FAQ – Brumm' })
       </p>
       <ol class="mt-4 space-y-3 text-gray-500 list-decimal pl-5">
         <li>
-          Eine <strong class="text-gray-700">PostgreSQL-Datenbank</strong> für Mitgliederdaten – z.&nbsp;B. bei <a href="https://neon.tech" target="_blank" rel="noopener" class="text-primary-600 hover:underline">Neon</a> (kostenloser Tarif verfügbar). Den Connection String unter <strong class="text-gray-700">Einstellungen → Datenbank</strong> eintragen.
+          Eine <strong class="text-gray-700">PostgreSQL-Datenbank</strong> für Mitgliederdaten. Den Connection String unter <strong class="text-gray-700">Einstellungen → Datenbank</strong> eintragen.
         </li>
         <li>
           Einen <strong class="text-gray-700">S3-kompatiblen Speicher</strong> für Dateien (Vertragsvorlagen, Vertragsunterlagen, Aktuell-Dokumente) – z.&nbsp;B. AWS S3, Cloudflare R2 oder Hetzner Object Storage. Bucket, Region und Zugangsdaten unter <strong class="text-gray-700">Einstellungen → Datenspeicher</strong> eintragen.

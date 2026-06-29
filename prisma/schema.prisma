@@ -10,11 +10,14 @@ datasource db {
 }
 
 model Club {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  name          String
-  membershipFee Float?
-  createdAt     DateTime @default(now())
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  adminEmail      String?
+  membershipFee   Float?
+  encryptedDsn    String?
+  encryptedS3Config String?
+  createdAt       DateTime @default(now())
 
   users             User[]
   sessions          Session[]
@@ -24,8 +27,7 @@ model Club {
   team              Team[]
   documents         Document[]
   deviceSessions    DeviceSession[]
-  clubDatabase      ClubDatabase?
-  clubFileStorage   ClubFileStorage?
+  clubISBJConfig    ClubISBJConfig?
 }
 
 model User {
@@ -42,7 +44,6 @@ model User {
   createdAt DateTime @default(now())
 
   club            Club             @relation(fields: [clubId], references: [id])
-  emails          UserEmail[]
   sessions        Session[]
   magicLinks      MagicLink[]
   invites         Invite[]
@@ -50,16 +51,6 @@ model User {
   deviceSessions  DeviceSession[]
 
   @@unique([storageId, clubId])
-}
-
-model UserEmail {
-  id        String   @id @default(cuid())
-  userId    String
-  email     String   @unique
-  isPrimary Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
 }
 
 model Invite {
@@ -204,26 +195,18 @@ enum MemberStatus {
   DEACTIVATED
 }
 
-model ClubDatabase {
-  id                  String      @id @default(cuid())
-  clubId              String      @unique
-  type                DataBackend @default(POSTGRES)
-  encryptedDsn        String?
-  pendingEncryptedDsn String?
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-
-  club Club @relation(fields: [clubId], references: [id])
-}
-
-model ClubFileStorage {
-  id                     String      @id @default(cuid())
-  clubId                 String      @unique
-  type                   FileBackend @default(S3)
-  encryptedConfig        String?
-  pendingEncryptedConfig String?
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
+model ClubISBJConfig {
+  id                 String   @id @default(cuid())
+  clubId             String   @unique
+  host               String   @default("ds.traegerportal.isbj.verwalt-berlin.de")
+  username           String
+  traegerNummer      String
+  einrichtungsNummer String
+  encryptedApiKey    String
+  encryptedCert      String
+  encryptedCertPass  String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   club Club @relation(fields: [clubId], references: [id])
 }
@@ -241,14 +224,6 @@ model AuditLog {
 
   @@index([clubId, createdAt])
   @@index([createdAt])
-}
-
-enum DataBackend {
-  POSTGRES
-}
-
-enum FileBackend {
-  S3
 }
 
 enum AuditSeverity {

@@ -10,15 +10,11 @@ export default defineEventHandler(async (event) => {
 
   const club = await prisma.club.findUnique({ where: { id: clubId } })
   if (!club) throw createError({ statusCode: 404, statusMessage: 'Verein nicht gefunden' })
+  if (!club.adminEmail)
+    throw createError({ statusCode: 404, statusMessage: 'Keine E-Mail gefunden' })
 
-  const superuser = await prisma.user.findFirst({
-    where: { clubId, role: 'SUPERUSER' },
-    include: { emails: true },
-  })
+  const superuser = await prisma.user.findFirst({ where: { clubId, role: 'SUPERUSER' } })
   if (!superuser) throw createError({ statusCode: 404, statusMessage: 'Kein SUPERUSER gefunden' })
-
-  const primaryEmail = superuser.emails.find((e) => e.isPrimary) ?? superuser.emails[0]
-  if (!primaryEmail) throw createError({ statusCode: 404, statusMessage: 'Keine E-Mail gefunden' })
 
   await prisma.magicLink.updateMany({
     where: { userId: superuser.id, isUsed: false },
@@ -33,11 +29,11 @@ export default defineEventHandler(async (event) => {
   })
 
   await sendWelcomeEmail({
-    to: primaryEmail.email,
+    to: club.adminEmail,
     clubName: club.name,
     clubSlug: club.slug,
     token: magicLink.token,
   })
 
-  return { ok: true, sentTo: primaryEmail.email }
+  return { ok: true, sentTo: club.adminEmail }
 })

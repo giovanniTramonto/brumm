@@ -10,8 +10,11 @@ export async function getClubDb(clubId: string): Promise<Sql> {
   const cached = clientCache.get(clubId)
   if (cached) return cached
 
-  const record = await prisma.clubDatabase.findUnique({ where: { clubId } })
-  if (!record || record.type !== 'POSTGRES' || !record.encryptedDsn) {
+  const record = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { encryptedDsn: true },
+  })
+  if (!record?.encryptedDsn) {
     throw createError({ statusCode: 503, statusMessage: 'Keine Postgres-Datenbank konfiguriert.' })
   }
 
@@ -34,21 +37,22 @@ export async function migrateClubDb(
 export async function migrateAllClubDbs(): Promise<
   { clubId: string; applied: string[]; failed?: string }[]
 > {
-  const records = await prisma.clubDatabase.findMany({
-    where: { type: 'POSTGRES', encryptedDsn: { not: null } },
+  const clubs = await prisma.club.findMany({
+    where: { encryptedDsn: { not: null } },
+    select: { id: true },
   })
 
   const results = await Promise.allSettled(
-    records.map(async (r) => {
-      const result = await migrateClubDb(r.clubId)
-      return { clubId: r.clubId, ...result }
+    clubs.map(async (c) => {
+      const result = await migrateClubDb(c.id)
+      return { clubId: c.id, ...result }
     }),
   )
 
   return results.map((r, i) => {
     if (r.status === 'fulfilled') return r.value
     return {
-      clubId: records[i].clubId,
+      clubId: clubs[i].id,
       applied: [],
       failed: r.reason instanceof Error ? r.reason.message : String(r.reason),
     }

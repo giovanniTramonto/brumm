@@ -6,10 +6,13 @@ import { decrypt } from '../../server/utils/encryption'
 const prisma = new PrismaClient()
 
 async function deleteS3MemberFiles(clubId: string, memberId: string): Promise<void> {
-  const record = await prisma.clubFileStorage.findUnique({ where: { clubId } })
-  if (!record?.encryptedConfig) return
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { encryptedS3Config: true },
+  })
+  if (!club?.encryptedS3Config) return
 
-  const config = JSON.parse(decrypt(record.encryptedConfig)) as {
+  const config = JSON.parse(decrypt(club.encryptedS3Config)) as {
     endpoint?: string
     bucket: string
     region: string
@@ -39,10 +42,13 @@ async function deleteS3MemberFiles(clubId: string, memberId: string): Promise<vo
 }
 
 async function deleteMemberFromClubDb(clubId: string, userId: string): Promise<void> {
-  const record = await prisma.clubDatabase.findUnique({ where: { clubId } })
-  if (!record?.encryptedDsn) return
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { encryptedDsn: true },
+  })
+  if (!club?.encryptedDsn) return
 
-  const dsn = decrypt(record.encryptedDsn)
+  const dsn = decrypt(club.encryptedDsn)
   const sql = postgres(dsn, { max: 1, idle_timeout: 10, ssl: { rejectUnauthorized: false } })
   try {
     await sql`DELETE FROM members WHERE user_id = ${userId}`
@@ -80,7 +86,6 @@ export default async function handler() {
       await prisma.magicLink.deleteMany({ where: { userId: user.id } })
       await prisma.invite.deleteMany({ where: { userId: user.id } })
       await prisma.memberDocument.deleteMany({ where: { memberId: user.id } })
-      await prisma.userEmail.deleteMany({ where: { userId: user.id } })
       await prisma.user.delete({ where: { id: user.id } })
 
       cleaned++

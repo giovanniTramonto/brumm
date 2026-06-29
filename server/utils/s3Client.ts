@@ -18,12 +18,15 @@ export async function getClubS3(clubId: string): Promise<CachedS3> {
   const hit = cache.get(clubId)
   if (hit) return hit
 
-  const record = await prisma.clubFileStorage.findUnique({ where: { clubId } })
-  if (!record?.encryptedConfig) {
+  const record = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { encryptedS3Config: true },
+  })
+  if (!record?.encryptedS3Config) {
     throw createError({ statusCode: 503, statusMessage: 'S3 nicht konfiguriert' })
   }
 
-  const config = JSON.parse(decrypt(record.encryptedConfig)) as S3Config
+  const config = JSON.parse(decrypt(record.encryptedS3Config)) as S3Config
   const client = new S3Client({
     region: config.region,
     credentials: { accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey },

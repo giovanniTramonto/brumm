@@ -29,7 +29,6 @@ export default defineEventHandler(async (event) => {
 
   const managerUser = await prisma.user.findFirst({
     where: { storageId: manager.storageId, clubId: club.id, role: 'MANAGER' },
-    include: { emails: true },
   })
 
   const [updated] = await Promise.all([

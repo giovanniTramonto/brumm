@@ -23,20 +23,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 409, statusMessage: 'Dieser Slug ist bereits vergeben' })
   }
 
-  const existingEmail = await prisma.userEmail.findUnique({ where: { email: email.toLowerCase() } })
+  const existingEmail = await prisma.club.findFirst({ where: { adminEmail: email.toLowerCase() } })
   if (existingEmail) {
     throw createError({ statusCode: 409, statusMessage: 'E-Mail-Adresse bereits registriert' })
   }
 
-  const club = await prisma.club.create({ data: { name: name.trim(), slug } })
+  const club = await prisma.club.create({
+    data: { name: name.trim(), slug, adminEmail: email.toLowerCase() },
+  })
 
   const user = await prisma.user.create({
     data: {
       clubId: club.id,
       role: 'SUPERUSER',
-      emails: {
-        create: [{ email: email.toLowerCase(), isPrimary: true }],
-      },
     },
   })
 

@@ -101,51 +101,52 @@ CREATE TABLE IF NOT EXISTS team_members (
 }
 
 export default async () => {
-  const records = await prisma.clubDatabase.findMany({
-    where: { type: 'POSTGRES', encryptedDsn: { not: null } },
+  const clubs = await prisma.club.findMany({
+    where: { encryptedDsn: { not: null } },
+    select: { id: true, encryptedDsn: true },
   })
 
-  console.log(`[deploy-succeeded] Migrating ${records.length} club database(s)…`)
+  console.log(`[deploy-succeeded] Migrating ${clubs.length} club database(s)…`)
 
-  for (const record of records) {
+  for (const club of clubs) {
     let sql: ReturnType<typeof postgres> | undefined
     try {
-      if (!record.encryptedDsn) continue
-      const dsn = decrypt(record.encryptedDsn)
+      if (!club.encryptedDsn) continue
+      const dsn = decrypt(club.encryptedDsn)
       sql = postgres(dsn, { max: 2, connect_timeout: 10, ssl: { rejectUnauthorized: false } })
       const result = await runMigrations(sql)
 
       if (result.failed) {
         await prisma.auditLog.create({
           data: {
-            clubId: record.clubId,
+            clubId: club.id,
             event: 'DEPLOY_MIGRATION_FAILED',
             severity: 'ERROR',
             metadata: { reason: result.failed },
           },
         })
-        console.error(`[deploy-succeeded] ${record.clubId}: migration failed — ${result.failed}`)
+        console.error(`[deploy-succeeded] ${club.id}: migration failed — ${result.failed}`)
       } else if (result.applied.length > 0) {
         await prisma.auditLog.create({
           data: {
-            clubId: record.clubId,
+            clubId: club.id,
             event: 'DEPLOY_MIGRATION_DONE',
             severity: 'INFO',
             metadata: { applied: result.applied },
           },
         })
-        console.log(`[deploy-succeeded] ${record.clubId}: applied ${result.applied.join(', ')}`)
+        console.log(`[deploy-succeeded] ${club.id}: applied ${result.applied.join(', ')}`)
       }
     } catch (err) {
       await prisma.auditLog.create({
         data: {
-          clubId: record.clubId,
+          clubId: club.id,
           event: 'DEPLOY_MIGRATION_FAILED',
           severity: 'ERROR',
           metadata: { reason: err instanceof Error ? err.message : String(err) },
         },
       })
-      console.error(`[deploy-succeeded] ${record.clubId}: ${err}`)
+      console.error(`[deploy-succeeded] ${club.id}: ${err}`)
     } finally {
       await sql?.end()
     }
