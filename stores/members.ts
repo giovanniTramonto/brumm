@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
-import type { Member } from '~/types'
+import type { Group, Member } from '~/types'
 
 export const useMembersStore = defineStore('members', () => {
   const members = ref<Member[]>([])
+  const groups = ref<Group[]>([])
   const hasAnyMemberManager = ref(false)
   const memberManagerNames = ref<string[]>([])
   const isLoading = ref(false)
@@ -16,11 +17,13 @@ export const useMembersStore = defineStore('members', () => {
     error.value = null
     fetchPromise = $fetch<{
       members: Member[]
+      groups: Group[]
       hasAnyMemberManager: boolean
       memberManagerNames: string[]
     }>(`/api/ini/${slug}/members`)
       .then((data) => {
         members.value = data.members
+        groups.value = data.groups
         hasAnyMemberManager.value = data.hasAnyMemberManager
         memberManagerNames.value = data.memberManagerNames
       })
@@ -56,6 +59,7 @@ export const useMembersStore = defineStore('members', () => {
 
   return {
     members,
+    groups,
     hasAnyMemberManager,
     memberManagerNames,
     isLoading,

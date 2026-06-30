@@ -81,6 +81,7 @@ export default defineEventHandler(async (event) => {
         contractEnd: md.contractEnd,
         lastEditedAt: md.lastEditedAt,
         lastEditedBy: md.lastEditedBy,
+        address: md.address,
         hasInvite: false,
         hasSubmittedDocuments: u.hasSubmittedDocuments,
       }
@@ -96,5 +97,5 @@ export default defineEventHandler(async (event) => {
     .filter((md) => memberManagerIds.has(md.managerId))
     .map((md) => md.name)
 
-  return { members, hasAnyMemberManager: memberManagerNames.length > 0, memberManagerNames }
+  return { members, groups, hasAnyMemberManager: memberManagerNames.length > 0, memberManagerNames }
 })
