@@ -22,9 +22,9 @@ defineProps<{ members: Address[] }>()
       <thead>
         <tr class="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
           <th class="pb-3 pr-8 w-1/5">Kind</th>
-          <th class="pb-3 pr-8">Geboren</th>
+          <th class="pb-3 pr-8">Geburtstag</th>
           <th class="pb-3 pr-8 w-1/5">Adresse</th>
-          <th class="pb-3 pr-8">Name</th>
+          <th class="pb-3 pr-8">Eltern</th>
           <th class="pb-3 pr-8">E-Mail</th>
           <th class="pb-3">Telefon</th>
         </tr>
