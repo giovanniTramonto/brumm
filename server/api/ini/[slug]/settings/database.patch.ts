@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
     where: { id: club.id },
     data: { encryptedDsn: encrypt(parsed.data.dsn) },
   })
-  invalidateClubDb(club.id)
+  await invalidateClubDb(club.id)
   await migrateClubDb(club.id)
 
   return { ok: true }

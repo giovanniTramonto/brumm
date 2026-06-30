@@ -7,8 +7,13 @@ import { prisma } from './prisma'
 // instead of each establishing their own connection.
 const clientCache = new Map<string, Promise<Sql>>()
 
-export function invalidateClubDb(clubId: string): void {
+export async function invalidateClubDb(clubId: string): Promise<void> {
+  const cached = clientCache.get(clubId)
   clientCache.delete(clubId)
+  if (cached) {
+    const sql = await cached.catch(() => null)
+    await sql?.end()
+  }
 }
 
 export async function getClubDb(clubId: string, knownEncryptedDsn?: string): Promise<Sql> {
