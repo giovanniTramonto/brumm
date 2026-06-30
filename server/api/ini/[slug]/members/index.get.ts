@@ -49,12 +49,10 @@ export default defineEventHandler(async (event) => {
     .map((u) => {
       const md = memberDataMap.get(u.id)
       if (!md) return null
-      if (guardianEmails) {
-        const match =
-          guardianEmails.has(md.email1.toLowerCase()) ||
-          (md.email2 && guardianEmails.has(md.email2.toLowerCase()))
-        if (!match) return null
-      }
+      const isOwnChild = guardianEmails
+        ? guardianEmails.has(md.email1.toLowerCase()) ||
+          !!(md.email2 && guardianEmails.has(md.email2.toLowerCase()))
+        : false
       return {
         id: u.id,
         clubId: u.clubId,
@@ -82,6 +80,7 @@ export default defineEventHandler(async (event) => {
         lastEditedAt: md.lastEditedAt,
         lastEditedBy: md.lastEditedBy,
         address: md.address,
+        isOwnChild,
         hasInvite: false,
         hasSubmittedDocuments: u.hasSubmittedDocuments,
       }

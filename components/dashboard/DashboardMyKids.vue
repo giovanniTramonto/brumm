@@ -25,10 +25,10 @@ const STATUS_CLASS: Record<string, string> = {
 <template>
   <div class="card mt-6">
     <h2 class="mb-3 text-sm font-medium text-gray-900">Anmeldung</h2>
-    <template v-if="membersStore.members.length > 0">
+    <template v-if="membersStore.members.some((m) => m.isOwnChild)">
       <ul class="-mx-4 -mb-4">
         <li
-          v-for="child in membersStore.members"
+          v-for="child in membersStore.members.filter((m) => m.isOwnChild)"
           :key="child.id"
           class="flex items-center justify-between px-4 py-2.5 text-sm"
           :class="(child.status === 'REGISTERED' || child.status === 'PENDING_INVITE') ? 'bg-orange-50' : ''"

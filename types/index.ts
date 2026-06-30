@@ -79,6 +79,7 @@ export interface Member extends User {
   lastEditedAt: string | null
   lastEditedBy: string | null
   address: string | null
+  isOwnChild: boolean
   hasInvite: boolean
   hasSubmittedDocuments: boolean
   group?: Group | null
