@@ -40,8 +40,6 @@ const showNoMemberManagerHint = computed(() => {
   return user?.role === 'MANAGER' && !user?.isMemberManager
 })
 
-onMounted(() => membersStore.fetchMembers(slug))
-
 const filteredMembers = computed(() => {
   const q = search.value.toLowerCase()
   const base = isMember.value

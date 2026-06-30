@@ -12,8 +12,6 @@ const groupsStore = useGroupsStore()
 
 const deletingGroupId = ref<string | null>(null)
 
-onMounted(() => groupsStore.fetchGroups(slug))
-
 async function onDeleteGroup(group: Group) {
   if (!confirm(`Gruppe „${group.name}" löschen?`)) return
   deletingGroupId.value = group.id

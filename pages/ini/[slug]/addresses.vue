@@ -12,16 +12,9 @@ const { members, groups } = storeToRefs(membersStore)
 const { team } = storeToRefs(teamStore)
 const { managers } = storeToRefs(managersStore)
 
-const isLoading = ref(true)
-
-onMounted(async () => {
-  await Promise.all([
-    membersStore.fetchMembers(slug),
-    teamStore.fetchTeam(slug).catch(() => {}),
-    managersStore.fetchManagers(slug).catch(() => {}),
-  ])
-  isLoading.value = false
-})
+const isLoading = computed(
+  () => membersStore.isLoading || teamStore.isLoading || managersStore.isLoading,
+)
 
 const activeMembers = computed(() =>
   members.value.filter((m) => m.status === 'ACTIVE' || m.status === 'INACTIVE'),

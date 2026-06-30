@@ -6,10 +6,6 @@ definePageMeta({ middleware: ['auth'] })
 const route = useRoute()
 const slug = route.params.slug as string
 const teamStore = useTeamStore()
-
-onMounted(async () => {
-  await teamStore.fetchTeam(slug)
-})
 </script>
 
 <template>

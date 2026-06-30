@@ -6,10 +6,6 @@ definePageMeta({ middleware: ['auth'] })
 const route = useRoute()
 const slug = route.params.slug as string
 const managersStore = useManagersStore()
-
-onMounted(async () => {
-  await managersStore.fetchManagers(slug)
-})
 </script>
 
 <template>

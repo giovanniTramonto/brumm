@@ -454,6 +454,7 @@ async function onSave() {
     )
     member.value = refreshed.member
     isOwnChild.value = refreshed.isOwnChild
+    membersStore.updateMember(refreshed.member)
   } catch (err: unknown) {
     saveError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
@@ -479,9 +480,7 @@ async function onReactivate() {
   if (!member.value) return
   isReactivating.value = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${member.value.id}/reactivate`, {
-      method: 'POST',
-    })
+    await membersStore.reactivateMember(slug, member.value.id)
     member.value = { ...member.value, status: 'ACTIVE', deactivatedAt: null }
     await loadDocuments()
   } catch (err: unknown) {
@@ -496,7 +495,7 @@ async function onToggleDisabled() {
   if (!member.value) return
   isDisabling.value = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${member.value.id}/toggle-disabled`, { method: 'POST' })
+    await membersStore.toggleDisabledMember(slug, member.value.id)
     member.value = {
       ...member.value,
       status: member.value.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
@@ -513,7 +512,7 @@ async function onDeactivate() {
   if (!member.value || !confirm('Kind abmelden?')) return
   isDeactivating.value = true
   try {
-    await $fetch(`/api/ini/${slug}/members/${member.value.id}/deactivate`, { method: 'POST' })
+    await membersStore.deactivateMember(slug, member.value.id)
     member.value = {
       ...member.value,
       status: 'DEACTIVATED',
@@ -559,6 +558,7 @@ async function onDeleteMember() {
     await $fetch(`/api/ini/${slug}/members/${member.value.id}/delete`, {
       method: 'POST',
     })
+    membersStore.removeMember(member.value.id)
     await navigateTo(`/ini/${slug}/members`)
   } catch (err: unknown) {
     inviteActionError.value =

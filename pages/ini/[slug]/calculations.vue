@@ -20,10 +20,6 @@ const slug = route.params.slug as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
-onMounted(async () => {
-  await membersStore.fetchMembers(slug)
-})
-
 const { canManageClub } = storeToRefs(authStore)
 
 type View = 'month' | 'year' | 'next-year'

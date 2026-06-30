@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
-import type { Group } from '~/types'
+import { useMembersStore } from '~/stores/members'
 import { SURCHARGE_OPTIONS } from '~/utils/config'
 import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
@@ -10,7 +10,6 @@ const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 
-const groups = ref<Group[]>([])
 const hasTemplates = ref(true)
 const isSubmitting = ref(false)
 const error = ref<string | null>(null)
@@ -74,12 +73,10 @@ const guardian2Fields = computed({
 const isNoInviteWorkflow = computed(() => !form.sendInvite)
 
 onMounted(async () => {
-  const [groupsData, templatesData] = await Promise.all([
-    $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`),
-    $fetch<{ templates: unknown[] }>(`/api/ini/${slug}/contract-templates`),
+  const [, templatesData] = await Promise.all([
     membersStore.fetchMembers(slug),
+    $fetch<{ templates: unknown[] }>(`/api/ini/${slug}/contract-templates`),
   ])
-  groups.value = groupsData.groups
   hasTemplates.value = templatesData.templates.length > 0
   if (!hasTemplates.value) {
     form.sendInvite = false
@@ -116,6 +113,7 @@ async function onSubmit() {
     )
     created.value = { id: res.user.id, name: `${form.firstName} ${form.lastName}` }
     emailError.value = res.emailError
+    membersStore.invalidate()
   } catch (err: unknown) {
     error.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Anlegen'
@@ -172,7 +170,7 @@ async function onSubmit() {
         <label class="label">Gruppe</label>
         <select v-model="form.groupId" class="input mt-1">
           <option value="">Keine Gruppe</option>
-          <option v-for="group in groups" :key="group.id" :value="group.id">
+          <option v-for="group in membersStore.groups" :key="group.id" :value="group.id">
             {{ group.name }}
           </option>
         </select>

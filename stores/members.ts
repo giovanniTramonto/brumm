@@ -57,6 +57,38 @@ export const useMembersStore = defineStore('members', () => {
       }
   }
 
+  async function reactivateMember(slug: string, memberId: string): Promise<void> {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/reactivate`, { method: 'POST' })
+    const index = members.value.findIndex((m) => m.id === memberId)
+    if (index !== -1)
+      members.value[index] = { ...members.value[index], status: 'ACTIVE', deactivatedAt: null }
+  }
+
+  async function toggleDisabledMember(slug: string, memberId: string): Promise<void> {
+    await $fetch(`/api/ini/${slug}/members/${memberId}/toggle-disabled`, { method: 'POST' })
+    const index = members.value.findIndex((m) => m.id === memberId)
+    if (index !== -1)
+      members.value[index] = {
+        ...members.value[index],
+        status: members.value[index].status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+      }
+  }
+
+  function updateMember(updated: Member): void {
+    const index = members.value.findIndex((m) => m.id === updated.id)
+    if (index !== -1) members.value[index] = updated
+  }
+
+  function removeMember(memberId: string): void {
+    members.value = members.value.filter((m) => m.id !== memberId)
+  }
+
+  function invalidate(): void {
+    members.value = []
+    groups.value = []
+    fetchPromise = null
+  }
+
   return {
     members,
     groups,
@@ -67,5 +99,10 @@ export const useMembersStore = defineStore('members', () => {
     fetchMembers,
     activateMember,
     deactivateMember,
+    reactivateMember,
+    toggleDisabledMember,
+    updateMember,
+    removeMember,
+    invalidate,
   }
 })
