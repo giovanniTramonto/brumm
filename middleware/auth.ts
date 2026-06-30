@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { useDocumentsStore } from '~/stores/documents'
 import { useManagersStore } from '~/stores/managers'
 import { useMembersStore } from '~/stores/members'
 import { useTeamStore } from '~/stores/team'
@@ -20,5 +21,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
     useMembersStore().fetchMembers(slug)
     useTeamStore().fetchTeam(slug)
     useManagersStore().fetchManagers(slug)
+    useDocumentsStore().fetchDocuments(slug)
   }
 })

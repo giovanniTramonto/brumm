@@ -1,20 +1,13 @@
 <script setup lang="ts">
+import { useDocumentsStore, type WallEntry } from '~/stores/documents'
+
 definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
 const slug = route.params.slug as string
 
-type WallEntry = {
-  id: string
-  name: string
-  order: number
-  type: string
-  url: string | null
-  createdAt: string
-}
-
-const entries = ref<WallEntry[]>([])
-const isLoading = ref(true)
+const documentsStore = useDocumentsStore()
+const isReady = ref(false)
 
 const newType = ref<'document' | 'link'>('document')
 const newName = ref('')
@@ -40,17 +33,18 @@ function onDragOver(event: DragEvent, id: string) {
 
 function onDrop(targetId: string) {
   if (!draggedId.value || draggedId.value === targetId) return
-  const from = entries.value.findIndex((d) => d.id === draggedId.value)
-  const to = entries.value.findIndex((d) => d.id === targetId)
-  const updated = [...entries.value]
+  const from = documentsStore.documents.findIndex((d) => d.id === draggedId.value)
+  const to = documentsStore.documents.findIndex((d) => d.id === targetId)
+  const updated = [...documentsStore.documents]
   const [item] = updated.splice(from, 1)
   updated.splice(to, 0, item)
-  entries.value = updated
+  const ids = updated.map((d) => d.id)
+  documentsStore.reorder(ids)
   draggedId.value = null
   dragOverId.value = null
   $fetch(`/api/ini/${slug}/documents/reorder`, {
     method: 'PUT',
-    body: { ids: entries.value.map((d) => d.id) },
+    body: { ids },
   })
 }
 
@@ -60,12 +54,8 @@ function onDragEnd() {
 }
 
 onMounted(async () => {
-  try {
-    const data = await $fetch<{ documents: WallEntry[] }>(`/api/ini/${slug}/documents`)
-    entries.value = data.documents
-  } finally {
-    isLoading.value = false
-  }
+  await documentsStore.fetchDocuments(slug)
+  isReady.value = true
 })
 
 function onNewFileSelected(event: Event) {
@@ -98,7 +88,7 @@ async function onCreate() {
         method: 'POST',
         body: { name: newName.value.trim(), url: newUrl.value.trim() },
       })
-      entries.value = [...entries.value, data.document]
+      documentsStore.addDocument(data.document)
       newName.value = ''
       newUrl.value = ''
     } else {
@@ -110,7 +100,7 @@ async function onCreate() {
         method: 'POST',
         body,
       })
-      entries.value = [...entries.value, data.document]
+      documentsStore.addDocument(data.document)
       newName.value = ''
       newFile.value = null
       const input = document.getElementById('new-doc-file') as HTMLInputElement | null
@@ -136,7 +126,7 @@ async function onReplace(id: string, event: Event) {
       method: 'PATCH',
       body,
     })
-    entries.value = entries.value.map((d) => (d.id === id ? data.document : d))
+    documentsStore.updateDocument(id, data.document)
   } finally {
     replacingId.value = null
     input.value = ''
@@ -148,7 +138,7 @@ async function onDelete(entry: WallEntry) {
   deletingId.value = entry.id
   try {
     await $fetch(`/api/ini/${slug}/documents/${entry.id}`, { method: 'DELETE' })
-    entries.value = entries.value.filter((d) => d.id !== entry.id)
+    documentsStore.removeDocument(entry.id)
   } finally {
     deletingId.value = null
   }
@@ -161,17 +151,17 @@ async function onDelete(entry: WallEntry) {
       <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-sm text-gray-500 hover:text-gray-900">← Zurück</NuxtLink>
     </div>
 
-    <LoadingBrumm v-if="isLoading" />
+    <LoadingBrumm v-if="!isReady" />
 
     <template v-else>
       <div class="card space-y-4">
         <h1 class="text-2xl font-bold text-gray-900">Aktuell</h1>
 
-        <p v-if="entries.length === 0" class="text-sm text-gray-500">Noch keine Einträge.</p>
+        <p v-if="documentsStore.documents.length === 0" class="text-sm text-gray-500">Noch keine Einträge.</p>
 
         <ul v-else class="divide-y divide-gray-100">
           <li
-            v-for="entry in entries"
+            v-for="entry in documentsStore.documents"
             :key="entry.id"
             draggable="true"
             class="flex cursor-default items-center gap-3 py-3 transition-opacity"
