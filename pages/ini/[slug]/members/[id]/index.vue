@@ -458,7 +458,10 @@ async function onSave() {
     const refreshed = await $fetch<{ member: Member }>(`/api/ini/${slug}/members/${memberId}`)
     member.value = refreshed.member
     isOwnChild.value = computeIsOwnChild(refreshed.member)
-    membersStore.updateMember({ ...refreshed.member, isOwnChild: isOwnChild.value })
+    const group = refreshed.member.groupId
+      ? (membersStore.groups.find((g) => g.id === refreshed.member.groupId) ?? null)
+      : null
+    membersStore.updateMember({ ...refreshed.member, isOwnChild: isOwnChild.value, group })
   } catch (err: unknown) {
     saveError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
