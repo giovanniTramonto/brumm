@@ -6,20 +6,28 @@ export const useManagersStore = defineStore('managers', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+  let fetchPromise: Promise<void> | null = null
+
   async function fetchManagers(slug: string): Promise<void> {
+    if (managers.value.length > 0) return
+    if (fetchPromise) return fetchPromise
     isLoading.value = true
     error.value = null
-    try {
-      const data = await $fetch<{ managers: Manager[] }>(`/api/ini/${slug}/managers`)
-      managers.value = data.managers
-    } catch (err) {
-      const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
-      const sm = d?.statusMessage
-      const m = d?.message
-      error.value = sm ? (m && m !== sm ? `${sm} (${m})` : sm) : 'Fehler beim Laden'
-    } finally {
-      isLoading.value = false
-    }
+    fetchPromise = $fetch<{ managers: Manager[] }>(`/api/ini/${slug}/managers`)
+      .then((data) => {
+        managers.value = data.managers
+      })
+      .catch((err) => {
+        const d = (err as { data?: { statusMessage?: string; message?: string } })?.data
+        const sm = d?.statusMessage
+        const m = d?.message
+        error.value = sm ? (m && m !== sm ? `${sm} (${m})` : sm) : 'Fehler beim Laden'
+      })
+      .finally(() => {
+        isLoading.value = false
+        fetchPromise = null
+      })
+    return fetchPromise
   }
 
   async function createManager(

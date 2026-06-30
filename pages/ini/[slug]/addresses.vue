@@ -4,34 +4,23 @@ definePageMeta({ middleware: ['auth'] })
 const route = useRoute()
 const slug = route.params.slug as string
 
-type TeamMember = { id: string; name: string; email: string }
-type Manager = { id: string; name: string; email: string }
+const membersStore = useMembersStore()
+const teamStore = useTeamStore()
+const managersStore = useManagersStore()
 
-const teamMembers = ref<TeamMember[]>([])
-const managers = ref<Manager[]>([])
+const { members, groups } = storeToRefs(membersStore)
+const { team } = storeToRefs(teamStore)
+const { managers } = storeToRefs(managersStore)
+
 const isLoading = ref(true)
 
-const membersStore = useMembersStore()
-const { members, groups } = storeToRefs(membersStore)
-
 onMounted(async () => {
-  try {
-    await Promise.all([
-      membersStore.fetchMembers(slug),
-      $fetch<{ team: TeamMember[] }>(`/api/ini/${slug}/team`)
-        .catch(() => ({ team: [] }))
-        .then((d) => {
-          teamMembers.value = d.team
-        }),
-      $fetch<{ managers: Manager[] }>(`/api/ini/${slug}/managers`)
-        .catch(() => ({ managers: [] }))
-        .then((d) => {
-          managers.value = d.managers
-        }),
-    ])
-  } finally {
-    isLoading.value = false
-  }
+  await Promise.all([
+    membersStore.fetchMembers(slug),
+    teamStore.fetchTeam(slug).catch(() => {}),
+    managersStore.fetchManagers(slug).catch(() => {}),
+  ])
+  isLoading.value = false
 })
 
 const activeMembers = computed(() =>
@@ -78,7 +67,7 @@ const groupedSections = computed(() => {
     </div>
 
     <template v-if="!isLoading">
-      <ContactTable title="Team" :members="teamMembers" emptyText="Noch keine Teammitglieder eingetragen." />
+      <ContactTable title="Team" :members="team" emptyText="Noch keine Teammitglieder eingetragen." />
       <ContactTable title="Vorstand" :members="managers" emptyText="Noch keine Vorstandsmitglieder eingetragen." />
     </template>
   </div>
