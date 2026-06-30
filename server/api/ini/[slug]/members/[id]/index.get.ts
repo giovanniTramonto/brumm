@@ -92,7 +92,8 @@ export default defineEventHandler(async (event) => {
     lastEditedBy: md.lastEditedBy,
     hasInvite: !!anyInvite,
     hasSubmittedDocuments: user.hasSubmittedDocuments,
+    isOwnChild,
   }
 
-  return { member, isOwnChild }
+  return { member }
 })

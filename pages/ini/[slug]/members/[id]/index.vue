@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
-import type { Group, Member } from '~/types'
+import type { Member } from '~/types'
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL, SURCHARGE_OPTIONS } from '~/utils/config'
 import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
@@ -14,7 +14,7 @@ const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
 const member = ref<Member | null>(null)
-const groups = ref<Group[]>([])
+const groups = computed(() => membersStore.groups)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const isSubmitting = ref(false)
@@ -357,23 +357,33 @@ async function loadMemberDocTemplates() {
   }
 }
 
+function computeIsOwnChild(m: Member): boolean {
+  if (isMember.value) return true // MEMBER kann nur auf eigene Kinder zugreifen (Server erzwingt dies)
+  if (authStore.currentUser?.role === 'SUPERUSER') {
+    const adminEmail = authStore.currentClub?.adminEmail?.toLowerCase()
+    if (!adminEmail) return false
+    return (
+      m.email1.toLowerCase() === adminEmail || !!(m.email2 && m.email2.toLowerCase() === adminEmail)
+    )
+  }
+  return false
+}
+
 onMounted(async () => {
-  membersStore.fetchMembers(slug) // fire-and-forget: hint computed updates reactively when members arrive
   try {
-    const [memberData, groupsData, templatesData] = await Promise.all([
-      $fetch<{ member: Member; isOwnChild: boolean }>(`/api/ini/${slug}/members/${memberId}`),
-      $fetch<{ groups: Group[] }>(`/api/ini/${slug}/groups`),
-      $fetch<{ templates: TemplateEntry[]; allSubmitted: boolean }>(
-        `/api/ini/${slug}/members/${memberId}/documents/contract`,
-      ).catch(() => null),
-    ])
+    await membersStore.fetchMembers(slug)
 
-    member.value = memberData.member
-    isOwnChild.value = memberData.isOwnChild
-    submitted.value = memberData.member.hasSubmittedDocuments
-    groups.value = groupsData.groups
+    const m = membersStore.members.find((mm) => mm.id === memberId) ?? null
+    if (!m) {
+      error.value = 'Kind nicht gefunden'
+      isLoading.value = false
+      return
+    }
 
-    const m = memberData.member
+    member.value = m
+    isOwnChild.value = computeIsOwnChild(m)
+    submitted.value = m.hasSubmittedDocuments
+
     form.firstName = m.firstName
     form.lastName = m.lastName
     form.birthDate = m.birthDate.slice(0, 10)
@@ -389,22 +399,18 @@ onMounted(async () => {
     form.contractEnd = m.contractEnd ?? ''
     form.address = m.address ?? ''
 
-    if (templatesData) {
-      memberDocTemplates.value = templatesData.templates
-      allSubmitted.value = templatesData.allSubmitted
-      for (const t of templatesData.templates) {
-        if (t.documentType === 'read' && t.submission?.readAt) {
-          readMap[t.id] = true
-        }
-      }
-    }
+    isLoading.value = false
 
-    if (m.status === 'ACTIVE' || m.status === 'INACTIVE')
-      await Promise.all([loadDocuments(), loadOtherDocuments()])
-    else if (!m.hasInvite || canManageMembers.value) await loadDocuments()
+    // Dokumente im Hintergrund laden — blockiert das Formular nicht
+    loadMemberDocTemplates()
+    if (m.status === 'ACTIVE' || m.status === 'INACTIVE') {
+      loadDocuments()
+      loadOtherDocuments()
+    } else if (!m.hasInvite || canManageMembers.value) {
+      loadDocuments()
+    }
   } catch {
     error.value = 'Kind nicht gefunden'
-  } finally {
     isLoading.value = false
   }
 })
@@ -449,12 +455,10 @@ async function onSave() {
         lastEditedAt: member.value?.lastEditedAt ?? null,
       },
     })
-    const refreshed = await $fetch<{ member: Member; isOwnChild: boolean }>(
-      `/api/ini/${slug}/members/${memberId}`,
-    )
+    const refreshed = await $fetch<{ member: Member }>(`/api/ini/${slug}/members/${memberId}`)
     member.value = refreshed.member
-    isOwnChild.value = refreshed.isOwnChild
-    membersStore.updateMember(refreshed.member)
+    isOwnChild.value = computeIsOwnChild(refreshed.member)
+    membersStore.updateMember({ ...refreshed.member, isOwnChild: isOwnChild.value })
   } catch (err: unknown) {
     saveError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'

@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const club = event.context.club
   const currentUser = event.context.user
 
-  const [[users, memberManagerRecords], [allMemberData, groups, allManagerData]] =
+  const [[users, memberManagerRecords, invites], [allMemberData, groups, allManagerData]] =
     await Promise.all([
       Promise.all([
         prisma.user.findMany({
@@ -29,9 +29,12 @@ export default defineEventHandler(async (event) => {
           where: { clubId: club.id, isMemberManager: true },
           select: { id: true },
         }),
+        prisma.invite.findMany({ where: { clubId: club.id }, select: { userId: true } }),
       ]),
       Promise.all([getAllMemberDataForClub(club), getAllGroups(club), getAllManagerData(club)]),
     ])
+
+  const inviteUserIds = new Set(invites.map((i) => i.userId))
 
   const groupMap = new Map(groups.map((g) => [g.id, g]))
   const memberDataMap = new Map(allMemberData.map((md) => [md.userId, md]))
@@ -81,7 +84,7 @@ export default defineEventHandler(async (event) => {
         lastEditedBy: md.lastEditedBy,
         address: md.address,
         isOwnChild,
-        hasInvite: false,
+        hasInvite: inviteUserIds.has(u.id),
         hasSubmittedDocuments: u.hasSubmittedDocuments,
       }
     })
