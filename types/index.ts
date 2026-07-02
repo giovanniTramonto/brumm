@@ -118,6 +118,21 @@ export interface TeamMember {
   createdAt: string
 }
 
+export interface ParentJobMember {
+  id: string
+  jobId: string
+  email: string
+  name: string | null
+  phone: string | null
+  isLeader: boolean
+}
+
+export interface ParentJob {
+  id: string
+  name: string
+  members?: ParentJobMember[]
+}
+
 export interface AuthUser extends User {
   firstName?: string | null
   lastName?: string | null

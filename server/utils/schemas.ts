@@ -61,6 +61,21 @@ export const updateMemberSchema = z.object({
   lastEditedAt: z.string().optional().nullable(),
 })
 
+export const createParentJobSchema = z.object({
+  name: z.string().min(1, 'Name fehlt'),
+})
+
+export const addParentJobMemberSchema = z.object({
+  email: z.string().email('Ungültige E-Mail-Adresse'),
+  name: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  isLeader: z.boolean().optional().default(false),
+})
+
+export const updateParentJobMemberSchema = z.object({
+  isLeader: z.boolean(),
+})
+
 export const createGroupSchema = z.object({
   name: z.string().min(2, 'Gruppenname zu kurz'),
   email: z.string().email('Ungültige E-Mail-Adresse').optional().or(z.literal('')),

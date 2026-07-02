@@ -1,6 +1,7 @@
 import { sendEmailAddedNotification, sendEmailRemovedNotification } from '~/server/utils/email'
 import { getManagerData } from '~/server/utils/managerData'
 import { batchUpdateMembersData, getAllMemberData } from '~/server/utils/memberData'
+import { syncParentJobMemberContact } from '~/server/utils/parentJobData'
 import { prisma } from '~/server/utils/prisma'
 import { formatZodError, updateMemberSchema } from '~/server/utils/schemas'
 
@@ -134,6 +135,27 @@ export default defineEventHandler(async (event) => {
 
   // Single write for main member + all siblings
   await batchUpdateMembersData(batchUpdates, club, expectedLastEditedAt)
+
+  // Sync parent job member contacts (fire-and-forget, non-critical)
+  const syncPromises: Promise<void>[] = [
+    syncParentJobMemberContact(club, {
+      oldEmail: existing.email1,
+      newEmail: newEmail1,
+      name: guardian1Name,
+      phone: phone1 || null,
+    }),
+  ]
+  if (existing.email2) {
+    syncPromises.push(
+      syncParentJobMemberContact(club, {
+        oldEmail: existing.email2,
+        newEmail: newEmail2 ?? existing.email2,
+        name: guardian2Name || null,
+        phone: phone2 || null,
+      }),
+    )
+  }
+  await Promise.allSettled(syncPromises)
 
   const oldEmailSet = new Set([existing.email1, existing.email2].filter(Boolean) as string[])
   const newEmails = [newEmail1, ...(newEmail2 ? [newEmail2] : [])]

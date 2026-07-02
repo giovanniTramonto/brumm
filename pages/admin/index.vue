@@ -98,7 +98,7 @@ async function onDeleteClub(clubId: string) {
       <!-- Login -->
       <div v-if="!isAuthenticated" class="flex justify-center">
       <div class="card w-full max-w-sm">
-        <h2 class="mb-4 font-semibold text-gray-900">Brumm Amdin Anmeldung</h2>
+        <h2 class="mb-4 font-semibold text-gray-900">Brumm Admin Anmeldung</h2>
         <form class="space-y-4" @submit.prevent="onLogin">
           <input type="text" name="username" autocomplete="username" value="admin" class="hidden" />
           <div>

@@ -42,6 +42,23 @@ CREATE TABLE IF NOT EXISTS team_members (
   email      TEXT
 );`,
   },
+  {
+    filename: '002_parent_jobs.sql',
+    sql: `
+CREATE TABLE IF NOT EXISTS parent_jobs (
+  job_id TEXT PRIMARY KEY,
+  name   TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS parent_job_members (
+  member_id TEXT    PRIMARY KEY,
+  job_id    TEXT    NOT NULL REFERENCES parent_jobs(job_id) ON DELETE CASCADE,
+  email     TEXT    NOT NULL,
+  name      TEXT,
+  phone     TEXT,
+  is_leader BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE (job_id, email)
+);`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {
