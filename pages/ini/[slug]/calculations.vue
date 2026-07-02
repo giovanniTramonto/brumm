@@ -480,6 +480,6 @@ async function onSaveMembershipFee() {
 
 <style scoped>
 .annual-grid {
-  min-width: 540px;
+  grid-template-columns: repeat(12, minmax(4rem, 1fr));
 }
 </style>
