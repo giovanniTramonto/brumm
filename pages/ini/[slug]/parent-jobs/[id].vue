@@ -183,6 +183,7 @@ async function onSaveTasks(member: ParentJobMember) {
     )
     if (job.value?.members) {
       job.value.members = job.value.members.map((m) => (m.id === member.id ? data.member : m))
+      parentJobsStore.updateParentJob(job.value)
     }
     localTasks.value[member.id] = value ?? ''
   } finally {
@@ -199,6 +200,7 @@ async function onToggleLeader(member: ParentJobMember) {
     )
     if (job.value?.members) {
       job.value.members = job.value.members.map((m) => (m.id === member.id ? data.member : m))
+      parentJobsStore.updateParentJob(job.value)
     }
   } finally {
     togglingMemberId.value = null
@@ -212,6 +214,7 @@ async function onRemoveMember(member: ParentJobMember) {
     await $fetch(`/api/ini/${slug}/parent-jobs/${jobId}/members/${member.id}`, { method: 'DELETE' })
     if (job.value?.members) {
       job.value.members = job.value.members.filter((m) => m.id !== member.id)
+      parentJobsStore.updateParentJob(job.value)
     }
   } finally {
     deletingMemberId.value = null
@@ -230,6 +233,7 @@ async function onAddMember() {
     )
     if (job.value) {
       job.value.members = [...(job.value.members ?? []), data.member]
+      parentJobsStore.updateParentJob(job.value)
     }
     selectedEmail.value = null
     addIsLeader.value = false

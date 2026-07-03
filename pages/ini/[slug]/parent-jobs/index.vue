@@ -24,10 +24,6 @@ const isEditing = ref(false)
 const draggedId = ref<string | null>(null)
 const dragOverId = ref<string | null>(null)
 
-onMounted(async () => {
-  await parentJobsStore.fetchParentJobs(slug)
-})
-
 async function onCreate() {
   if (!newName.value.trim()) return
   createError.value = null
@@ -104,11 +100,10 @@ function sortedJobMembers(job: ParentJob) {
       </button>
     </div>
 
-    <div class="card space-y-4">
-      <LoadingBrumm v-if="parentJobsStore.isLoading" />
+    <LoadingBrumm v-if="parentJobsStore.isLoading" />
 
-      <template v-else>
-        <p v-if="parentJobsStore.parentJobs.length === 0" class="text-sm text-gray-500">Noch keine Elternposten angelegt.</p>
+    <div v-else class="card space-y-4">
+      <p v-if="parentJobsStore.parentJobs.length === 0" class="text-sm text-gray-500">Noch keine Elternposten angelegt.</p>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -201,7 +196,7 @@ function sortedJobMembers(job: ParentJob) {
             </button>
           </div>
         </div>
-      </template>
     </div>
+
   </div>
 </template>
