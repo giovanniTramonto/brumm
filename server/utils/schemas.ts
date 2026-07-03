@@ -25,41 +25,73 @@ const contractEndField = z
   .optional()
   .or(z.literal(''))
 
-export const createMemberSchema = z.object({
-  firstName: z.string().min(1, 'Vorname fehlt'),
-  lastName: z.string().min(1, 'Nachname fehlt'),
-  birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
-  guardian1Name: z.string().min(1, 'Erziehungsberechtigter 1 fehlt'),
-  guardian2Name: z.string().optional(),
-  email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
-  email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
-  phone1: z.string().optional().or(z.literal('')),
-  phone2: z.string().optional().or(z.literal('')),
-  groupId: z.string().optional(),
-  careType: z.string().optional(),
-  surcharges: z.array(z.string()).optional(),
-  contractEnd: contractEndField,
-  address: z.string().optional().or(z.literal('')),
-  sendInvite: z.boolean().default(true),
-})
+const guardianRefinement = (
+  data: { guardian2Name?: string; email1?: string; email2?: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (data.guardian2Name?.trim() && !data.email2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'E-Mail-Adresse (Elternteil 2) fehlt',
+      path: ['email2'],
+    })
+  }
+  if (data.email1 && data.email2 && data.email1 === data.email2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Elternteil 1 und 2 dürfen nicht die gleiche E-Mail-Adresse haben',
+      path: ['email2'],
+    })
+  }
+}
 
-export const updateMemberSchema = z.object({
-  firstName: z.string().min(1, 'Vorname fehlt'),
-  lastName: z.string().min(1, 'Nachname fehlt'),
-  birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
-  guardian1Name: z.string().min(1, 'Erziehungsberechtigter 1 fehlt'),
-  guardian2Name: z.string().optional(),
-  email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
-  email2: z.string().email('Ungültige E-Mail-Adresse (Elternteil 2)').optional().or(z.literal('')),
-  phone1: z.string().optional().or(z.literal('')),
-  phone2: z.string().optional().or(z.literal('')),
-  groupId: z.string().optional(),
-  careType: z.string().optional(),
-  surcharges: z.array(z.string()).optional(),
-  contractEnd: contractEndField,
-  address: z.string().optional().or(z.literal('')),
-  lastEditedAt: z.string().optional().nullable(),
-})
+export const createMemberSchema = z
+  .object({
+    firstName: z.string().min(1, 'Vorname fehlt'),
+    lastName: z.string().min(1, 'Nachname fehlt'),
+    birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
+    guardian1Name: z.string().min(1, 'Erziehungsberechtigter 1 fehlt'),
+    guardian2Name: z.string().optional(),
+    email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
+    email2: z
+      .string()
+      .email('Ungültige E-Mail-Adresse (Elternteil 2)')
+      .optional()
+      .or(z.literal('')),
+    phone1: z.string().optional().or(z.literal('')),
+    phone2: z.string().optional().or(z.literal('')),
+    groupId: z.string().optional(),
+    careType: z.string().optional(),
+    surcharges: z.array(z.string()).optional(),
+    contractEnd: contractEndField,
+    address: z.string().optional().or(z.literal('')),
+    sendInvite: z.boolean().default(true),
+  })
+  .superRefine(guardianRefinement)
+
+export const updateMemberSchema = z
+  .object({
+    firstName: z.string().min(1, 'Vorname fehlt'),
+    lastName: z.string().min(1, 'Nachname fehlt'),
+    birthDate: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'Ungültiges Geburtsdatum'),
+    guardian1Name: z.string().min(1, 'Erziehungsberechtigter 1 fehlt'),
+    guardian2Name: z.string().optional(),
+    email1: z.string().email('Ungültige E-Mail-Adresse (Elternteil 1)'),
+    email2: z
+      .string()
+      .email('Ungültige E-Mail-Adresse (Elternteil 2)')
+      .optional()
+      .or(z.literal('')),
+    phone1: z.string().optional().or(z.literal('')),
+    phone2: z.string().optional().or(z.literal('')),
+    groupId: z.string().optional(),
+    careType: z.string().optional(),
+    surcharges: z.array(z.string()).optional(),
+    contractEnd: contractEndField,
+    address: z.string().optional().or(z.literal('')),
+    lastEditedAt: z.string().optional().nullable(),
+  })
+  .superRefine(guardianRefinement)
 
 export const createParentJobSchema = z.object({
   name: z.string().min(1, 'Name fehlt'),
