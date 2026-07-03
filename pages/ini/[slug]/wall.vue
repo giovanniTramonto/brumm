@@ -155,7 +155,7 @@ async function onDelete(entry: WallEntry) {
 
     <template v-else>
       <div class="card space-y-4">
-        <h1 class="text-2xl font-bold text-gray-900">Aktuell</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Infos</h1>
 
         <p v-if="documentsStore.documents.length === 0" class="text-sm text-gray-500">Noch keine Einträge.</p>
 

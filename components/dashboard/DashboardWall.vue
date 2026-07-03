@@ -16,7 +16,7 @@ const isVisible = computed(() => canManageClub.value || documentsStore.documents
 <template>
   <div v-if="isVisible" class="card mt-6">
     <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-sm font-medium text-gray-900">Aktuell</h2>
+      <h2 class="text-sm font-medium text-gray-900">Infos</h2>
       <NuxtLink v-if="canManageClub" :to="`/ini/${props.slug}/wall`" class="btn-secondary text-xs">Bearbeiten</NuxtLink>
     </div>
     <p v-if="documentsStore.documents.length === 0" class="text-sm text-gray-500">Noch keine Einträge.</p>

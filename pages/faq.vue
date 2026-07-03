@@ -17,7 +17,7 @@ useHead({ title: 'FAQ – Brumm' })
           Eine <strong class="text-gray-700">PostgreSQL-Datenbank</strong> für Mitgliederdaten. Den Connection String unter <strong class="text-gray-700">Einstellungen → Datenbank</strong> eintragen.
         </li>
         <li>
-          Einen <strong class="text-gray-700">S3-kompatiblen Speicher</strong> für Dateien (Vertragsvorlagen, Vertragsunterlagen, Aktuell-Dokumente) – z.&nbsp;B. AWS S3, Cloudflare R2 oder Hetzner Object Storage. Bucket, Region und Zugangsdaten unter <strong class="text-gray-700">Einstellungen → Datenspeicher</strong> eintragen.
+          Einen <strong class="text-gray-700">S3-kompatiblen Speicher</strong> für Dateien (Vertragsvorlagen, Vertragsunterlagen, Infos-Dokumente) – z.&nbsp;B. AWS S3, Cloudflare R2 oder Hetzner Object Storage. Bucket, Region und Zugangsdaten unter <strong class="text-gray-700">Einstellungen → Datenspeicher</strong> eintragen.
         </li>
       </ol>
     </section>

@@ -28,7 +28,7 @@ useHead({ title: 'Anleitung – Brumm' })
       <ol class="mt-2 space-y-3 text-gray-500 list-decimal pl-5">
         <li>Du erhältst einen Anmelde-Link per E-Mail – kein Passwort nötig.</li>
         <li>Unter <strong class="text-gray-700">Berechnung</strong> siehst du Kostenerstattungen und den Personalschlüssel – monatsgenau oder als Jahresübersicht.</li>
-        <li>Unter <strong class="text-gray-700">Aktuell</strong> Dokumente und Links für alle Mitglieder bereitstellen.</li>
+        <li>Unter <strong class="text-gray-700">Infos</strong> Dokumente und Links für alle Mitglieder bereitstellen.</li>
       </ol>
       <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Mit Mitgliederverwaltung</p>
       <p class="mt-1 text-sm text-gray-500">Nur wenn der Admin diese Berechtigung aktiviert hat.</p>
