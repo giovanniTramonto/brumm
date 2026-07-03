@@ -46,8 +46,10 @@ CREATE TABLE IF NOT EXISTS team_members (
     filename: '002_parent_jobs.sql',
     sql: `
 CREATE TABLE IF NOT EXISTS parent_jobs (
-  job_id TEXT PRIMARY KEY,
-  name   TEXT NOT NULL
+  job_id     TEXT PRIMARY KEY,
+  name       TEXT NOT NULL,
+  sort_order INT  NOT NULL DEFAULT 0,
+  tasks      TEXT
 );
 CREATE TABLE IF NOT EXISTS parent_job_members (
   member_id TEXT    PRIMARY KEY,
@@ -55,9 +57,15 @@ CREATE TABLE IF NOT EXISTS parent_job_members (
   email     TEXT    NOT NULL,
   name      TEXT,
   phone     TEXT,
+  tasks     TEXT,
   is_leader BOOLEAN NOT NULL DEFAULT FALSE,
   UNIQUE (job_id, email)
 );`,
+  },
+  {
+    filename: '003_parent_jobs_sort_order.sql',
+    sql: `ALTER TABLE parent_jobs ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
+ALTER TABLE parent_job_members ADD COLUMN IF NOT EXISTS tasks TEXT;`,
   },
 ]
 

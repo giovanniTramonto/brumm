@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 import { useParentJobsStore } from '~/stores/parentJobs'
 import type { Member, ParentJob, ParentJobMember } from '~/types'
@@ -9,6 +11,9 @@ const route = useRoute()
 const slug = route.params.slug as string
 const jobId = route.params.id as string
 
+const authStore = useAuthStore()
+const { canManageClub } = storeToRefs(authStore)
+
 const membersStore = useMembersStore()
 const parentJobsStore = useParentJobsStore()
 
@@ -16,6 +21,7 @@ const job = ref<ParentJob | null>(null)
 const isLoading = ref(true)
 const pageError = ref<string | null>(null)
 
+const isEditing = ref(false)
 const isEditingName = ref(false)
 const editName = ref('')
 const isSavingName = ref(false)
@@ -26,6 +32,17 @@ const togglingMemberId = ref<string | null>(null)
 
 const isAddingMember = ref(false)
 const addError = ref<string | null>(null)
+
+const localTasks = ref<Record<string, string>>({})
+const savingTasksMemberId = ref<string | null>(null)
+
+function initLocalTasks(members: ParentJobMember[]) {
+  for (const m of members) {
+    if (!(m.id in localTasks.value)) {
+      localTasks.value[m.id] = m.tasks ?? ''
+    }
+  }
+}
 
 type GuardianOption = {
   email: string
@@ -43,6 +60,7 @@ onMounted(async () => {
       try {
         const data = await $fetch<{ parentJob: ParentJob }>(`/api/ini/${slug}/parent-jobs/${jobId}`)
         job.value = data.parentJob
+        initLocalTasks(data.parentJob.members ?? [])
       } catch {
         pageError.value = 'Elternposten nicht gefunden'
       } finally {
@@ -60,6 +78,27 @@ const existingEmails = computed(() => {
   const set = new Set<string>()
   for (const m of job.value?.members ?? []) set.add(m.email)
   return set
+})
+
+const memberIdsByEmail = computed(() => {
+  const map = new Map<string, string[]>()
+  for (const m of membersStore.members as Member[]) {
+    if (m.email1) {
+      map.set(m.email1, [...(map.get(m.email1) ?? []), m.id])
+    }
+    if (m.email2) {
+      map.set(m.email2, [...(map.get(m.email2) ?? []), m.id])
+    }
+  }
+  return map
+})
+
+const sortedMembers = computed<ParentJobMember[]>(() => {
+  const members = job.value?.members ?? []
+  return [...members].sort((a, b) => {
+    if (a.isLeader !== b.isLeader) return a.isLeader ? -1 : 1
+    return (a.name ?? a.email).localeCompare(b.name ?? b.email, 'de')
+  })
 })
 
 const guardianOptions = computed<GuardianOption[]>(() => {
@@ -103,13 +142,6 @@ const selectedGuardian = computed<GuardianOption | null>(
   () => guardianOptions.value.find((o) => o.email === selectedEmail.value) ?? null,
 )
 
-const leaders = computed<ParentJobMember[]>(
-  () => job.value?.members?.filter((m) => m.isLeader) ?? [],
-)
-const others = computed<ParentJobMember[]>(
-  () => job.value?.members?.filter((m) => !m.isLeader) ?? [],
-)
-
 function onStartEditName() {
   editName.value = job.value?.name ?? ''
   isEditingName.value = true
@@ -138,6 +170,23 @@ async function onSaveName() {
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
   } finally {
     isSavingName.value = false
+  }
+}
+
+async function onSaveTasks(member: ParentJobMember) {
+  const value = (localTasks.value[member.id] ?? '').trim() || null
+  savingTasksMemberId.value = member.id
+  try {
+    const data = await $fetch<{ member: ParentJobMember }>(
+      `/api/ini/${slug}/parent-jobs/${jobId}/members/${member.id}`,
+      { method: 'PATCH', body: { tasks: value } },
+    )
+    if (job.value?.members) {
+      job.value.members = job.value.members.map((m) => (m.id === member.id ? data.member : m))
+    }
+    localTasks.value[member.id] = value ?? ''
+  } finally {
+    savingTasksMemberId.value = null
   }
 }
 
@@ -202,7 +251,7 @@ function optionLabel(opt: GuardianOption): string {
 <template>
   <div>
     <div class="mb-6">
-      <NuxtLink :to="`/ini/${slug}/parent-jobs`" class="text-sm text-gray-500 hover:text-gray-900">← Elternposten</NuxtLink>
+      <NuxtLink :to="`/ini/${slug}/parent-jobs`" class="text-sm text-gray-500 hover:text-gray-900">← Zurück</NuxtLink>
     </div>
 
     <LoadingBrumm v-if="isLoading" />
@@ -210,7 +259,7 @@ function optionLabel(opt: GuardianOption): string {
     <p v-else-if="pageError" class="text-sm text-red-600">{{ pageError }}</p>
 
     <template v-else-if="job">
-      <div class="card mb-4 space-y-4">
+      <div class="card space-y-4">
         <div class="flex items-center gap-3">
           <template v-if="isEditingName">
             <input
@@ -227,73 +276,96 @@ function optionLabel(opt: GuardianOption): string {
           </template>
           <template v-else>
             <h1 class="flex-1 text-2xl font-bold text-gray-900">{{ job.name }}</h1>
-            <button type="button" class="btn-secondary py-1 text-sm" @click="onStartEditName">Umbenennen</button>
+            <button v-if="canManageClub && isEditing" type="button" class="btn-secondary py-1 text-sm" @click="onStartEditName">Umbenennen</button>
+            <button v-if="canManageClub" type="button" class="btn-secondary py-1 text-sm" @click="isEditing = !isEditing">
+              {{ isEditing ? 'Fertig' : 'Bearbeiten' }}
+            </button>
           </template>
         </div>
         <p v-if="nameError" class="text-sm text-red-600">{{ nameError }}</p>
-      </div>
 
-      <div class="card space-y-4">
-        <h2 class="text-sm font-medium text-gray-900">Mitglieder</h2>
+        <p v-if="!sortedMembers.length" class="text-sm text-gray-500">Noch keine Mitglieder.</p>
 
-        <ul v-if="job.members?.length">
-          <li v-for="m in leaders" :key="m.id" class="flex items-center gap-3 py-2.5">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-gray-900">{{ m.name ?? m.email }}</p>
-              <p class="text-xs text-gray-500">{{ m.email }}</p>
-            </div>
-            <span class="rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">Leitung</span>
-            <button
-              type="button"
-              class="btn-secondary py-1 text-xs"
-              :disabled="togglingMemberId === m.id"
-              @click="onToggleLeader(m)"
-            >
-              {{ togglingMemberId === m.id ? '…' : 'Leitung entfernen' }}
-            </button>
-            <button
-              type="button"
-              class="btn-danger py-1 text-xs"
-              :disabled="deletingMemberId === m.id"
-              @click="onRemoveMember(m)"
-            >
-              {{ deletingMemberId === m.id ? '…' : 'Entfernen' }}
-            </button>
-          </li>
-          <li v-for="m in others" :key="m.id" class="flex items-center gap-3 py-2.5">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm font-medium text-gray-900">{{ m.name ?? m.email }}</p>
-              <p class="text-xs text-gray-500">{{ m.email }}</p>
-            </div>
-            <button
-              type="button"
-              class="btn-secondary py-1 text-xs"
-              :disabled="togglingMemberId === m.id"
-              @click="onToggleLeader(m)"
-            >
-              {{ togglingMemberId === m.id ? '…' : 'Als Leitung' }}
-            </button>
-            <button
-              type="button"
-              class="btn-danger py-1 text-xs"
-              :disabled="deletingMemberId === m.id"
-              @click="onRemoveMember(m)"
-            >
-              {{ deletingMemberId === m.id ? '…' : 'Entfernen' }}
-            </button>
-          </li>
-        </ul>
-        <p v-else class="text-sm text-gray-500">Noch keine Mitglieder.</p>
+        <div v-else class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200">
+                <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">Name</th>
+                <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">Aufgaben</th>
+                <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">E-Mail</th>
+                <th class="pb-2 text-left text-xs font-medium text-gray-500">Telefon</th>
+                <th v-if="canManageClub && isEditing" class="pb-2" />
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="m in sortedMembers" :key="m.id" class="border-t border-gray-100 align-top">
+                <td class="whitespace-nowrap py-2.5 pr-6 align-top font-medium text-gray-900">
+                  <template v-if="canManageClub && memberIdsByEmail.get(m.email)?.length">
+                    <span class="inline-block max-w-48 whitespace-normal">
+                      <NuxtLink :to="`/ini/${slug}/members/${memberIdsByEmail.get(m.email)![0]}`" class="text-blue-600 hover:text-blue-800">{{ m.name ?? m.email }} →</NuxtLink>
+                    </span>
+                  </template>
+                  <span v-else class="inline-block max-w-48 whitespace-normal">{{ m.name ?? m.email }}</span>
+                  <span v-if="m.isLeader" class="ml-1.5 inline-block rounded-full bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-800">Leitung</span>
+                </td>
+                <td class="min-w-80 py-2.5 pr-6 align-top">
+                  <template v-if="canManageClub && isEditing">
+                    <textarea
+                      v-model="localTasks[m.id]"
+                      class="input w-full resize-none text-xs"
+                      rows="3"
+                    />
+                    <button
+                      v-if="(localTasks[m.id] ?? '') !== (m.tasks ?? '')"
+                      type="button"
+                      class="btn-primary mt-1 py-0.5 text-xs"
+                      :disabled="savingTasksMemberId === m.id"
+                      @click="onSaveTasks(m)"
+                    >
+                      {{ savingTasksMemberId === m.id ? '…' : 'Speichern' }}
+                    </button>
+                  </template>
+                  <span v-else class="text-xs text-gray-500">{{ m.tasks ?? '–' }}</span>
+                </td>
+                <td class="py-2.5 pr-6 align-top">
+                  <a :href="`mailto:${m.email}`" class="text-blue-600 hover:text-blue-800">{{ m.email }}</a>
+                </td>
+                <td class="py-2.5 align-top">
+                  <a v-if="m.phone" :href="`tel:${m.phone}`" class="font-mono text-blue-600 hover:underline">{{ m.phone }}</a>
+                </td>
+                <td v-if="canManageClub && isEditing" class="py-2.5 pl-4">
+                  <div class="flex items-center justify-end gap-2">
+                    <label class="flex cursor-pointer items-center gap-1.5 text-xs text-gray-700">
+                      <input
+                        type="checkbox"
+                        class="accent-primary-600"
+                        :checked="m.isLeader"
+                        :disabled="togglingMemberId === m.id"
+                        @change="onToggleLeader(m)"
+                      />
+                      Leitung
+                    </label>
+                    <button
+                      type="button"
+                      class="btn-danger py-0.5 text-xs"
+                      :disabled="deletingMemberId === m.id"
+                      @click="onRemoveMember(m)"
+                    >
+                      {{ deletingMemberId === m.id ? '…' : 'Entfernen' }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-        <div class="border-t pt-4">
+        <div v-if="canManageClub && isEditing" class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">Mitglied hinzufügen</h3>
           <div v-if="addError" role="alert" class="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{{ addError }}</div>
           <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div class="flex-1">
-              <select
-                v-model="selectedEmail"
-                class="input w-full text-sm"
-              >
+              <select v-model="selectedEmail" class="input w-full text-sm">
                 <option :value="null">Erziehungsberechtigte/n auswählen…</option>
                 <option v-for="opt in guardianOptions" :key="opt.email" :value="opt.email">
                   {{ optionLabel(opt) }}

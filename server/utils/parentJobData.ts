@@ -10,6 +10,7 @@ import {
   pgGetParentJob,
   pgGetParentJobWithMembers,
   pgRemoveParentJobMember,
+  pgReorderParentJobs,
   pgSyncParentJobMemberContact,
   pgUpdateParentJob,
   pgUpdateParentJobMember,
@@ -57,6 +58,11 @@ export async function deleteParentJob(club: { id: string }, jobId: string): Prom
   await pgDeleteParentJob(sql, jobId)
 }
 
+export async function reorderParentJobs(club: { id: string }, ids: string[]): Promise<void> {
+  const sql = await getClubDb(club.id)
+  await pgReorderParentJobs(sql, ids)
+}
+
 export async function addParentJobMember(
   club: { id: string },
   params: {
@@ -64,6 +70,7 @@ export async function addParentJobMember(
     email: string
     name: string | null
     phone: string | null
+    tasks: string | null
     isLeader: boolean
   },
 ): Promise<ParentJobMember> {
@@ -75,10 +82,10 @@ export async function updateParentJobMember(
   club: { id: string },
   jobId: string,
   memberId: string,
-  isLeader: boolean,
+  params: { isLeader?: boolean; tasks?: string | null },
 ): Promise<ParentJobMember | null> {
   const sql = await getClubDb(club.id)
-  return pgUpdateParentJobMember(sql, jobId, memberId, isLeader)
+  return pgUpdateParentJobMember(sql, jobId, memberId, params)
 }
 
 export async function removeParentJobMember(

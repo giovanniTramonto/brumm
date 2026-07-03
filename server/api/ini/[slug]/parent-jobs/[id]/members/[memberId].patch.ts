@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const member = await updateParentJobMember(club, jobId, memberId, parsed.data.isLeader)
+  const member = await updateParentJobMember(club, jobId, memberId, parsed.data)
   if (!member) {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }

@@ -69,11 +69,13 @@ export const addParentJobMemberSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
   name: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
+  tasks: z.string().nullable().optional(),
   isLeader: z.boolean().optional().default(false),
 })
 
 export const updateParentJobMemberSchema = z.object({
-  isLeader: z.boolean(),
+  isLeader: z.boolean().optional(),
+  tasks: z.string().nullable().optional(),
 })
 
 export const createGroupSchema = z.object({

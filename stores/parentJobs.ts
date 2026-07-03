@@ -45,6 +45,11 @@ export const useParentJobsStore = defineStore('parentJobs', () => {
     parentJobs.value = parentJobs.value.filter((j) => j.id !== jobId)
   }
 
+  function reorder(ids: string[]): void {
+    const map = new Map(parentJobs.value.map((j) => [j.id, j]))
+    parentJobs.value = ids.map((id) => map.get(id)).filter(Boolean) as typeof parentJobs.value
+  }
+
   function invalidate(): void {
     parentJobs.value = []
     isLoaded = false
@@ -59,6 +64,7 @@ export const useParentJobsStore = defineStore('parentJobs', () => {
     addParentJob,
     updateParentJob,
     removeParentJob,
+    reorder,
     invalidate,
   }
 })

@@ -23,7 +23,7 @@ const navItems = computed(() => {
     isSuperUser.value && { label: 'Gruppen', to: `${base}/groups` },
     isSuperUser.value && { label: 'Vorstand', to: `${base}/managers` },
     isSuperUser.value && { label: 'Team', to: `${base}/team` },
-    canManageClub.value && { label: 'Elternposten', to: `${base}/parent-jobs` },
+    { label: 'Elternposten', to: `${base}/parent-jobs` },
     canManageClub.value && { label: 'Berechnung', to: `${base}/calculations` },
     isSuperUser.value && { label: 'Einstellungen', to: `${base}/settings` },
   ].filter(Boolean) as { label: string; to: string }[]
