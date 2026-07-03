@@ -58,6 +58,8 @@ Nach dem Start PostgreSQL-DSN und S3-Zugangsdaten unter `/ini/{slug}/settings` e
 /ini/{slug}/team/{id}                → Teammitglied bearbeiten
 /ini/{slug}/calculations             → Rechnung: Einnahmen, Personalschlüssel (SUPERUSER + MANAGER)
 /ini/{slug}/wall                     → Wall / Aktuell (SUPERUSER + MANAGER)
+/ini/{slug}/parent-jobs              → Elternposten (SUPERUSER + MANAGER)
+/ini/{slug}/parent-jobs/{id}         → Elternposten-Detailseite
 /ini/{slug}/settings
 /ini/{slug}/settings/delete          → Verein löschen
 /offline                             → Offline-Fallback (PWA)
@@ -68,7 +70,7 @@ Nach dem Start PostgreSQL-DSN und S3-Zugangsdaten unter `/ini/{slug}/settings` e
 | Rolle | Rechte |
 |---|---|
 | `SUPERUSER` | Alles: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen, Vorstand, Gruppen, Rechnung (Einnahmen & Personalschlüssel), Settings (PostgreSQL + S3 konfigurieren). Beim Anlegen kann per Checkbox gesteuert werden, ob eine Einladungs-Email verschickt wird. |
-| `MANAGER` | Vorstandsmitglied. Zugriff auf Rechnung (Einnahmen & Personalschlüssel). Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen verwalten |
+| `MANAGER` | Vorstandsmitglied. Zugriff auf Rechnung (Einnahmen & Personalschlüssel) und Elternposten. Mit `isMemberManager = true`: Kinder anlegen/bearbeiten/freischalten/abmelden, Vertragsvorlagen verwalten |
 | `TEAM` | Kinderdaten lesen (read-only, keine Unterlagen). Dashboard mit Vereinsunterlagen. Login per Magic Link. Wird ausschließlich von SUPERUSER angelegt und verwaltet. |
 | `MEMBER` | Elternteil eines Kindes – sieht eigene Kinder in der Liste (inkl. Betreuungsumfang und Vertragsende) und auf dem Dashboard. Kann das Formular auf der Kind-Detailseite bearbeiten solange das Kind noch nicht aktiv ist. Ab Freischaltung ist das Formular vollständig readonly. Kann Vertragsunterlagen hochladen (max. 1 MB) und weitere Unterlagen nach Aktivierung hoch- oder ersetzen. Klickt „Einreichen" wenn alle Unterlagen vollständig sind. |
 
