@@ -1,7 +1,7 @@
 import type { Sql } from 'postgres'
 import type { ParentJob, ParentJobMember } from '~/types'
 
-type JobRow = { job_id: string; name: string; sort_order: number }
+type JobRow = { job_id: string; name: string; icon: string | null; sort_order: number }
 type MemberRow = {
   member_id: string
   job_id: string
@@ -13,7 +13,7 @@ type MemberRow = {
 }
 
 function rowToJob(row: JobRow): ParentJob {
-  return { id: row.job_id, name: row.name }
+  return { id: row.job_id, name: row.name, icon: row.icon }
 }
 
 function rowToMember(row: MemberRow): ParentJobMember {
@@ -69,7 +69,7 @@ export async function pgCreateParentJob(sql: Sql, jobId: string, name: string): 
   >`SELECT COALESCE(MAX(sort_order), -1) AS max FROM parent_jobs`
   const sortOrder = max + 1
   await sql`INSERT INTO parent_jobs (job_id, name, sort_order) VALUES (${jobId}, ${name.trim()}, ${sortOrder})`
-  return { id: jobId, name: name.trim() }
+  return { id: jobId, name: name.trim(), icon: null }
 }
 
 export async function pgReorderParentJobs(sql: Sql, ids: string[]): Promise<void> {
@@ -81,11 +81,14 @@ export async function pgReorderParentJobs(sql: Sql, ids: string[]): Promise<void
 export async function pgUpdateParentJob(
   sql: Sql,
   jobId: string,
-  name: string,
+  params: { name?: string; icon?: string | null },
 ): Promise<ParentJob | null> {
-  const rows = await sql<
-    JobRow[]
-  >`UPDATE parent_jobs SET name = ${name.trim()} WHERE job_id = ${jobId} RETURNING *`
+  const rows = await sql<JobRow[]>`
+    UPDATE parent_jobs SET
+      name = CASE WHEN ${params.name !== undefined} THEN ${params.name?.trim() ?? null} ELSE name END,
+      icon = CASE WHEN ${params.icon !== undefined} THEN ${params.icon ?? null} ELSE icon END
+    WHERE job_id = ${jobId} RETURNING *
+  `
   return rows[0] ? rowToJob(rows[0]) : null
 }
 

@@ -79,6 +79,10 @@ UPDATE parent_job_members SET sort_order = sub.rn FROM (
     filename: '007_drop_is_leader.sql',
     sql: `ALTER TABLE parent_job_members DROP COLUMN IF EXISTS is_leader;`,
   },
+  {
+    filename: '008_parent_jobs_icon.sql',
+    sql: `ALTER TABLE parent_jobs ADD COLUMN IF NOT EXISTS icon TEXT;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {

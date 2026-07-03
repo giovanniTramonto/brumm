@@ -85,6 +85,29 @@ type GuardianOption = {
   phone: string | null
   childNames: string[]
 }
+const ICON_OPTIONS = [
+  '🧹',
+  '🍳',
+  '🚌',
+  '📚',
+  '🎨',
+  '🌱',
+  '🔧',
+  '🛒',
+  '🎉',
+  '📋',
+  '💰',
+  '🎵',
+  '🏃',
+  '🤝',
+  '🏠',
+  '📢',
+  '🔑',
+  '🌸',
+  '♻️',
+  '🎭',
+]
+
 const selectedEmail = ref<string | null>(null)
 
 onMounted(async () => {
@@ -179,6 +202,16 @@ function onStartEditName() {
 function onCancelEditName() {
   isEditingName.value = false
   nameError.value = null
+}
+
+async function onSaveIcon(icon: string | null) {
+  if (!job.value) return
+  const data = await $fetch<{ parentJob: ParentJob }>(`/api/ini/${slug}/parent-jobs/${jobId}`, {
+    method: 'PATCH',
+    body: { icon },
+  })
+  job.value = { ...job.value, icon: data.parentJob.icon }
+  parentJobsStore.updateParentJob(job.value)
 }
 
 async function onSaveName() {
@@ -290,7 +323,18 @@ function optionLabel(opt: GuardianOption): string {
             <button type="button" class="btn-secondary py-1 text-sm" @click="onCancelEditName">Abbrechen</button>
           </template>
           <template v-else>
-            <h1 class="flex-1 text-2xl font-bold text-gray-900">{{ job.name }}</h1>
+            <select
+              v-if="canManageClub && isEditing"
+              class="input w-16 text-sm"
+              :value="job.icon ?? ''"
+              @change="onSaveIcon(($event.target as HTMLSelectElement).value || null)"
+            >
+              <option value="">Icon wählen…</option>
+              <option v-for="emoji in ICON_OPTIONS" :key="emoji" :value="emoji">{{ emoji }}</option>
+            </select>
+            <h1 class="flex-1 text-2xl font-bold text-gray-900">
+              <span v-if="job.icon && !isEditing" class="mr-1">{{ job.icon }}</span>{{ job.name }}
+            </h1>
             <button v-if="canManageClub && isEditing" type="button" class="btn-secondary py-1 text-sm" @click="onStartEditName">Umbenennen</button>
             <button v-if="canManageClub" type="button" class="btn-secondary py-1 text-sm" @click="isEditing = !isEditing">
               {{ isEditing ? 'Fertig' : 'Bearbeiten' }}

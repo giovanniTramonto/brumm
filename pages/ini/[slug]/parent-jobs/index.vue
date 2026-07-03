@@ -116,9 +116,9 @@ function onDragEnd() {
         @drop="canManageClub && isEditing && onDrop(job.id)"
         @dragend="onDragEnd"
       >
-        <div class="flex items-start gap-2">
+        <div class="flex min-h-8 items-start gap-2">
           <span v-if="canManageClub && isEditing" class="mt-0.5 cursor-grab text-gray-300 active:cursor-grabbing">⠿</span>
-          <span class="flex-1 font-semibold text-gray-900">{{ job.name }}</span>
+          <span class="flex-1 font-semibold text-gray-900"><span v-if="job.icon" class="mr-1 text-lg">{{ job.icon }}</span>{{ job.name }}</span>
         </div>
 
         <div v-if="job.members?.length" class="space-y-1">

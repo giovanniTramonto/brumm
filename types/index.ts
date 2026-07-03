@@ -130,6 +130,7 @@ export interface ParentJobMember {
 export interface ParentJob {
   id: string
   name: string
+  icon: string | null
   members?: ParentJobMember[]
 }
 

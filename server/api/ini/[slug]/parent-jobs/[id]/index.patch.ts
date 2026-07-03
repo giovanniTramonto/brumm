@@ -1,5 +1,5 @@
 import { getParentJob, updateParentJob } from '~/server/utils/parentJobData'
-import { createParentJobSchema, formatZodError } from '~/server/utils/schemas'
+import { formatZodError, updateParentJobSchema } from '~/server/utils/schemas'
 
 export default defineEventHandler(async (event) => {
   const club = event.context.club
@@ -19,11 +19,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Elternposten nicht gefunden' })
   }
 
-  const parsed = createParentJobSchema.safeParse(await readBody(event))
+  const parsed = updateParentJobSchema.safeParse(await readBody(event))
   if (!parsed.success) {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const job = await updateParentJob(club, jobId, parsed.data.name)
+  const job = await updateParentJob(club, jobId, parsed.data)
   return { parentJob: job }
 })

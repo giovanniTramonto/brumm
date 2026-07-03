@@ -97,6 +97,11 @@ export const createParentJobSchema = z.object({
   name: z.string().min(1, 'Name fehlt'),
 })
 
+export const updateParentJobSchema = z.object({
+  name: z.string().min(1, 'Name fehlt').optional(),
+  icon: z.string().nullable().optional(),
+})
+
 export const addParentJobMemberSchema = z.object({
   email: z.string().email('Ungültige E-Mail-Adresse'),
   name: z.string().nullable().optional(),

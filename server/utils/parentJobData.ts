@@ -48,10 +48,10 @@ export async function createParentJob(club: { id: string }, name: string): Promi
 export async function updateParentJob(
   club: { id: string },
   jobId: string,
-  name: string,
+  params: { name?: string; icon?: string | null },
 ): Promise<ParentJob | null> {
   const sql = await getClubDb(club.id)
-  return pgUpdateParentJob(sql, jobId, name)
+  return pgUpdateParentJob(sql, jobId, params)
 }
 
 export async function deleteParentJob(club: { id: string }, jobId: string): Promise<void> {
