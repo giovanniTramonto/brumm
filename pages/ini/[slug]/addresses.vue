@@ -37,10 +37,6 @@ const groupedSections = computed(() => {
 
 <template>
   <div>
-    <div class="mb-6">
-      <NuxtLink :to="`/ini/${slug}/dashboard`" class="text-sm text-gray-500 hover:text-gray-900">← Zurück</NuxtLink>
-    </div>
-
     <h1 class="mb-6 text-2xl font-bold text-gray-900">Adressliste</h1>
 
     <LoadingBrumm v-if="isLoading" />
