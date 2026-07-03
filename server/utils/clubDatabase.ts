@@ -38,7 +38,7 @@ export async function getClubDb(clubId: string, knownEncryptedDsn?: string): Pro
       })
     }
     const dsn = decrypt(encryptedDsn)
-    return postgres(dsn, { max: 5, idle_timeout: 30 })
+    return postgres(dsn, { max: 1, idle_timeout: 10 })
   })()
 
   clientCache.set(clubId, promise)
