@@ -67,6 +67,14 @@ CREATE TABLE IF NOT EXISTS parent_job_members (
     sql: `ALTER TABLE parent_jobs ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
 ALTER TABLE parent_job_members ADD COLUMN IF NOT EXISTS tasks TEXT;`,
   },
+  {
+    filename: '004_parent_job_members_sort_order.sql',
+    sql: `ALTER TABLE parent_job_members ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
+UPDATE parent_job_members SET sort_order = sub.rn FROM (
+  SELECT member_id, ROW_NUMBER() OVER (PARTITION BY job_id ORDER BY member_id) - 1 AS rn
+  FROM parent_job_members
+) sub WHERE parent_job_members.member_id = sub.member_id;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {

@@ -10,6 +10,7 @@ type MemberRow = {
   phone: string | null
   tasks: string | null
   is_leader: boolean
+  sort_order: number
 }
 
 function rowToJob(row: JobRow): ParentJob {
@@ -44,9 +45,7 @@ export async function pgGetParentJobWithMembers(
 ): Promise<ParentJob | null> {
   const [jobs, members] = await Promise.all([
     sql<JobRow[]>`SELECT * FROM parent_jobs WHERE job_id = ${jobId}`,
-    sql<
-      MemberRow[]
-    >`SELECT * FROM parent_job_members WHERE job_id = ${jobId} ORDER BY is_leader DESC`,
+    sql<MemberRow[]>`SELECT * FROM parent_job_members WHERE job_id = ${jobId} ORDER BY sort_order`,
   ])
   if (!jobs[0]) return null
   return { ...rowToJob(jobs[0]), members: members.map(rowToMember) }
@@ -55,7 +54,7 @@ export async function pgGetParentJobWithMembers(
 export async function pgGetAllParentJobsWithMembers(sql: Sql): Promise<ParentJob[]> {
   const [jobs, members] = await Promise.all([
     sql<JobRow[]>`SELECT * FROM parent_jobs ORDER BY sort_order, name`,
-    sql<MemberRow[]>`SELECT * FROM parent_job_members ORDER BY is_leader DESC`,
+    sql<MemberRow[]>`SELECT * FROM parent_job_members ORDER BY sort_order`,
   ])
   const membersByJob = new Map<string, ParentJobMember[]>()
   for (const m of members) {
@@ -108,9 +107,13 @@ export async function pgAddParentJobMember(
     isLeader: boolean
   },
 ): Promise<ParentJobMember> {
+  const [{ max }] = await sql<
+    [{ max: number }]
+  >`SELECT COALESCE(MAX(sort_order), -1) AS max FROM parent_job_members WHERE job_id = ${params.jobId}`
+  const sortOrder = max + 1
   await sql`
-    INSERT INTO parent_job_members (member_id, job_id, email, name, phone, tasks, is_leader)
-    VALUES (${memberId}, ${params.jobId}, ${params.email}, ${params.name}, ${params.phone}, ${params.tasks}, ${params.isLeader})
+    INSERT INTO parent_job_members (member_id, job_id, email, name, phone, tasks, is_leader, sort_order)
+    VALUES (${memberId}, ${params.jobId}, ${params.email}, ${params.name}, ${params.phone}, ${params.tasks}, ${params.isLeader}, ${sortOrder})
   `
   return {
     id: memberId,
@@ -121,6 +124,19 @@ export async function pgAddParentJobMember(
     tasks: params.tasks,
     isLeader: params.isLeader,
   }
+}
+
+export async function pgReorderParentJobMembers(
+  sql: Sql,
+  jobId: string,
+  ids: string[],
+): Promise<void> {
+  await Promise.all(
+    ids.map(
+      (id, index) =>
+        sql`UPDATE parent_job_members SET sort_order = ${index} WHERE member_id = ${id} AND job_id = ${jobId}`,
+    ),
+  )
 }
 
 export async function pgUpdateParentJobMember(

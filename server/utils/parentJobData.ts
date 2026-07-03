@@ -10,6 +10,7 @@ import {
   pgGetParentJob,
   pgGetParentJobWithMembers,
   pgRemoveParentJobMember,
+  pgReorderParentJobMembers,
   pgReorderParentJobs,
   pgSyncParentJobMemberContact,
   pgUpdateParentJob,
@@ -95,6 +96,15 @@ export async function removeParentJobMember(
 ): Promise<void> {
   const sql = await getClubDb(club.id)
   await pgRemoveParentJobMember(sql, jobId, memberId)
+}
+
+export async function reorderParentJobMembers(
+  club: { id: string },
+  jobId: string,
+  ids: string[],
+): Promise<void> {
+  const sql = await getClubDb(club.id)
+  await pgReorderParentJobMembers(sql, jobId, ids)
 }
 
 export async function syncParentJobMemberContact(

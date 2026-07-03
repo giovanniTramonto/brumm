@@ -30,6 +30,42 @@ const nameError = ref<string | null>(null)
 const deletingMemberId = ref<string | null>(null)
 const togglingMemberId = ref<string | null>(null)
 
+const draggedMemberId = ref<string | null>(null)
+const dragOverMemberId = ref<string | null>(null)
+
+function onMemberDragStart(event: DragEvent, id: string) {
+  draggedMemberId.value = id
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+
+function onMemberDragOver(event: DragEvent, id: string) {
+  event.preventDefault()
+  dragOverMemberId.value = id
+}
+
+function onMemberDrop(targetId: string) {
+  if (!draggedMemberId.value || draggedMemberId.value === targetId || !job.value?.members) return
+  const members = job.value.members
+  const from = members.findIndex((m) => m.id === draggedMemberId.value)
+  const to = members.findIndex((m) => m.id === targetId)
+  const updated = [...members]
+  const [item] = updated.splice(from, 1)
+  updated.splice(to, 0, item)
+  job.value.members = updated
+  parentJobsStore.updateParentJob(job.value)
+  draggedMemberId.value = null
+  dragOverMemberId.value = null
+  $fetch(`/api/ini/${slug}/parent-jobs/${jobId}/members/reorder`, {
+    method: 'PUT',
+    body: { ids: updated.map((m) => m.id) },
+  })
+}
+
+function onMemberDragEnd() {
+  draggedMemberId.value = null
+  dragOverMemberId.value = null
+}
+
 const isAddingMember = ref(false)
 const addError = ref<string | null>(null)
 
@@ -93,13 +129,7 @@ const memberIdsByEmail = computed(() => {
   return map
 })
 
-const sortedMembers = computed<ParentJobMember[]>(() => {
-  const members = job.value?.members ?? []
-  return [...members].sort((a, b) => {
-    if (a.isLeader !== b.isLeader) return a.isLeader ? -1 : 1
-    return (a.name ?? a.email).localeCompare(b.name ?? b.email, 'de')
-  })
-})
+const jobMembers = computed<ParentJobMember[]>(() => job.value?.members ?? [])
 
 const guardianOptions = computed<GuardianOption[]>(() => {
   const emailMap = new Map<
@@ -288,12 +318,13 @@ function optionLabel(opt: GuardianOption): string {
         </div>
         <p v-if="nameError" class="text-sm text-red-600">{{ nameError }}</p>
 
-        <p v-if="!sortedMembers.length" class="text-sm text-gray-500">Noch keine Mitglieder.</p>
+        <p v-if="!jobMembers.length" class="text-sm text-gray-500">Noch keine Mitglieder.</p>
 
         <div v-else class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-gray-200">
+                <th v-if="canManageClub && isEditing" class="w-4 pb-2 pr-3" />
                 <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">Name</th>
                 <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">Aufgaben</th>
                 <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">E-Mail</th>
@@ -302,7 +333,23 @@ function optionLabel(opt: GuardianOption): string {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="m in sortedMembers" :key="m.id" class="border-t border-gray-100 align-top">
+              <tr
+                v-for="m in jobMembers"
+                :key="m.id"
+                :draggable="canManageClub && isEditing"
+                :class="[
+                  dragOverMemberId === m.id && dragOverMemberId !== draggedMemberId ? 'border-t-2 border-primary-500' : 'border-t border-gray-100',
+                  draggedMemberId === m.id ? 'opacity-40' : '',
+                  'align-top',
+                ]"
+                @dragstart="canManageClub && isEditing && onMemberDragStart($event, m.id)"
+                @dragover="canManageClub && isEditing && onMemberDragOver($event, m.id)"
+                @drop="canManageClub && isEditing && onMemberDrop(m.id)"
+                @dragend="onMemberDragEnd"
+              >
+                <td v-if="canManageClub && isEditing" class="pr-3 pt-2.5 align-top">
+                  <span class="cursor-grab text-gray-300 active:cursor-grabbing">⠿</span>
+                </td>
                 <td class="whitespace-nowrap py-2.5 pr-6 align-top font-medium text-gray-900">
                   <template v-if="canManageClub && memberIdsByEmail.get(m.email)?.length">
                     <span class="inline-block max-w-48 whitespace-normal">
