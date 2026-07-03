@@ -24,14 +24,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: formatZodError(parsed.error) })
   }
 
-  const { email, name, phone, tasks, isLeader } = parsed.data
+  const { email, name, phone, tasks } = parsed.data
   const member = await addParentJobMember(club, {
     jobId,
     email,
     name: name ?? null,
     phone: phone ?? null,
     tasks: tasks ?? null,
-    isLeader,
   })
   return { member }
 })

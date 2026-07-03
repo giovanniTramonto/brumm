@@ -102,11 +102,9 @@ export const addParentJobMemberSchema = z.object({
   name: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   tasks: z.string().nullable().optional(),
-  isLeader: z.boolean().optional().default(false),
 })
 
 export const updateParentJobMemberSchema = z.object({
-  isLeader: z.boolean().optional(),
   tasks: z.string().nullable().optional(),
 })
 

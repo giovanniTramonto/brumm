@@ -125,7 +125,6 @@ export interface ParentJobMember {
   name: string | null
   phone: string | null
   tasks: string | null
-  isLeader: boolean
 }
 
 export interface ParentJob {

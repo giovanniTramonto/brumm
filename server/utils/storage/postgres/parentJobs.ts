@@ -9,7 +9,6 @@ type MemberRow = {
   name: string | null
   phone: string | null
   tasks: string | null
-  is_leader: boolean
   sort_order: number
 }
 
@@ -25,7 +24,6 @@ function rowToMember(row: MemberRow): ParentJobMember {
     name: row.name,
     phone: row.phone,
     tasks: row.tasks,
-    isLeader: row.is_leader,
   }
 }
 
@@ -104,7 +102,6 @@ export async function pgAddParentJobMember(
     name: string | null
     phone: string | null
     tasks: string | null
-    isLeader: boolean
   },
 ): Promise<ParentJobMember> {
   const [{ max }] = await sql<
@@ -112,8 +109,8 @@ export async function pgAddParentJobMember(
   >`SELECT COALESCE(MAX(sort_order), -1) AS max FROM parent_job_members WHERE job_id = ${params.jobId}`
   const sortOrder = max + 1
   await sql`
-    INSERT INTO parent_job_members (member_id, job_id, email, name, phone, tasks, is_leader, sort_order)
-    VALUES (${memberId}, ${params.jobId}, ${params.email}, ${params.name}, ${params.phone}, ${params.tasks}, ${params.isLeader}, ${sortOrder})
+    INSERT INTO parent_job_members (member_id, job_id, email, name, phone, tasks, sort_order)
+    VALUES (${memberId}, ${params.jobId}, ${params.email}, ${params.name}, ${params.phone}, ${params.tasks}, ${sortOrder})
   `
   return {
     id: memberId,
@@ -122,7 +119,6 @@ export async function pgAddParentJobMember(
     name: params.name,
     phone: params.phone,
     tasks: params.tasks,
-    isLeader: params.isLeader,
   }
 }
 
@@ -143,11 +139,10 @@ export async function pgUpdateParentJobMember(
   sql: Sql,
   jobId: string,
   memberId: string,
-  params: { isLeader?: boolean; tasks?: string | null },
+  params: { tasks?: string | null },
 ): Promise<ParentJobMember | null> {
   const rows = await sql<MemberRow[]>`
     UPDATE parent_job_members SET
-      is_leader = COALESCE(${params.isLeader ?? null}, is_leader),
       tasks = CASE WHEN ${params.tasks !== undefined} THEN ${params.tasks ?? null} ELSE tasks END
     WHERE member_id = ${memberId} AND job_id = ${jobId}
     RETURNING *

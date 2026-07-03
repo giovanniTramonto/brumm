@@ -28,7 +28,6 @@ const isSavingName = ref(false)
 const nameError = ref<string | null>(null)
 
 const deletingMemberId = ref<string | null>(null)
-const togglingMemberId = ref<string | null>(null)
 
 const draggedMemberId = ref<string | null>(null)
 const dragOverMemberId = ref<string | null>(null)
@@ -87,7 +86,6 @@ type GuardianOption = {
   childNames: string[]
 }
 const selectedEmail = ref<string | null>(null)
-const addIsLeader = ref(false)
 
 onMounted(async () => {
   await Promise.all([
@@ -168,7 +166,7 @@ const guardianOptions = computed<GuardianOption[]>(() => {
     .sort((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email, 'de'))
 })
 
-const selectedGuardian = computed<GuardianOption | null>(
+const selectedOption = computed<GuardianOption | null>(
   () => guardianOptions.value.find((o) => o.email === selectedEmail.value) ?? null,
 )
 
@@ -221,22 +219,6 @@ async function onSaveTasks(member: ParentJobMember) {
   }
 }
 
-async function onToggleLeader(member: ParentJobMember) {
-  togglingMemberId.value = member.id
-  try {
-    const data = await $fetch<{ member: ParentJobMember }>(
-      `/api/ini/${slug}/parent-jobs/${jobId}/members/${member.id}`,
-      { method: 'PATCH', body: { isLeader: !member.isLeader } },
-    )
-    if (job.value?.members) {
-      job.value.members = job.value.members.map((m) => (m.id === member.id ? data.member : m))
-      parentJobsStore.updateParentJob(job.value)
-    }
-  } finally {
-    togglingMemberId.value = null
-  }
-}
-
 async function onRemoveMember(member: ParentJobMember) {
   if (!confirm(`„${member.name ?? member.email}" aus diesem Posten entfernen?`)) return
   deletingMemberId.value = member.id
@@ -252,21 +234,20 @@ async function onRemoveMember(member: ParentJobMember) {
 }
 
 async function onAddMember() {
-  if (!selectedGuardian.value) return
+  if (!selectedOption.value) return
   addError.value = null
   isAddingMember.value = true
   try {
-    const { email, name, phone } = selectedGuardian.value
+    const { email, name, phone } = selectedOption.value
     const data = await $fetch<{ member: ParentJobMember }>(
       `/api/ini/${slug}/parent-jobs/${jobId}/members`,
-      { method: 'POST', body: { email, name, phone, isLeader: addIsLeader.value } },
+      { method: 'POST', body: { email, name, phone } },
     )
     if (job.value) {
       job.value.members = [...(job.value.members ?? []), data.member]
       parentJobsStore.updateParentJob(job.value)
     }
     selectedEmail.value = null
-    addIsLeader.value = false
   } catch (err: unknown) {
     addError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ??
@@ -327,8 +308,6 @@ function optionLabel(opt: GuardianOption): string {
                 <th v-if="canManageClub && isEditing" class="w-4 pb-2 pr-3" />
                 <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">Name</th>
                 <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">Aufgaben</th>
-                <th class="pb-2 pr-6 text-left text-xs font-medium text-gray-500">E-Mail</th>
-                <th class="pb-2 text-left text-xs font-medium text-gray-500">Telefon</th>
                 <th v-if="canManageClub && isEditing" class="pb-2" />
               </tr>
             </thead>
@@ -357,7 +336,6 @@ function optionLabel(opt: GuardianOption): string {
                     </span>
                   </template>
                   <span v-else class="inline-block max-w-48 whitespace-normal">{{ m.name ?? m.email }}</span>
-                  <span v-if="m.isLeader" class="ml-1.5 inline-block rounded-full bg-yellow-100 px-1.5 py-0.5 text-xs font-medium text-yellow-800">Leitung</span>
                 </td>
                 <td class="min-w-80 py-2.5 pr-6 align-top">
                   <template v-if="canManageClub && isEditing">
@@ -378,33 +356,15 @@ function optionLabel(opt: GuardianOption): string {
                   </template>
                   <span v-else class="text-xs text-gray-500">{{ m.tasks ?? '–' }}</span>
                 </td>
-                <td class="py-2.5 pr-6 align-top">
-                  <a :href="`mailto:${m.email}`" class="text-blue-600 hover:text-blue-800">{{ m.email }}</a>
-                </td>
-                <td class="py-2.5 align-top">
-                  <a v-if="m.phone" :href="`tel:${m.phone}`" class="font-mono text-blue-600 hover:underline">{{ m.phone }}</a>
-                </td>
-                <td v-if="canManageClub && isEditing" class="py-2.5 pl-4">
-                  <div class="flex items-center justify-end gap-2">
-                    <label class="flex cursor-pointer items-center gap-1.5 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        class="accent-primary-600"
-                        :checked="m.isLeader"
-                        :disabled="togglingMemberId === m.id"
-                        @change="onToggleLeader(m)"
-                      />
-                      Leitung
-                    </label>
-                    <button
-                      type="button"
-                      class="btn-danger py-0.5 text-xs"
-                      :disabled="deletingMemberId === m.id"
-                      @click="onRemoveMember(m)"
-                    >
-                      {{ deletingMemberId === m.id ? '…' : 'Entfernen' }}
-                    </button>
-                  </div>
+                <td v-if="canManageClub && isEditing" class="py-2.5 pl-4 text-right">
+                  <button
+                    type="button"
+                    class="btn-danger py-0.5 text-xs"
+                    :disabled="deletingMemberId === m.id"
+                    @click="onRemoveMember(m)"
+                  >
+                    {{ deletingMemberId === m.id ? '…' : 'Entfernen' }}
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -414,7 +374,7 @@ function optionLabel(opt: GuardianOption): string {
         <div v-if="canManageClub && isEditing" class="border-t pt-4">
           <h3 class="mb-3 text-sm font-medium text-gray-900">Mitglied hinzufügen</h3>
           <div v-if="addError" role="alert" class="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{{ addError }}</div>
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div class="flex-1">
               <select v-model="selectedEmail" class="input w-full text-sm">
                 <option :value="null">Erziehungsberechtigte/n auswählen…</option>
@@ -423,20 +383,16 @@ function optionLabel(opt: GuardianOption): string {
                 </option>
               </select>
             </div>
-            <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
-              <input v-model="addIsLeader" type="checkbox" class="accent-primary-600" />
-              Leitung
-            </label>
             <button
               type="button"
               class="btn-primary text-sm"
-              :disabled="!selectedGuardian || isAddingMember"
+              :disabled="!selectedOption || isAddingMember"
               @click="onAddMember"
             >
               {{ isAddingMember ? 'Wird hinzugefügt…' : 'Hinzufügen' }}
             </button>
           </div>
-          <p v-if="guardianOptions.length === 0 && activeMembers.length > 0" class="mt-2 text-xs text-gray-500">
+          <p v-if="guardianOptions.length === 0 && activeMembers.length > 0" class="mt-2 rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
             Alle aktiven Erziehungsberechtigten sind bereits in diesem Posten.
           </p>
         </div>

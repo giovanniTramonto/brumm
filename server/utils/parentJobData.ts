@@ -72,7 +72,6 @@ export async function addParentJobMember(
     name: string | null
     phone: string | null
     tasks: string | null
-    isLeader: boolean
   },
 ): Promise<ParentJobMember> {
   const sql = await getClubDb(club.id)
@@ -83,7 +82,7 @@ export async function updateParentJobMember(
   club: { id: string },
   jobId: string,
   memberId: string,
-  params: { isLeader?: boolean; tasks?: string | null },
+  params: { tasks?: string | null },
 ): Promise<ParentJobMember | null> {
   const sql = await getClubDb(club.id)
   return pgUpdateParentJobMember(sql, jobId, memberId, params)
