@@ -149,13 +149,11 @@ function sortedJobMembers(job: ParentJob) {
                   <td class="pr-6 align-top" :class="{ 'pt-3': i === 0, 'pb-3': i === job.members.length - 1, 'py-1': i > 0 && i < job.members.length - 1 }">
                     <a v-if="m.phone" :href="`tel:${m.phone}`" class="font-mono text-blue-600 hover:underline">{{ m.phone }}</a>
                   </td>
-                  <td v-if="i === 0" :rowspan="job.members.length" class="align-top pt-3">
-                    <div class="flex items-center justify-end gap-2">
-                      <NuxtLink :to="`/ini/${slug}/parent-jobs/${job.id}`" draggable="false" class="btn-secondary py-1 text-xs">Ansehen</NuxtLink>
-                      <button v-if="canManageClub && isEditing" type="button" class="btn-danger py-1 text-xs" :disabled="deletingId === job.id" @click="onDelete(job.id, job.name)">
-                        {{ deletingId === job.id ? '…' : 'Löschen' }}
-                      </button>
-                    </div>
+                  <td v-if="i === 0" :rowspan="job.members.length" class="whitespace-nowrap align-top pt-3 text-right">
+                    <NuxtLink :to="`/ini/${slug}/parent-jobs/${job.id}`" draggable="false" class="btn-secondary py-1 text-xs">Ansehen</NuxtLink>
+                    <button v-if="canManageClub && isEditing" type="button" class="btn-danger ml-2 py-1 text-xs" :disabled="deletingId === job.id" @click="onDelete(job.id, job.name)">
+                      {{ deletingId === job.id ? '…' : 'Löschen' }}
+                    </button>
                   </td>
                 </tr>
               </template>
@@ -167,13 +165,11 @@ function sortedJobMembers(job: ParentJob) {
                   <NuxtLink :to="`/ini/${slug}/parent-jobs/${job.id}`" draggable="false" class="hover:text-primary-700">{{ job.name }}</NuxtLink>
                 </td>
                 <td colspan="3" class="pr-6 pt-3 pb-3 text-xs text-gray-400">Noch keine Mitglieder</td>
-                <td class="pt-3 pb-3 align-top">
-                  <div class="flex items-center gap-2">
-                    <NuxtLink :to="`/ini/${slug}/parent-jobs/${job.id}`" draggable="false" class="btn-secondary py-1 text-xs">Ansehen</NuxtLink>
-                    <button v-if="canManageClub && isEditing" type="button" class="btn-danger py-1 text-xs" :disabled="deletingId === job.id" @click="onDelete(job.id, job.name)">
-                      {{ deletingId === job.id ? '…' : 'Löschen' }}
-                    </button>
-                  </div>
+                <td class="whitespace-nowrap pt-3 pb-3 align-top text-right">
+                  <NuxtLink :to="`/ini/${slug}/parent-jobs/${job.id}`" draggable="false" class="btn-secondary py-1 text-xs">Ansehen</NuxtLink>
+                  <button v-if="canManageClub && isEditing" type="button" class="btn-danger ml-2 py-1 text-xs" :disabled="deletingId === job.id" @click="onDelete(job.id, job.name)">
+                    {{ deletingId === job.id ? '…' : 'Löschen' }}
+                  </button>
                 </td>
               </tr>
             </tbody>
