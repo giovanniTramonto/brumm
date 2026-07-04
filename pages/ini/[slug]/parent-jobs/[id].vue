@@ -115,9 +115,14 @@ onMounted(async () => {
     membersStore.fetchMembers(slug),
     (async () => {
       try {
-        const data = await $fetch<{ parentJob: ParentJob }>(`/api/ini/${slug}/parent-jobs/${jobId}`)
-        job.value = data.parentJob
-        initLocalTasks(data.parentJob.members ?? [])
+        await parentJobsStore.fetchParentJobs(slug)
+        const stored = parentJobsStore.parentJobs.find((j) => j.id === jobId)
+        if (!stored) {
+          pageError.value = 'Elternposten nicht gefunden'
+          return
+        }
+        job.value = stored
+        initLocalTasks(stored.members ?? [])
       } catch {
         pageError.value = 'Elternposten nicht gefunden'
       } finally {
