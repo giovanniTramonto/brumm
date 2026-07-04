@@ -44,11 +44,12 @@ async function onSaveName() {
 }
 
 // --- Datenbank ---
-type DbStatus = { hasDsn: boolean }
+type DbStatus = { hasDsn: boolean; hasPoolDsn: boolean }
 
-const dbStatus = ref<DbStatus>({ hasDsn: false })
+const dbStatus = ref<DbStatus>({ hasDsn: false, hasPoolDsn: false })
 const isEditingDb = ref(false)
 const dsnInput = ref('')
+const poolDsnInput = ref('')
 const isSavingDb = ref(false)
 const dbError = ref('')
 
@@ -57,16 +58,17 @@ async function fetchDbStatus() {
 }
 
 async function onSaveDb() {
-  if (!dsnInput.value.trim()) return
+  if (!dsnInput.value.trim() && !poolDsnInput.value.trim()) return
   isSavingDb.value = true
   dbError.value = ''
   try {
-    await $fetch(`/api/ini/${slug}/settings/database`, {
-      method: 'PATCH',
-      body: { dsn: dsnInput.value.trim() },
-    })
+    const body: Record<string, string> = {}
+    if (dsnInput.value.trim()) body.dsn = dsnInput.value.trim()
+    if (poolDsnInput.value.trim()) body.poolDsn = poolDsnInput.value.trim()
+    await $fetch(`/api/ini/${slug}/settings/database`, { method: 'PATCH', body })
     isEditingDb.value = false
     dsnInput.value = ''
+    poolDsnInput.value = ''
     await fetchDbStatus()
   } catch (err) {
     dbError.value =
@@ -264,26 +266,43 @@ onMounted(async () => {
           <dt class="w-32 shrink-0 text-gray-500">Connection</dt>
           <dd class="text-xs text-gray-400">verschlüsselt gespeichert</dd>
         </div>
+        <div v-if="dbStatus.hasPoolDsn" class="flex gap-2">
+          <dt class="w-32 shrink-0 text-gray-500">Pool Connection</dt>
+          <dd class="text-xs text-gray-400">verschlüsselt gespeichert</dd>
+        </div>
       </dl>
 
       <form v-if="isEditingDb" class="space-y-3" @submit.prevent="onSaveDb">
         <div>
-          <label class="mb-1 block text-xs text-gray-500">PostgreSQL Connection String</label>
+          <label class="mb-1 block text-xs text-gray-500">
+            PostgreSQL Connection String{{ dbStatus.hasDsn ? ' (leer = unverändert)' : '' }}
+          </label>
           <input
             v-model="dsnInput"
             type="password"
             class="input w-full font-mono text-sm"
             placeholder="postgresql://user:password@host:5432/dbname"
-            required
+            :required="!dbStatus.hasDsn"
             autofocus
           />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-gray-500">
+            Pool Connection String (optional{{ dbStatus.hasPoolDsn ? ', leer = unverändert' : ', z.B. Supabase Port 6543' }})
+          </label>
+          <input
+            v-model="poolDsnInput"
+            type="password"
+            class="input w-full font-mono text-sm"
+            placeholder="postgresql://user:password@host:6543/dbname"
+          />
           <p class="mt-1 text-xs text-gray-400">
-            Die Verbindung wird vor dem Speichern getestet.
+            Wenn gesetzt: Runtime-Queries laufen über den Pooler (max. 5 Verbindungen). Migrationen nutzen immer den direkten Connection String.
           </p>
         </div>
         <p v-if="dbError" class="text-xs text-red-600">{{ dbError }}</p>
         <div class="flex gap-2">
-          <button type="submit" class="btn-primary text-sm" :disabled="isSavingDb">
+          <button type="submit" class="btn-primary text-sm" :disabled="isSavingDb || (!dsnInput.trim() && !poolDsnInput.trim())">
             {{ isSavingDb ? 'Wird geprüft…' : 'Speichern' }}
           </button>
           <button type="button" class="btn-secondary text-sm" @click="isEditingDb = false; dbError = ''">

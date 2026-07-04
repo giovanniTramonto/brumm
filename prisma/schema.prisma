@@ -16,6 +16,7 @@ model Club {
   adminEmail      String?
   membershipFee   Float?
   encryptedDsn    String?
+  encryptedPoolDsn String?
   encryptedS3Config String?
   createdAt       DateTime @default(now())
 

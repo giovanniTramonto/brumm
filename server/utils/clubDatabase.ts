@@ -16,28 +16,31 @@ export async function invalidateClubDb(clubId: string): Promise<void> {
   }
 }
 
-export async function getClubDb(clubId: string, knownEncryptedDsn?: string): Promise<Sql> {
+// Returns pool client (max:5, prepare:false) if pool DSN is configured,
+// otherwise direct client (max:1). Used for all runtime API queries.
+export async function getClubDb(clubId: string): Promise<Sql> {
   const cached = clientCache.get(clubId)
   if (cached) return cached
 
   const promise = (async () => {
-    let encryptedDsn: string | null | undefined
-    if (knownEncryptedDsn !== undefined) {
-      encryptedDsn = knownEncryptedDsn
-    } else {
-      const record = await prisma.club.findUnique({
-        where: { id: clubId },
-        select: { encryptedDsn: true },
-      })
-      encryptedDsn = record?.encryptedDsn
+    const record = await prisma.club.findUnique({
+      where: { id: clubId },
+      select: { encryptedDsn: true, encryptedPoolDsn: true },
+    })
+
+    if (record?.encryptedPoolDsn) {
+      const dsn = decrypt(record.encryptedPoolDsn)
+      return postgres(dsn, { max: 5, idle_timeout: 10, prepare: false })
     }
-    if (!encryptedDsn) {
+
+    if (!record?.encryptedDsn) {
       throw createError({
         statusCode: 503,
         statusMessage: 'Keine Postgres-Datenbank konfiguriert.',
       })
     }
-    const dsn = decrypt(encryptedDsn)
+
+    const dsn = decrypt(record.encryptedDsn)
     return postgres(dsn, { max: 1, idle_timeout: 10 })
   })()
 
@@ -46,12 +49,28 @@ export async function getClubDb(clubId: string, knownEncryptedDsn?: string): Pro
   return promise
 }
 
-// Runs pending migrations; used by deploy-succeeded hook and lazy fallback
+// Always uses the direct DSN (not pool) — required for migrations which need
+// full session support that PgBouncer transaction mode doesn't provide.
 export async function migrateClubDb(
   clubId: string,
 ): Promise<{ applied: string[]; failed?: string }> {
-  const sql = await getClubDb(clubId)
-  return runMigrations(sql)
+  const record = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { encryptedDsn: true },
+  })
+  if (!record?.encryptedDsn) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Keine Postgres-Datenbank konfiguriert.',
+    })
+  }
+  const dsn = decrypt(record.encryptedDsn)
+  const sql = postgres(dsn, { max: 1, idle_timeout: 10 })
+  try {
+    return await runMigrations(sql)
+  } finally {
+    await sql.end()
+  }
 }
 
 // Called on deploy to migrate all clubs that have Postgres configured

@@ -44,8 +44,8 @@ export default defineEventHandler(async (event) => {
     if (!clubResult) throw createError({ statusCode: 404, statusMessage: 'Verein nicht gefunden' })
     event.context.club = clubResult
     // Warm up club DB connection early; handlers await the same cached Promise
-    if (clubResult.encryptedDsn) {
-      getClubDb(clubResult.id, clubResult.encryptedDsn).catch(() => {})
+    if (clubResult.encryptedDsn || clubResult.encryptedPoolDsn) {
+      getClubDb(clubResult.id).catch(() => {})
     }
   }
 })

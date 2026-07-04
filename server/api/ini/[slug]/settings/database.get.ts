@@ -6,5 +6,5 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  return { hasDsn: !!club.encryptedDsn }
+  return { hasDsn: !!club.encryptedDsn, hasPoolDsn: !!club.encryptedPoolDsn }
 })
