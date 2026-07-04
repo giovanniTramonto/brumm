@@ -30,11 +30,7 @@ export async function getClubDb(clubId: string): Promise<Sql> {
 
     if (record?.encryptedPoolDsn) {
       const dsn = decrypt(record.encryptedPoolDsn)
-      const sql = postgres(dsn, { max: 5, idle_timeout: 10, prepare: false })
-      console.time(`pool-warmup:${clubId}`)
-      await sql`SELECT 1`
-      console.timeEnd(`pool-warmup:${clubId}`)
-      return sql
+      return postgres(dsn, { max: 5, idle_timeout: 10, prepare: false })
     }
 
     if (!record?.encryptedDsn) {
