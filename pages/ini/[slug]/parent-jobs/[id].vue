@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
+import { useManagersStore } from '~/stores/managers'
 import { useMembersStore } from '~/stores/members'
 import { useParentJobsStore } from '~/stores/parentJobs'
 import type { Member, ParentJob, ParentJobMember } from '~/types'
@@ -15,6 +16,7 @@ const authStore = useAuthStore()
 const { canManageClub } = storeToRefs(authStore)
 
 const membersStore = useMembersStore()
+const managersStore = useManagersStore()
 const parentJobsStore = useParentJobsStore()
 
 const job = ref<ParentJob | null>(null)
@@ -151,9 +153,23 @@ const ICON_OPTIONS = [
 
 const selectedEmail = ref<string | null>(null)
 
+const isSelectingContact = ref(false)
+const selectedContactKey = ref('')
+const isSavingContact = ref(false)
+const contactError = ref<string | null>(null)
+
+type ContactOption = {
+  key: string
+  label: string
+  email: string
+  type: 'PARENT' | 'MANAGER'
+  phone: string | null
+}
+
 onMounted(async () => {
   await Promise.all([
     membersStore.fetchMembers(slug),
+    managersStore.fetchManagers(slug),
     (async () => {
       try {
         await parentJobsStore.fetchParentJobs(slug)
@@ -340,6 +356,65 @@ function optionLabel(opt: GuardianOption): string {
   const base = opt.name ?? opt.email
   return `${base} (${opt.childNames.join(', ')})`
 }
+
+const contactOptions = computed<ContactOption[]>(() => {
+  const opts: ContactOption[] = []
+  const emailMap = new Map<string, { name: string | null; phone: string | null }>()
+  for (const m of activeMembers.value as Member[]) {
+    if (m.email1 && !emailMap.has(m.email1))
+      emailMap.set(m.email1, { name: m.guardian1Name ?? null, phone: m.phone1 ?? null })
+    if (m.email2 && !emailMap.has(m.email2))
+      emailMap.set(m.email2, { name: m.guardian2Name ?? null, phone: m.phone2 ?? null })
+  }
+  for (const [email, { name, phone }] of emailMap)
+    opts.push({ key: `PARENT:${email}`, label: name ?? email, email, type: 'PARENT', phone })
+  for (const m of managersStore.managers)
+    opts.push({
+      key: `MANAGER:${m.email}`,
+      label: m.name,
+      email: m.email,
+      type: 'MANAGER',
+      phone: null,
+    })
+  return opts.sort((a, b) => a.label.localeCompare(b.label, 'de'))
+})
+
+async function onSaveContact() {
+  const opt = contactOptions.value.find((o) => o.key === selectedContactKey.value)
+  if (!opt || !job.value) return
+  isSavingContact.value = true
+  contactError.value = null
+  try {
+    const data = await $fetch<{ parentJob: ParentJob }>(`/api/ini/${slug}/parent-jobs/${jobId}`, {
+      method: 'PATCH',
+      body: { contactEmail: opt.email, contactType: opt.type },
+    })
+    job.value = { ...job.value, contact: data.parentJob.contact }
+    parentJobsStore.updateParentJob(job.value)
+    isSelectingContact.value = false
+    selectedContactKey.value = ''
+  } catch (err: unknown) {
+    contactError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
+  } finally {
+    isSavingContact.value = false
+  }
+}
+
+async function onRemoveContact() {
+  if (!job.value) return
+  isSavingContact.value = true
+  try {
+    const data = await $fetch<{ parentJob: ParentJob }>(`/api/ini/${slug}/parent-jobs/${jobId}`, {
+      method: 'PATCH',
+      body: { contactEmail: null, contactType: null },
+    })
+    job.value = { ...job.value, contact: data.parentJob.contact }
+    parentJobsStore.updateParentJob(job.value)
+  } finally {
+    isSavingContact.value = false
+  }
+}
 </script>
 
 <template>
@@ -388,6 +463,70 @@ function optionLabel(opt: GuardianOption): string {
           </template>
         </div>
         <p v-if="nameError" class="text-sm text-red-600">{{ nameError }}</p>
+
+        <!-- Contact block -->
+        <div v-if="job.contact || (canManageClub && isEditing)" class="border-t pt-3">
+          <div v-if="job.contact" class="flex items-start justify-between gap-3">
+            <div class="text-sm">
+              <p class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                <AppIcon name="person" class="h-4 w-4 shrink-0 text-gray-500" />
+                <span v-if="job.contact.name" class="text-gray-500">{{ job.contact.name }}</span>
+                <span v-if="job.contact.type === 'MANAGER'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Vorstand</span>
+                <a :href="`mailto:${job.contact.email}`" class="text-blue-600 hover:underline">{{ job.contact.email }}</a>
+                <a v-if="job.contact.phone" :href="`tel:${job.contact.phone}`" class="font-mono text-blue-600 hover:underline">{{ job.contact.phone }}</a>
+              </p>
+            </div>
+            <button
+              v-if="canManageClub && isEditing"
+              type="button"
+              class="btn-secondary shrink-0 py-1 text-xs"
+              :disabled="isSavingContact"
+              @click="onRemoveContact"
+            >
+              Entfernen
+            </button>
+          </div>
+          <template v-else-if="canManageClub && isEditing">
+            <template v-if="!isSelectingContact">
+              <button type="button" class="btn-secondary py-1 text-sm" @click="isSelectingContact = true">
+                Kontaktperson hinzufügen
+              </button>
+            </template>
+            <template v-else>
+              <div class="flex items-center gap-2">
+                <select v-model="selectedContactKey" class="input flex-1 text-sm">
+                  <option value="">Kontakt wählen…</option>
+                  <optgroup label="Vorstand">
+                    <option
+                      v-for="opt in contactOptions.filter((o) => o.type === 'MANAGER')"
+                      :key="opt.key"
+                      :value="opt.key"
+                    >{{ opt.label }}</option>
+                  </optgroup>
+                  <optgroup label="Eltern">
+                    <option
+                      v-for="opt in contactOptions.filter((o) => o.type === 'PARENT')"
+                      :key="opt.key"
+                      :value="opt.key"
+                    >{{ opt.label }}</option>
+                  </optgroup>
+                </select>
+                <button
+                  type="button"
+                  class="btn-primary py-1 text-sm"
+                  :disabled="!selectedContactKey || isSavingContact"
+                  @click="onSaveContact"
+                >{{ isSavingContact ? '…' : 'Speichern' }}</button>
+                <button
+                  type="button"
+                  class="btn-secondary py-1 text-sm"
+                  @click="isSelectingContact = false; selectedContactKey = ''"
+                >Abbrechen</button>
+              </div>
+              <p v-if="contactError" class="mt-1 text-sm text-red-600">{{ contactError }}</p>
+            </template>
+          </template>
+        </div>
 
         <p v-if="!jobMembers.length" class="text-sm text-gray-500">Noch keine Mitglieder.</p>
 

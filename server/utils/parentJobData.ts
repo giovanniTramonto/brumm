@@ -48,7 +48,12 @@ export async function createParentJob(club: { id: string }, name: string): Promi
 export async function updateParentJob(
   club: { id: string },
   jobId: string,
-  params: { name?: string; icon?: string | null },
+  params: {
+    name?: string
+    icon?: string | null
+    contactEmail?: string | null
+    contactType?: string | null
+  },
 ): Promise<ParentJob | null> {
   const sql = await getClubDb(club.id)
   return pgUpdateParentJob(sql, jobId, params)

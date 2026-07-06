@@ -127,10 +127,18 @@ export interface ParentJobMember {
   tasks: string | null
 }
 
+export interface ParentJobContact {
+  email: string
+  type: 'PARENT' | 'MANAGER'
+  name: string | null
+  phone: string | null
+}
+
 export interface ParentJob {
   id: string
   name: string
   icon: string | null
+  contact: ParentJobContact | null
   members?: ParentJobMember[]
 }
 
