@@ -93,6 +93,20 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
 }
 
 export async function pgDeleteMember(sql: Sql, userId: string): Promise<void> {
+  // Remove guardian from parent jobs only if no sibling child still shares the same email
+  await sql`
+    DELETE FROM parent_job_members
+    WHERE email IN (
+      SELECT email1 FROM members WHERE user_id = ${userId}
+      UNION
+      SELECT email2 FROM members WHERE user_id = ${userId} AND email2 IS NOT NULL
+    )
+    AND email NOT IN (
+      SELECT email1 FROM members WHERE user_id != ${userId}
+      UNION
+      SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
+    )
+  `
   await sql`DELETE FROM members WHERE user_id = ${userId}`
 }
 

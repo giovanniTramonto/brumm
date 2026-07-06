@@ -51,6 +51,19 @@ async function deleteMemberFromClubDb(clubId: string, userId: string): Promise<v
   const dsn = decrypt(club.encryptedDsn)
   const sql = postgres(dsn, { max: 1, idle_timeout: 10, ssl: { rejectUnauthorized: false } })
   try {
+    await sql`
+      DELETE FROM parent_job_members
+      WHERE email IN (
+        SELECT email1 FROM members WHERE user_id = ${userId}
+        UNION
+        SELECT email2 FROM members WHERE user_id = ${userId} AND email2 IS NOT NULL
+      )
+      AND email NOT IN (
+        SELECT email1 FROM members WHERE user_id != ${userId}
+        UNION
+        SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
+      )
+    `
     await sql`DELETE FROM members WHERE user_id = ${userId}`
   } finally {
     await sql.end()
