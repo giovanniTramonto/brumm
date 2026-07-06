@@ -64,6 +64,20 @@ async function deleteMemberFromClubDb(clubId: string, userId: string): Promise<v
         SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
       )
     `
+    await sql`
+      UPDATE parent_jobs SET contact_email = NULL, contact_type = NULL
+      WHERE contact_type = 'PARENT'
+      AND contact_email IN (
+        SELECT email1 FROM members WHERE user_id = ${userId}
+        UNION
+        SELECT email2 FROM members WHERE user_id = ${userId} AND email2 IS NOT NULL
+      )
+      AND contact_email NOT IN (
+        SELECT email1 FROM members WHERE user_id != ${userId}
+        UNION
+        SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
+      )
+    `
     await sql`DELETE FROM members WHERE user_id = ${userId}`
   } finally {
     await sql.end()
