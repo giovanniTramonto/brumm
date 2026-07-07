@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ name: 'person' | 'pencil' }>()
+defineProps<{ name: 'person' | 'pencil' | 'chevron-down' }>()
 </script>
 
 <template>
@@ -20,6 +20,9 @@ defineProps<{ name: 'person' | 'pencil' }>()
     <template v-if="name === 'pencil'">
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
       <polygon points="7.5,20.5 2,22 3.5,16.5" fill="currentColor" stroke="none" />
+    </template>
+    <template v-if="name === 'chevron-down'">
+      <path d="m6 9 6 6 6-6" />
     </template>
   </svg>
 </template>

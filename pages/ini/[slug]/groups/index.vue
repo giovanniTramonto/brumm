@@ -10,6 +10,8 @@ const slug = route.params.slug as string
 const authStore = useAuthStore()
 const groupsStore = useGroupsStore()
 
+onMounted(() => groupsStore.fetchGroups(slug))
+
 const deletingGroupId = ref<string | null>(null)
 
 async function onDeleteGroup(group: Group) {
