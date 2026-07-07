@@ -25,21 +25,19 @@ const navSections = computed((): NavSection[] => {
   const sections: NavSection[] = []
 
   if (canManageClub.value) {
-    const kinderItems: NavItem[] = [
-      { label: 'Kinder', to: `${base}/members` },
-      { label: 'Gruppen', to: `${base}/groups` },
-      { label: 'Elternposten', to: `${base}/parent-jobs` },
-    ]
-    sections.push({ label: 'Kinder & Eltern', items: kinderItems })
+    sections.push({
+      label: 'Kinder & Eltern',
+      items: [
+        { label: 'Kinder', to: `${base}/members` },
+        { label: 'Elternposten', to: `${base}/parent-jobs` },
+      ],
+    })
   }
 
   if (canManageClub.value) {
     sections.push({
       label: 'Personal',
-      items: [
-        { label: 'Vorstand', to: `${base}/managers` },
-        { label: 'Team', to: `${base}/team` },
-      ],
+      items: [{ label: 'Team', to: `${base}/team` }],
     })
   }
 
@@ -53,7 +51,11 @@ const navSections = computed((): NavSection[] => {
   if (isSuperUser.value) {
     sections.push({
       label: 'Admin',
-      items: [{ label: 'Einstellungen', to: `${base}/settings` }],
+      items: [
+        { label: 'Gruppen', to: `${base}/groups` },
+        { label: 'Vorstand', to: `${base}/managers` },
+        { label: 'Einstellungen', to: `${base}/settings` },
+      ],
     })
   }
 
