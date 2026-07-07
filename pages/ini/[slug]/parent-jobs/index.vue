@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { useParentJobsStore } from '~/stores/parentJobs'
+import type { ParentJob } from '~/types'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -28,10 +29,10 @@ async function onCreate() {
   createError.value = null
   isCreating.value = true
   try {
-    const data = await $fetch<{ parentJob: { id: string; name: string } }>(
-      `/api/ini/${slug}/parent-jobs`,
-      { method: 'POST', body: { name: newName.value.trim() } },
-    )
+    const data = await $fetch<{ parentJob: ParentJob }>(`/api/ini/${slug}/parent-jobs`, {
+      method: 'POST',
+      body: { name: newName.value.trim() },
+    })
     parentJobsStore.addParentJob(data.parentJob)
     newName.value = ''
   } catch (err: unknown) {

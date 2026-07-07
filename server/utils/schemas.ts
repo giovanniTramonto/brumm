@@ -101,7 +101,7 @@ export const updateParentJobSchema = z.object({
   name: z.string().min(1, 'Name fehlt').optional(),
   icon: z.string().nullable().optional(),
   contactEmail: z.string().email().nullable().optional(),
-  contactType: z.enum(['PARENT', 'MANAGER']).nullable().optional(),
+  contactType: z.enum(['PARENT', 'MANAGER', 'ADMIN']).nullable().optional(),
 })
 
 export const addParentJobMemberSchema = z.object({

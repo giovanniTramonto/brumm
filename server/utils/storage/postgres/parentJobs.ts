@@ -57,6 +57,7 @@ const JOB_SELECT = (sql: Sql) => sql`
       WHEN pj.contact_type = 'MANAGER' THEN (
         SELECT mg.name FROM managers mg WHERE mg.email = pj.contact_email LIMIT 1
       )
+      WHEN pj.contact_type = 'ADMIN' THEN 'Admin'
     END AS contact_name,
     CASE
       WHEN pj.contact_type = 'PARENT' THEN (

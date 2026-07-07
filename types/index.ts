@@ -129,7 +129,7 @@ export interface ParentJobMember {
 
 export interface ParentJobContact {
   email: string
-  type: 'PARENT' | 'MANAGER'
+  type: 'PARENT' | 'MANAGER' | 'ADMIN'
   name: string | null
   phone: string | null
 }

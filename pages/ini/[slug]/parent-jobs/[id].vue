@@ -13,7 +13,7 @@ const slug = route.params.slug as string
 const jobId = route.params.id as string
 
 const authStore = useAuthStore()
-const { canManageClub } = storeToRefs(authStore)
+const { canManageClub, currentClub } = storeToRefs(authStore)
 
 const membersStore = useMembersStore()
 const managersStore = useManagersStore()
@@ -162,7 +162,7 @@ type ContactOption = {
   key: string
   label: string
   email: string
-  type: 'PARENT' | 'MANAGER'
+  type: 'PARENT' | 'MANAGER' | 'ADMIN'
   phone: string | null
 }
 
@@ -376,6 +376,14 @@ const contactOptions = computed<ContactOption[]>(() => {
       type: 'MANAGER',
       phone: null,
     })
+  if (currentClub.value?.adminEmail)
+    opts.push({
+      key: `ADMIN:${currentClub.value.adminEmail}`,
+      label: 'Admin',
+      email: currentClub.value.adminEmail,
+      type: 'ADMIN',
+      phone: null,
+    })
   return opts.sort((a, b) => a.label.localeCompare(b.label, 'de'))
 })
 
@@ -446,17 +454,25 @@ async function onRemoveContact() {
           <template v-else>
             <select
               v-if="canManageClub && isEditing"
-              class="input w-16 text-sm"
+              class="input w-20 text-sm"
               :value="job.icon ?? ''"
               @change="onSaveIcon(($event.target as HTMLSelectElement).value || null)"
             >
               <option value="">Icon wählen…</option>
               <option v-for="emoji in ICON_OPTIONS" :key="emoji" :value="emoji">{{ emoji }}</option>
             </select>
-            <h1 class="flex-1 text-2xl font-bold text-gray-900">
+            <h1 class="flex flex-1 items-center gap-2 text-2xl font-bold text-gray-900">
               <span v-if="job.icon && !isEditing" class="mr-1">{{ job.icon }}</span>{{ job.name }}
+              <button
+                v-if="canManageClub && isEditing"
+                type="button"
+                class="text-gray-400 hover:text-gray-600"
+                title="Umbenennen"
+                @click="onStartEditName"
+              >
+                <AppIcon name="pencil" class="h-4 w-4" />
+              </button>
             </h1>
-            <button v-if="canManageClub && isEditing" type="button" class="btn-secondary py-1 text-sm" @click="onStartEditName">Umbenennen</button>
             <button v-if="canManageClub" type="button" class="btn-secondary py-1 text-sm" @click="isEditing = !isEditing">
               {{ isEditing ? 'Fertig' : 'Bearbeiten' }}
             </button>
@@ -472,6 +488,7 @@ async function onRemoveContact() {
                 <AppIcon name="person" class="h-4 w-4 shrink-0 text-gray-500" />
                 <span v-if="job.contact.name" class="text-gray-500">{{ job.contact.name }}</span>
                 <span v-if="job.contact.type === 'MANAGER'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Vorstand</span>
+                <span v-else-if="job.contact.type === 'ADMIN'" class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">Admin</span>
                 <a :href="`mailto:${job.contact.email}`" class="text-blue-600 hover:underline">{{ job.contact.email }}</a>
                 <a v-if="job.contact.phone" :href="`tel:${job.contact.phone}`" class="font-mono text-blue-600 hover:underline">{{ job.contact.phone }}</a>
               </p>
@@ -488,22 +505,31 @@ async function onRemoveContact() {
           </div>
           <template v-else-if="canManageClub && isEditing">
             <template v-if="!isSelectingContact">
-              <button type="button" class="btn-secondary py-1 text-sm" @click="isSelectingContact = true">
-                Kontaktperson hinzufügen
-              </button>
+              <div class="flex justify-end">
+                <button type="button" class="btn-secondary py-1 text-sm" @click="isSelectingContact = true">
+                  Kontaktperson hinzufügen
+                </button>
+              </div>
             </template>
             <template v-else>
               <div class="flex items-center gap-2">
                 <select v-model="selectedContactKey" class="input flex-1 text-sm">
                   <option value="">Kontakt wählen…</option>
-                  <optgroup label="Vorstand">
+                  <optgroup v-if="contactOptions.some((o) => o.type === 'ADMIN')" label="Admin">
+                    <option
+                      v-for="opt in contactOptions.filter((o) => o.type === 'ADMIN')"
+                      :key="opt.key"
+                      :value="opt.key"
+                    >{{ opt.label }}</option>
+                  </optgroup>
+                  <optgroup v-if="contactOptions.some((o) => o.type === 'MANAGER')" label="Vorstand">
                     <option
                       v-for="opt in contactOptions.filter((o) => o.type === 'MANAGER')"
                       :key="opt.key"
                       :value="opt.key"
                     >{{ opt.label }}</option>
                   </optgroup>
-                  <optgroup label="Eltern">
+                  <optgroup v-if="contactOptions.some((o) => o.type === 'PARENT')" label="Eltern">
                     <option
                       v-for="opt in contactOptions.filter((o) => o.type === 'PARENT')"
                       :key="opt.key"
