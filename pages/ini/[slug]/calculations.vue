@@ -22,23 +22,26 @@ const membersStore = useMembersStore()
 
 const { canManageClub } = storeToRefs(authStore)
 
-type View = 'month' | 'year' | 'next-year'
-const VALID_VIEWS: View[] = ['month', 'year', 'next-year']
-const initialView = VALID_VIEWS.includes(route.query.view as View)
-  ? (route.query.view as View)
-  : 'month'
-const view = ref<View>(initialView)
-
-watch(view, (v) => router.replace({ query: { ...route.query, view: v } }))
-const showAnnual = computed(() => view.value === 'year' || view.value === 'next-year')
-const displayYear = computed(() => (view.value === 'next-year' ? currentYear + 1 : currentYear))
-
 const now = new Date()
 const currentYear = now.getFullYear()
 const currentMonth = now.getMonth() + 1
 
+const qYear = computed(() => {
+  const y = Number(route.query.year)
+  return Number.isFinite(y) && y > 2000 ? y : null
+})
+
+const qMonth = computed(() => {
+  const m = Number(route.query.month)
+  return Number.isFinite(m) && m >= 1 && m <= 12 ? m : null
+})
+
+const showAnnual = computed(() => qYear.value !== null && qMonth.value === null)
+const displayYear = computed(() => qYear.value ?? currentYear)
+const displayMonth = computed(() => qMonth.value ?? currentMonth)
+
 const currentRateSource = computed(() => {
-  const date = new Date(currentYear, currentMonth - 1, 1)
+  const date = new Date(displayYear.value, displayMonth.value - 1, 1)
   const r = getRatesForDate(date)
   const color = RATE_PERIOD_COLORS[getRateIndex(date) % RATE_PERIOD_COLORS.length]
   return { label: r.label, source: r.source, color }
@@ -56,8 +59,6 @@ const annualRateSources = computed(() => {
         getRateIndex(new Date(displayYear.value, i, 1)) % RATE_PERIOD_COLORS.length
       ],
   )
-  const uniqueLabels = [...new Set(ratesets.map((r) => r.label))]
-
   const periods: {
     startCol: number
     span: number
@@ -85,12 +86,12 @@ const annualRateSources = computed(() => {
 
 const reimbursement = computed(() => {
   if (!canManageClub.value || membersStore.isLoading) return null
-  return calculateReimbursement(membersStore.members, currentYear, currentMonth)
+  return calculateReimbursement(membersStore.members, displayYear.value, displayMonth.value)
 })
 
 const staffing = computed(() => {
   if (!canManageClub.value || membersStore.isLoading) return null
-  return calculateStaffing(membersStore.members, currentYear, currentMonth)
+  return calculateStaffing(membersStore.members, displayYear.value, displayMonth.value)
 })
 
 const annualReimbursement = computed(() => {
@@ -104,8 +105,7 @@ const annualStaffing = computed(() => {
 })
 
 const monthLabel = computed(() => {
-  if (!reimbursement.value) return ''
-  return new Date(currentYear, currentMonth - 1).toLocaleDateString('de-DE', {
+  return new Date(displayYear.value, displayMonth.value - 1).toLocaleDateString('de-DE', {
     month: 'long',
     year: 'numeric',
   })
@@ -134,11 +134,11 @@ function formatEur(value: number): string {
 }
 
 const activeCount = computed(() =>
-  countContractActiveMembers(membersStore.members, currentYear, currentMonth),
+  countContractActiveMembers(membersStore.members, displayYear.value, displayMonth.value),
 )
 
 const ageBreakdown = computed(() =>
-  getAgeGroupBreakdown(membersStore.members, currentYear, currentMonth),
+  getAgeGroupBreakdown(membersStore.members, displayYear.value, displayMonth.value),
 )
 
 const monthlyMembershipFees = computed(
@@ -217,18 +217,18 @@ async function onSaveMembershipFee() {
       <div class="mb-4 flex gap-1">
         <button
           class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-          :class="view === 'month' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900'"
-          @click="view = 'month'"
+          :class="!qYear ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900'"
+          @click="router.replace({ query: {} })"
         >Aktueller Monat</button>
         <button
           class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-          :class="view === 'year' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900'"
-          @click="view = 'year'"
+          :class="qYear === currentYear ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900'"
+          @click="router.replace({ query: { year: currentYear } })"
         >{{ currentYear }}</button>
         <button
           class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
-          :class="view === 'next-year' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900'"
-          @click="view = 'next-year'"
+          :class="qYear === currentYear + 1 ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900'"
+          @click="router.replace({ query: { year: currentYear + 1 } })"
         >{{ currentYear + 1 }}</button>
       </div>
 
@@ -373,12 +373,17 @@ async function onSaveMembershipFee() {
             </div>
             <div class="overflow-x-auto">
             <div class="annual-grid grid grid-cols-12 gap-1 border-t pt-3">
-              <div v-for="(m, i) in annualReimbursement.months" :key="i" class="text-center">
+              <NuxtLink
+                v-for="(m, i) in annualReimbursement.months"
+                :key="i"
+                :to="{ query: { year: displayYear, month: i + 1 } }"
+                class="block cursor-pointer rounded border border-transparent p-1 text-center hover:border-primary-200 hover:bg-primary-50"
+              >
                 <p class="text-xs text-gray-400">{{ MONTH_LABELS[i] }}</p>
                 <p class="mt-0.5 text-xs font-medium text-gray-700">{{ formatEur(m.total + m.mealTotal + countContractActiveMembers(membersStore.members, displayYear, i + 1) * (authStore.currentClub?.membershipFee ?? 0)) }}<span class="pl-1">€</span></p>
                 <p class="mt-0.5 text-xs text-gray-400">{{ countContractActiveMembers(membersStore.members, displayYear, i + 1) }}</p>
                 <div :class="[annualRateSources.perMonth[i], 'mt-1.5 h-1 rounded-full']" />
-              </div>
+              </NuxtLink>
               <div
                 v-for="period in annualRateSources.periods"
                 :key="period.startCol"
@@ -409,12 +414,17 @@ async function onSaveMembershipFee() {
             </div>
             <div class="mt-4 overflow-x-auto">
             <div class="annual-grid grid grid-cols-12 gap-1 border-t pt-3">
-              <div v-for="(m, i) in annualStaffing.months" :key="i" class="text-center">
+              <NuxtLink
+                v-for="(m, i) in annualStaffing.months"
+                :key="i"
+                :to="{ query: { year: displayYear, month: i + 1 } }"
+                class="block cursor-pointer rounded border border-transparent p-1 text-center hover:border-primary-200 hover:bg-primary-50"
+              >
                 <p class="text-xs text-gray-400">{{ MONTH_LABELS[i] }}</p>
                 <p class="mt-0.5 text-xs font-medium text-gray-700">{{ m.careHours.toFixed(1) }}</p>
                 <p class="mt-0.5 text-xs text-gray-400">{{ m.leadershipHours.toFixed(1) }}</p>
                 <div :class="[annualRateSources.perMonth[i], 'mt-1.5 h-1 rounded-full']" />
-              </div>
+              </NuxtLink>
             </div>
             </div>
           </template>
