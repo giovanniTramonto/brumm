@@ -37,6 +37,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Nur für aktive Mitglieder verfügbar' })
   }
 
-  const documents = await s3ListFiles(club.id, `members/${memberId}/other`)
-  return { documents }
+  try {
+    const documents = await s3ListFiles(club.id, `members/${memberId}/other`)
+    return { documents }
+  } catch (err: unknown) {
+    if ((err as { statusCode?: number })?.statusCode === 503) return { documents: [] }
+    throw err
+  }
 })

@@ -1,5 +1,6 @@
 import { useAuthStore } from '~/stores/auth'
 import { useDocumentsStore } from '~/stores/documents'
+import { useFinancialsStore } from '~/stores/financials'
 import { useManagersStore } from '~/stores/managers'
 import { useMembersStore } from '~/stores/members'
 import { useParentJobsStore } from '~/stores/parentJobs'
@@ -24,5 +25,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     useManagersStore().fetchManagers(slug)
     useDocumentsStore().fetchDocuments(slug)
     useParentJobsStore().fetchParentJobs(slug)
+    const now = new Date()
+    useFinancialsStore().fetchMonthly(slug, now.getFullYear(), now.getMonth() + 1)
   }
 })

@@ -28,6 +28,11 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const documents = await s3ListFiles(club.id, `members/${memberId}/contract`)
-  return { documents }
+  try {
+    const documents = await s3ListFiles(club.id, `members/${memberId}/contract`)
+    return { documents }
+  } catch (err: unknown) {
+    if ((err as { statusCode?: number })?.statusCode === 503) return { documents: [] }
+    throw err
+  }
 })

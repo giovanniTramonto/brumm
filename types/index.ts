@@ -13,8 +13,37 @@ export interface Club {
   slug: string
   name: string
   adminEmail: string | null
-  membershipFee: number | null
   createdAt: string
+}
+
+export type FinancialItemType = 'membership_fee' | null
+export type RecurrenceType = 'once' | 'recurring' | 'period'
+
+export interface IncomeItem {
+  id: string
+  name: string
+  amount: number
+  startAt: string
+  endAt: string | null
+  recurrenceType: RecurrenceType
+  itemType: FinancialItemType
+  sortOrder: number
+}
+
+export interface AnnualFinancialsByMonth {
+  membershipFee: number
+  extraIncome: number
+  expenses: number
+}
+
+export interface ExpenseItem {
+  id: string
+  name: string
+  amount: number
+  startAt: string
+  endAt: string | null
+  recurrenceType: RecurrenceType
+  sortOrder: number
 }
 
 export interface GroupData {

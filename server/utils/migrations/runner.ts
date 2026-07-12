@@ -88,6 +88,33 @@ UPDATE parent_job_members SET sort_order = sub.rn FROM (
     sql: `ALTER TABLE parent_jobs ADD COLUMN IF NOT EXISTS contact_email TEXT;
 ALTER TABLE parent_jobs ADD COLUMN IF NOT EXISTS contact_type TEXT;`,
   },
+  {
+    filename: '010_financials.sql',
+    sql: `
+CREATE TABLE IF NOT EXISTS income (
+  id           TEXT    PRIMARY KEY,
+  name         TEXT    NOT NULL,
+  amount       NUMERIC NOT NULL,
+  month        INTEGER NOT NULL,
+  year         INTEGER NOT NULL,
+  is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+  group_id     TEXT,
+  item_type    TEXT,
+  sort_order   INTEGER NOT NULL DEFAULT 0,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS expenses (
+  id           TEXT    PRIMARY KEY,
+  name         TEXT    NOT NULL,
+  amount       NUMERIC NOT NULL,
+  month        INTEGER NOT NULL,
+  year         INTEGER NOT NULL,
+  is_recurring BOOLEAN NOT NULL DEFAULT FALSE,
+  group_id     TEXT,
+  sort_order   INTEGER NOT NULL DEFAULT 0,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {
