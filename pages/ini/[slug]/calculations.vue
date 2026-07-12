@@ -651,7 +651,11 @@ const MONTH_LABELS = [
 ]
 
 function formatEur(value: number): string {
-  return value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  return value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+function formatEurExpense(value: number): string {
+  return value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 </script>
 
@@ -867,7 +871,7 @@ function formatEur(value: number): string {
                     <span v-else-if="item.recurrenceType === 'period'" class="ml-1.5 text-xs text-gray-400"><NuxtLink v-if="!isStartMonth(item)" :to="{ query: { year: Number(item.startAt.slice(0, 4)), month: Number(item.startAt.slice(5, 7)), edit: '1', tab: editTab } }" class="inline-flex items-center gap-0.5 text-blue-600 hover:underline">{{ formatStartAt(item.startAt) }}<AppIcon name="pencil" class="size-3" /></NuxtLink><template v-else>{{ formatStartAt(item.startAt) }}</template> – {{ item.endAt ? formatStartAt(item.endAt) : '…' }}</span>
                     <span v-if="item.recurrenceType === 'recurring' && !isStartMonth(item)" class="ml-1.5 text-xs text-gray-400">seit <NuxtLink :to="{ query: { year: Number(item.startAt.slice(0, 4)), month: Number(item.startAt.slice(5, 7)), edit: '1', tab: editTab } }" class="inline-flex items-center gap-0.5 text-blue-600 hover:underline">{{ formatStartAt(item.startAt) }}<AppIcon name="pencil" class="size-3" /></NuxtLink></span>
                   </span>
-                  <span class="font-mono text-sm text-expense-700">{{ formatEur(item.amount) }} €</span>
+                  <span class="font-mono text-sm text-expense-700">{{ formatEurExpense(item.amount) }} €</span>
                   <button v-if="isStartMonth(item)" type="button" class="btn-secondary py-1 text-xs" @click="onStartEditExpense(item)">Bearbeiten</button>
                   <button v-if="isStartMonth(item)" type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteExpense(item)">Löschen</button>
                 </div>
@@ -1065,7 +1069,7 @@ function formatEur(value: number): string {
                 <template v-if="item.recurrenceType === 'recurring'"> (monatlich)</template>
                 <template v-else-if="item.recurrenceType === 'period'"> ({{ formatStartAt(item.startAt) }} – {{ item.endAt ? formatStartAt(item.endAt) : '…' }})</template>
               </span>
-              <span class="font-mono whitespace-nowrap text-expense-700">{{ formatEur(item.amount) }}<span class="pl-1">€</span></span>
+              <span class="font-mono whitespace-nowrap text-expense-700">{{ formatEurExpense(item.amount) }}<span class="pl-1">€</span></span>
             </div>
             <div class="flex justify-between border-t pt-2 text-gray-700">
               <span class="font-medium">Gesamt</span>
