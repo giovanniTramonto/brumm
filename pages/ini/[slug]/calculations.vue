@@ -645,7 +645,7 @@ const MONTH_LABELS = [
 ]
 
 function formatEur(value: number): string {
-  return value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return value.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 </script>
 
