@@ -1086,28 +1086,28 @@ function formatEurExpense(value: number): string {
               <div class="flex flex-wrap gap-4 mobile:gap-6">
                 <div class="hidden mobile:block">
                   <p class="text-sm text-gray-500">Betreuungsstunden</p>
-                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.careHours.toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.careHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
                 </div>
                 <div class="hidden mobile:block">
                   <p class="text-sm text-gray-500">Leitungsstunden</p>
-                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.leadershipHours.toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.leadershipHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
                 </div>
                 <div class="hidden border-l pl-6 tablet:block">
                   <p class="text-sm text-gray-500">Min. Fachstunden</p>
-                  <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours * 2 / 3).toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours * 2 / 3).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
                 </div>
                 <div class="hidden tablet:block">
                   <p class="text-sm text-gray-500">Max. Quereinsteigerstd.</p>
-                  <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours / 3).toFixed(1) }}</p>
+                  <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ (staffing.weeklyHours / 3).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
                 </div>
               </div>
               <div class="text-right">
                 <p class="text-sm text-gray-500">Gesamtstunden</p>
-                <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.weeklyHours.toFixed(1) }}</p>
+                <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ staffing.weeklyHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
               </div>
             </div>
             <div class="mt-4 border-t pt-3 text-xs text-gray-400">
-              <span class="font-mono whitespace-nowrap">{{ staffing.positionsWithLeadership.toFixed(2) }}</span> Stellen mit Leitung gesamt
+              <span class="font-mono whitespace-nowrap">{{ staffing.positionsWithLeadership.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span> Stellen mit Leitung gesamt
             </div>
           </template>
         </div>
@@ -1151,11 +1151,11 @@ function formatEurExpense(value: number): string {
             <div class="flex items-end justify-between">
               <div>
                 <p class="text-sm text-gray-500">Ø Betreuungsstunden</p>
-                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageCareHours.toFixed(1) }}</p>
+                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageCareHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
               </div>
               <div class="text-right">
                 <p class="text-sm text-gray-500">Ø Leitungsstunden</p>
-                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageLeadershipHours.toFixed(1) }}</p>
+                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageLeadershipHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
               </div>
             </div>
             <div class="mt-4 overflow-x-auto">
@@ -1166,8 +1166,8 @@ function formatEurExpense(value: number): string {
                   class="p-1 text-center"
                 >
                   <p class="text-xs text-gray-400">{{ MONTH_LABELS[i] }}</p>
-                  <p class="mt-0.5 text-xs font-medium text-gray-700">{{ m.careHours.toFixed(1) }}</p>
-                  <p class="mt-0.5 text-xs text-gray-400">{{ m.leadershipHours.toFixed(1) }}</p>
+                  <p class="mt-0.5 text-xs font-medium text-gray-700">{{ m.careHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
+                  <p class="mt-0.5 text-xs text-gray-400">{{ m.leadershipHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
                 </div>
               </div>
             </div>
