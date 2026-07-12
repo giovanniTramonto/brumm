@@ -112,6 +112,12 @@ watch(
   { immediate: true },
 )
 
+const isLoadingData = computed(() => {
+  if (!canManageClub.value) return false
+  if (showAnnual.value) return annualByMonth.value === null
+  return financialsStore.getMonthly(displayYear.value, displayMonth.value) === undefined
+})
+
 // ── Helpers ───────────────────────────────────────────────────────────────
 function displayMonthDate(): string {
   return `${displayYear.value}-${String(displayMonth.value).padStart(2, '0')}-01`
@@ -679,8 +685,10 @@ function formatEur(value: number): string {
         >{{ currentYear + 1 }}</button>
       </div>
 
+      <LoadingBrumm v-if="isLoadingData" />
+
       <!-- ── Monatsansicht: Bearbeiten-Modus ────────────────────────────── -->
-      <template v-if="!showAnnual && isEditing">
+      <template v-else-if="!showAnnual && isEditing">
         <!-- Titel -->
         <MonthTitleCard
           :month-label="monthLabel"
@@ -898,7 +906,7 @@ function formatEur(value: number): string {
       </template>
 
       <!-- ── Monatsansicht: Lese-Modus ──────────────────────────────────── -->
-      <template v-if="!showAnnual && !isEditing">
+      <template v-else-if="!showAnnual && !isEditing">
         <!-- Monat Header (mit Chart) -->
         <CalculationsTitleCard
           v-if="annualReimbursement && annualByMonth"
@@ -1102,7 +1110,7 @@ function formatEur(value: number): string {
       </template>
 
       <!-- ── Jahresansicht ───────────────────────────────────────────────── -->
-      <template v-if="showAnnual">
+      <template v-else-if="showAnnual">
         <!-- Jahres Header (mit Chart) -->
         <CalculationsTitleCard
           v-if="annualReimbursement && annualByMonth"
