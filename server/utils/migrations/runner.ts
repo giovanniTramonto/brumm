@@ -115,6 +115,35 @@ CREATE TABLE IF NOT EXISTS expenses (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );`,
   },
+  {
+    filename: '011_financials_schema.sql',
+    sql: `
+ALTER TABLE income
+  ADD COLUMN IF NOT EXISTS recurrence_type TEXT,
+  ADD COLUMN IF NOT EXISTS start_at DATE,
+  ADD COLUMN IF NOT EXISTS end_at DATE;
+UPDATE income SET
+  start_at = MAKE_DATE(year, month, 1),
+  recurrence_type = CASE WHEN is_recurring THEN 'recurring' ELSE 'once' END
+WHERE start_at IS NULL;
+ALTER TABLE income
+  DROP COLUMN IF EXISTS month,
+  DROP COLUMN IF EXISTS year,
+  DROP COLUMN IF EXISTS is_recurring;
+
+ALTER TABLE expenses
+  ADD COLUMN IF NOT EXISTS recurrence_type TEXT,
+  ADD COLUMN IF NOT EXISTS start_at DATE,
+  ADD COLUMN IF NOT EXISTS end_at DATE;
+UPDATE expenses SET
+  start_at = MAKE_DATE(year, month, 1),
+  recurrence_type = CASE WHEN is_recurring THEN 'recurring' ELSE 'once' END
+WHERE start_at IS NULL;
+ALTER TABLE expenses
+  DROP COLUMN IF EXISTS month,
+  DROP COLUMN IF EXISTS year,
+  DROP COLUMN IF EXISTS is_recurring;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {
