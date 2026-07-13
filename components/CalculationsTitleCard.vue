@@ -21,6 +21,7 @@ type RatePeriod = { startCol: number; span: number; label: string; source: strin
 
 const props = defineProps<{
   title: string
+  titleSuffix?: string
   displayYear: number
   displayMonth?: number
   annualMonthlyIncome: number[]
@@ -44,7 +45,7 @@ function formatEur(value: number): string {
     <!-- Header + Stats (slot) -->
     <div class="flex min-h-[115px] flex-col gap-4">
       <div class="relative flex min-h-[32px] items-start justify-between">
-        <h2 class="text-lg font-semibold text-gray-900">{{ title }}</h2>
+        <h2 class="text-lg font-semibold text-gray-900">{{ title }}<span v-if="titleSuffix" class="ml-1 font-normal text-gray-400">{{ titleSuffix }}</span></h2>
         <slot name="center" />
         <slot name="action" />
       </div>
@@ -58,7 +59,7 @@ function formatEur(value: number): string {
           v-for="(_, i) in annualByMonth"
           :key="i"
           :to="{ query: { year: displayYear, month: i + 1 } }"
-          class="group flex flex-col items-center gap-1 rounded border border-transparent p-0.5 hover:border-primary-200 hover:bg-primary-50"
+          class="group relative flex flex-col items-center gap-1 rounded border border-transparent p-0.5 hover:border-primary-200 hover:bg-primary-50"
           :class="displayMonth === i + 1 ? 'border-primary-200 bg-primary-50' : ''"
         >
           <div class="relative h-10 w-full overflow-hidden rounded-sm">

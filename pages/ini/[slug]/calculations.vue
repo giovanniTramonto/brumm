@@ -28,6 +28,12 @@ const { canManageClub } = storeToRefs(authStore)
 const now = new Date()
 const currentYear = now.getFullYear()
 const currentMonth = now.getMonth() + 1
+const currentDateLabel = now.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })
+const currentDateFull = now.toLocaleDateString('de-DE', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+})
 
 const qYear = computed(() => {
   const y = Number(route.query.year)
@@ -599,6 +605,20 @@ const annualIncomeTotal = computed(() =>
 )
 const annualSaldo = computed(() => annualIncomeTotal.value - annualExpensesTotal.value)
 
+const toDateMonths = computed(() => (displayYear.value === currentYear ? currentMonth : 12))
+
+const annualIncomeTotalToDate = computed(() =>
+  annualMonthlyIncome.value.slice(0, toDateMonths.value).reduce((sum, v) => sum + v, 0),
+)
+
+const annualExpensesTotalToDate = computed(() =>
+  (annualByMonth.value ?? []).slice(0, toDateMonths.value).reduce((sum, m) => sum + m.expenses, 0),
+)
+
+const annualSaldoToDate = computed(
+  () => annualIncomeTotalToDate.value - annualExpensesTotalToDate.value,
+)
+
 const annualMonthlySaldos = computed(() => {
   const reimbursement = annualReimbursement.value
   const byMonth = annualByMonth.value
@@ -619,6 +639,40 @@ const annualMonthlyIncome = computed(() => {
     if (!fin) return 0
     return m.total + m.mealTotal + fin.membershipFee * count + fin.extraIncome
   })
+})
+
+const isFutureYear = computed(() => displayYear.value > currentYear)
+
+const saldoForecastBasis = computed(() => {
+  if (displayYear.value !== currentYear) return 0
+  return currentMonth - 1
+})
+
+function forecastTotal(monthlyValues: number[], pastCount: number): number {
+  const pastSum = monthlyValues.slice(0, pastCount).reduce((sum, v) => sum + v, 0)
+  return pastSum + (pastSum / pastCount) * (12 - pastCount)
+}
+
+const saldoForecast = computed(() => {
+  if (isFutureYear.value) return annualSaldo.value
+  const pastCount = saldoForecastBasis.value
+  if (pastCount === 0) return null
+  return forecastTotal(annualMonthlySaldos.value, pastCount)
+})
+
+const incomeForecast = computed(() => {
+  if (isFutureYear.value) return annualIncomeTotal.value
+  const pastCount = saldoForecastBasis.value
+  if (pastCount === 0) return null
+  return forecastTotal(annualMonthlyIncome.value, pastCount)
+})
+
+const expensesForecast = computed(() => {
+  if (isFutureYear.value) return annualExpensesTotal.value
+  const pastCount = saldoForecastBasis.value
+  if (pastCount === 0) return null
+  const monthlyExpenses = (annualByMonth.value ?? []).map((m) => m.expenses)
+  return forecastTotal(monthlyExpenses, pastCount)
 })
 
 const annualChartMax = computed(() => {
@@ -1118,7 +1172,8 @@ function formatEurExpense(value: number): string {
         <!-- Jahres Header (mit Chart) -->
         <CalculationsTitleCard
           v-if="annualReimbursement && annualByMonth"
-          :title="`Jahresansicht ${displayYear}`"
+          :title="displayYear === currentYear ? 'Jahresansicht' : `Jahresansicht ${displayYear}`"
+          :title-suffix="displayYear === currentYear ? `– Stand ${currentDateFull}` : undefined"
           :display-year="displayYear"
           :annual-monthly-income="annualMonthlyIncome"
           :annual-by-month="annualByMonth"
@@ -1127,23 +1182,36 @@ function formatEurExpense(value: number): string {
           :annual-rate-sources="annualRateSources"
           :members="membersStore.members"
         >
-          <div class="ml-auto text-right">
-            <p class="text-sm text-gray-500">Saldo</p>
-            <p class="mt-1 font-mono text-3xl font-bold" :class="annualSaldo > 0 ? 'text-gray-900' : annualSaldo < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(annualSaldo) }}<span class="pl-1">€</span></p>
-          </div>
-          <template #footer>
-            <div class="mt-3 space-y-1 border-t pt-3">
-              <div class="flex items-baseline justify-between">
-                <p class="text-sm text-gray-500">Einnahmen</p>
-                <p class="font-mono text-sm font-bold text-gray-900">{{ formatEur(annualIncomeTotal) }}<span class="pl-1">€</span></p>
-              </div>
-              <div v-if="annualExpensesTotal > 0" class="flex items-baseline justify-between">
-                <p class="text-sm text-gray-500">Ausgaben</p>
-                <p class="font-mono text-sm font-bold text-expense-700">−{{ formatEur(annualExpensesTotal) }}<span class="pl-1">€</span></p>
-              </div>
+          <div class="flex items-end justify-between">
+            <div v-if="!isFutureYear" class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
+              <p class="text-sm text-gray-500">Einnahmen</p>
+              <p class="text-right font-mono text-sm font-bold text-gray-900">{{ formatEur(annualIncomeTotalToDate) }}<span class="pl-1">€</span></p>
+              <p v-if="annualExpensesTotalToDate > 0" class="text-sm text-gray-500">Ausgaben</p>
+              <p v-if="annualExpensesTotalToDate > 0" class="text-right font-mono text-sm font-bold text-expense-700">−{{ formatEur(annualExpensesTotalToDate) }}<span class="pl-1">€</span></p>
             </div>
-          </template>
+            <div class="text-right" :class="isFutureYear ? 'w-full' : ''">
+              <p class="text-sm text-gray-500">Saldo</p>
+              <p v-if="isFutureYear" class="mt-1 font-mono text-3xl font-bold text-gray-300">–</p>
+              <p v-else class="mt-1 font-mono text-3xl font-bold" :class="annualSaldoToDate > 0 ? 'text-gray-900' : annualSaldoToDate < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(annualSaldoToDate) }}<span class="pl-1">€</span></p>
+            </div>
+          </div>
         </CalculationsTitleCard>
+
+        <div v-if="saldoForecast !== null" class="card mt-4">
+          <h2 class="mb-4 text-sm font-medium text-gray-900">{{ isFutureYear ? `Vorschau ${displayYear}` : `Prognose ${displayYear}` }}</h2>
+          <div class="flex items-end justify-between">
+            <div class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
+              <p class="text-sm text-gray-500">Einnahmen</p>
+              <p class="text-right font-mono text-sm font-bold text-gray-900">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(incomeForecast!) }}<span class="pl-1">€</span></p>
+              <p class="text-sm text-gray-500">Ausgaben</p>
+              <p class="text-right font-mono text-sm font-bold text-expense-700">{{ isFutureYear ? '' : '≈ ' }}−{{ formatEur(expensesForecast!) }}<span class="pl-1">€</span></p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-gray-500">Saldo</p>
+              <p class="mt-1 font-mono text-2xl font-bold" :class="saldoForecast > 0 ? 'text-gray-900' : saldoForecast < 0 ? 'text-expense-700' : 'text-gray-300'">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(saldoForecast) }}<span class="pl-1">€</span></p>
+            </div>
+          </div>
+        </div>
 
         <div class="card mt-4 min-h-[235px]">
           <template v-if="annualStaffing">
