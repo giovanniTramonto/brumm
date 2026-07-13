@@ -56,8 +56,8 @@ function formatEur(value: number): string {
   <div class="card mb-4">
     <!-- Header + Stats (slot) -->
     <div class="flex min-h-[115px] flex-col gap-4">
-      <div class="relative flex min-h-[32px] items-start justify-between">
-        <h2 class="text-lg font-semibold text-gray-900">{{ title }}<span v-if="titleSuffix" class="ml-1 font-normal text-gray-400">{{ titleSuffix }}</span></h2>
+      <div class="relative flex min-h-[32px] items-start justify-between gap-x-4">
+        <h2 class="flex min-w-0 flex-wrap items-baseline gap-x-1 text-lg font-semibold text-gray-900"><span class="whitespace-nowrap">{{ title }}</span><span v-if="titleSuffix" class="whitespace-nowrap font-normal text-gray-400">{{ titleSuffix }}</span></h2>
         <slot name="center" />
         <slot name="action" />
       </div>

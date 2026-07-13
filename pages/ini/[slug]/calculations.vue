@@ -1437,13 +1437,13 @@ function formatEurExpense(value: number): string {
           <div class="flex items-end justify-between">
             <div class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
               <p class="text-sm text-gray-500">Einnahmen</p>
-              <p class="text-right font-mono text-sm font-bold text-gray-900">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(incomeForecast!) }}<span class="pl-1">€</span></p>
+              <p class="whitespace-nowrap text-right font-mono text-sm font-bold text-gray-900">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(incomeForecast!) }}<span class="pl-1">€</span></p>
               <p class="text-sm text-gray-500">Ausgaben</p>
-              <p class="text-right font-mono text-sm font-bold text-expense-700">{{ isFutureYear ? '' : '≈ ' }}−{{ formatEur(expensesForecast!) }}<span class="pl-1">€</span></p>
+              <p class="whitespace-nowrap text-right font-mono text-sm font-bold text-expense-700">{{ isFutureYear ? '' : '≈ ' }}−{{ formatEur(expensesForecast!) }}<span class="pl-1">€</span></p>
             </div>
             <div class="text-right">
               <p class="text-sm text-gray-500">Saldo</p>
-              <p class="mt-1 font-mono text-2xl font-bold" :class="saldoForecast > 0 ? 'text-gray-900' : saldoForecast < 0 ? 'text-expense-700' : 'text-gray-300'">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(saldoForecast) }}<span class="pl-1">€</span></p>
+              <p class="mt-1 whitespace-nowrap font-mono text-2xl font-bold" :class="saldoForecast > 0 ? 'text-gray-900' : saldoForecast < 0 ? 'text-expense-700' : 'text-gray-300'">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(saldoForecast) }}<span class="pl-1">€</span></p>
             </div>
           </div>
         </div>
