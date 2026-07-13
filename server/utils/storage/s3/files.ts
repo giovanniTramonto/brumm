@@ -21,7 +21,8 @@ export function decodeS3FileId(fileId: string): string {
 }
 
 export function sanitizeFilename(filename: string): string {
-  return filename.replace(/\//g, '-')
+  // Only strip chars that are problematic in S3 keys or HTTP: path separators and control chars
+  return filename.replace(/[/\\<>:"|?*]/g, '-').replace(/-+/g, '-') || 'file'
 }
 
 export async function s3UploadFile(
@@ -67,7 +68,7 @@ export async function s3GetPresignedUrl(clubId: string, key: string): Promise<st
     new GetObjectCommand({
       Bucket: bucket,
       Key: key,
-      ResponseContentDisposition: `inline; filename="${filename}"`,
+      ResponseContentDisposition: `inline; filename*=UTF-8''${encodeURIComponent(filename)}`,
     }),
     { expiresIn: 3600 },
   )
