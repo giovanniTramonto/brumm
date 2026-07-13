@@ -1054,6 +1054,8 @@ async function onSubmit() {
             </div>
           </template>
 
+          <p v-else-if="member.status === 'PENDING_INVITE'" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">Upload erst möglich, wenn die Erziehungsberechtigten die Einladung bestätigt haben.</p>
+
           <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">Noch keine Vertragsvorlagen konfiguriert – <NuxtLink :to="`/ini/${slug}/contract-templates`" class="font-medium underline">Jetzt anlegen →</NuxtLink></p>
 
           <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates, shown alongside template list before activation -->
