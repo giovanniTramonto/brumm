@@ -32,6 +32,18 @@ const props = defineProps<{
   members: Member[]
 }>()
 
+const scrollContainer = ref<HTMLElement | null>(null)
+
+function scrollToMonth() {
+  const container = scrollContainer.value
+  if (props.displayMonth == null || !container) return
+  const col = container.querySelector<HTMLElement>(`[data-month-index="${props.displayMonth - 1}"]`)
+  col?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' })
+}
+
+onMounted(scrollToMonth)
+watch(() => props.displayMonth, scrollToMonth)
+
 function formatEur(value: number): string {
   return new Intl.NumberFormat('de-DE', {
     minimumFractionDigits: 0,
@@ -53,11 +65,12 @@ function formatEur(value: number): string {
     </div>
 
     <!-- Chart + Monatsgrid (ein gemeinsamer Scroll-Container) -->
-    <div class="mt-4 overflow-x-auto overflow-y-hidden border-t pb-2 pt-3">
+    <div ref="scrollContainer" class="mt-4 overflow-x-auto overflow-y-hidden border-t pb-2 pt-3">
       <div class="month-grid grid grid-cols-12 gap-1">
         <NuxtLink
           v-for="(_, i) in annualByMonth"
           :key="i"
+          :data-month-index="i"
           :to="{ query: { year: displayYear, month: i + 1 } }"
           class="group relative flex flex-col items-center gap-1 rounded border border-transparent p-0.5 hover:border-primary-200 hover:bg-primary-50"
           :class="displayMonth === i + 1 ? 'border-primary-200 bg-primary-50' : ''"
@@ -65,22 +78,22 @@ function formatEur(value: number): string {
           <div class="relative h-10 w-full overflow-hidden rounded-sm">
             <div
               class="absolute bottom-0 left-0 right-0 rounded-t-sm transition-all"
-              :class="displayMonth === i + 1 ? 'bg-gray-600 opacity-80' : 'bg-gray-400 opacity-50 group-hover:bg-gray-600 group-hover:opacity-80'"
+              :class="displayMonth === i + 1 ? 'bg-gray-600 opacity-80' : 'bg-gray-400 opacity-50'"
               :style="`height: ${(Math.max(0, annualMonthlyIncome[i]) / annualChartMax) * 100}%`"
             />
             <div
               class="absolute bottom-0 left-0 right-0 rounded-t-sm transition-opacity"
-              :class="displayMonth === i + 1 ? 'opacity-0' : 'opacity-50 group-hover:opacity-0'"
+              :class="displayMonth === i + 1 ? 'opacity-0' : 'opacity-50'"
               :style="`height: ${((annualByMonth[i]?.expenses ?? 0) / annualChartMax) * 100}%; background: repeating-linear-gradient(-45deg, #6b7280 0, #6b7280 2px, transparent 0, transparent 50%) 0 / 5px 5px`"
             />
             <div
               class="absolute bottom-0 left-0 right-0 rounded-t-sm transition-opacity"
-              :class="displayMonth === i + 1 ? 'opacity-80' : 'opacity-0 group-hover:opacity-80'"
+              :class="displayMonth === i + 1 ? 'opacity-80' : 'opacity-0'"
               :style="`height: ${((annualByMonth[i]?.expenses ?? 0) / annualChartMax) * 100}%; background: repeating-linear-gradient(-45deg, #ef4444 0, #ef4444 2px, transparent 0, transparent 50%) 0 / 5px 5px`"
             />
           </div>
           <span
-            class="text-[10px] leading-none transition-colors group-hover:text-gray-700"
+            class="text-[10px] leading-none"
             :class="displayMonth === i + 1 ? 'font-semibold text-gray-700' : 'text-gray-400'"
           >{{ MONTH_LABELS[i] }}</span>
           <p class="text-xs font-medium" :class="annualMonthlySaldos[i] > 0 ? 'text-gray-700' : annualMonthlySaldos[i] < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(annualMonthlySaldos[i]) }}<span class="pl-0.5 text-[10px]">€</span></p>
