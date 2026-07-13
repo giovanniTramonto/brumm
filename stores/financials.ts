@@ -2,10 +2,15 @@ import { defineStore } from 'pinia'
 import type { AnnualFinancialsByMonth, ExpenseItem, IncomeItem } from '~/types'
 
 type MonthlyData = { income: IncomeItem[]; expenses: ExpenseItem[] }
+type AnnualData = {
+  byMonth: AnnualFinancialsByMonth[]
+  income: IncomeItem[]
+  expenses: ExpenseItem[]
+}
 
 export const useFinancialsStore = defineStore('financials', () => {
   const monthlyCache = ref(new Map<string, MonthlyData>())
-  const annualCache = ref(new Map<number, AnnualFinancialsByMonth[]>())
+  const annualCache = ref(new Map<number, AnnualData>())
 
   const monthlyPromises = new Map<string, Promise<void>>()
   const annualPromises = new Map<number, Promise<void>>()
@@ -19,7 +24,13 @@ export const useFinancialsStore = defineStore('financials', () => {
   }
 
   function getAnnual(year: number): AnnualFinancialsByMonth[] | undefined {
-    return annualCache.value.get(year)
+    return annualCache.value.get(year)?.byMonth
+  }
+
+  function getAnnualItems(year: number): MonthlyData | undefined {
+    const data = annualCache.value.get(year)
+    if (!data) return undefined
+    return { income: data.income, expenses: data.expenses }
   }
 
   async function fetchMonthly(slug: string, year: number, month: number): Promise<void> {
@@ -46,11 +57,13 @@ export const useFinancialsStore = defineStore('financials', () => {
     if (annualCache.value.has(year)) return
     if (annualPromises.has(year)) return annualPromises.get(year)
 
-    const promise = $fetch<{ byMonth: AnnualFinancialsByMonth[] }>(`/api/ini/${slug}/financials`, {
-      query: { year },
-    })
+    const promise = $fetch<{
+      byMonth: AnnualFinancialsByMonth[]
+      income: IncomeItem[]
+      expenses: ExpenseItem[]
+    }>(`/api/ini/${slug}/financials`, { query: { year } })
       .then((data) => {
-        annualCache.value = new Map(annualCache.value).set(year, data.byMonth)
+        annualCache.value = new Map(annualCache.value).set(year, data)
       })
       .finally(() => {
         annualPromises.delete(year)
@@ -129,9 +142,44 @@ export const useFinancialsStore = defineStore('financials', () => {
     })
   }
 
+  function patchAnnualIncome(year: number, item: IncomeItem): void {
+    const existing = annualCache.value.get(year)
+    if (!existing) return
+    const income = existing.income.map((i) => (i.id === item.id ? item : i))
+    if (!income.some((i) => i.id === item.id)) income.push(item)
+    annualCache.value = new Map(annualCache.value).set(year, { ...existing, income })
+  }
+
+  function removeAnnualIncome(year: number, id: string): void {
+    const existing = annualCache.value.get(year)
+    if (!existing) return
+    annualCache.value = new Map(annualCache.value).set(year, {
+      ...existing,
+      income: existing.income.filter((i) => i.id !== id),
+    })
+  }
+
+  function patchAnnualExpense(year: number, item: ExpenseItem): void {
+    const existing = annualCache.value.get(year)
+    if (!existing) return
+    const expenses = existing.expenses.map((e) => (e.id === item.id ? item : e))
+    if (!expenses.some((e) => e.id === item.id)) expenses.push(item)
+    annualCache.value = new Map(annualCache.value).set(year, { ...existing, expenses })
+  }
+
+  function removeAnnualExpense(year: number, id: string): void {
+    const existing = annualCache.value.get(year)
+    if (!existing) return
+    annualCache.value = new Map(annualCache.value).set(year, {
+      ...existing,
+      expenses: existing.expenses.filter((e) => e.id !== id),
+    })
+  }
+
   return {
     getMonthly,
     getAnnual,
+    getAnnualItems,
     fetchMonthly,
     fetchAnnual,
     invalidateMonth,
@@ -143,5 +191,9 @@ export const useFinancialsStore = defineStore('financials', () => {
     removeMonthlyIncome,
     patchMonthlyExpense,
     removeMonthlyExpense,
+    patchAnnualIncome,
+    removeAnnualIncome,
+    patchAnnualExpense,
+    removeAnnualExpense,
   }
 })

@@ -106,7 +106,11 @@ export type { AnnualFinancialsByMonth } from '~/types'
 export async function getAnnualFinancialsSummary(
   sql: Sql,
   year: number,
-): Promise<{ byMonth: import('~/types').AnnualFinancialsByMonth[] }> {
+): Promise<{
+  byMonth: import('~/types').AnnualFinancialsByMonth[]
+  income: IncomeItem[]
+  expenses: ExpenseItem[]
+}> {
   const firstDay = monthDate(year, 1)
   const lastDay = monthDate(year, 12)
 
@@ -152,7 +156,11 @@ export async function getAnnualFinancialsSummary(
     }
   })
 
-  return { byMonth }
+  return {
+    byMonth,
+    income: allIncome.map(rowToIncome),
+    expenses: allExpenses.map(rowToExpense),
+  }
 }
 
 export async function createIncome(

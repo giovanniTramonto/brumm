@@ -95,8 +95,13 @@ watch(
       mfError.value = null
     }
     isEditing.value = entering
-    if (!entering && !annualByMonth.value) {
-      await financialsStore.fetchAnnual(slug, displayYear.value)
+    if (!entering) {
+      if (showAnnual.value) {
+        financialsStore.invalidateAnnual(displayYear.value)
+        await financialsStore.fetchAnnual(slug, displayYear.value)
+      } else if (!annualByMonth.value) {
+        await financialsStore.fetchAnnual(slug, displayYear.value)
+      }
     }
   },
   { immediate: true },
@@ -129,6 +134,14 @@ function displayMonthDate(): string {
   return `${displayYear.value}-${String(displayMonth.value).padStart(2, '0')}-01`
 }
 
+function displayYearStartDate(): string {
+  return `${displayYear.value}-01-01`
+}
+
+function currentPeriodDate(): string {
+  return showAnnual.value ? displayYearStartDate() : displayMonthDate()
+}
+
 function formatStartAt(startAt: string): string {
   const [y, m] = startAt.split('-').map(Number)
   return new Date(y, m - 1).toLocaleDateString('de-DE', { month: 'short', year: 'numeric' })
@@ -138,6 +151,10 @@ function isStartMonth(item: IncomeItem | ExpenseItem): boolean {
   return item.startAt === displayMonthDate()
 }
 
+function isCurrentPeriodStart(item: IncomeItem | ExpenseItem): boolean {
+  return showAnnual.value ? item.startAt.startsWith(String(displayYear.value)) : isStartMonth(item)
+}
+
 // ── Membership fee (special income item) ─────────────────────────────────
 const membershipFeeItem = computed(() => {
   const items = incomeItems.value.filter((i) => i.itemType === 'membership_fee')
@@ -145,6 +162,69 @@ const membershipFeeItem = computed(() => {
   return items.reduce((best, item) => (item.startAt > best.startAt ? item : best))
 })
 const membershipFeeAmount = computed(() => membershipFeeItem.value?.amount ?? 0)
+
+// ── Annual items ──────────────────────────────────────────────────────────
+const annualIncomeItems = computed(
+  () => financialsStore.getAnnualItems(displayYear.value)?.income ?? [],
+)
+const annualExpenseItems = computed(
+  () => financialsStore.getAnnualItems(displayYear.value)?.expenses ?? [],
+)
+const annualMembershipFeeItem = computed(() => {
+  const items = annualIncomeItems.value.filter((i) => i.itemType === 'membership_fee')
+  if (items.length === 0) return null
+  return items.reduce((best, item) => (item.startAt > best.startAt ? item : best))
+})
+const annualExtraIncomeItems = computed(() =>
+  annualIncomeItems.value.filter((i) => i.itemType !== 'membership_fee'),
+)
+
+const activeMembershipFeeItem = computed(() =>
+  showAnnual.value ? annualMembershipFeeItem.value : membershipFeeItem.value,
+)
+const activeExtraIncomeItems = computed(() =>
+  showAnnual.value ? annualExtraIncomeItems.value : extraIncomeItems.value,
+)
+const activeExpenseItems = computed(() =>
+  showAnnual.value ? annualExpenseItems.value : expenseItems.value,
+)
+
+// ── Store mutation helpers (monthly or annual) ────────────────────────────
+function patchActiveIncome(item: IncomeItem): void {
+  if (showAnnual.value) {
+    financialsStore.patchAnnualIncome(displayYear.value, item)
+  } else {
+    financialsStore.patchMonthlyIncome(displayYear.value, displayMonth.value, item)
+    financialsStore.invalidateAnnual(displayYear.value)
+  }
+}
+
+function removeActiveIncome(id: string): void {
+  if (showAnnual.value) {
+    financialsStore.removeAnnualIncome(displayYear.value, id)
+  } else {
+    financialsStore.removeMonthlyIncome(displayYear.value, displayMonth.value, id)
+    financialsStore.invalidateAnnual(displayYear.value)
+  }
+}
+
+function patchActiveExpense(item: ExpenseItem): void {
+  if (showAnnual.value) {
+    financialsStore.patchAnnualExpense(displayYear.value, item)
+  } else {
+    financialsStore.patchMonthlyExpense(displayYear.value, displayMonth.value, item)
+    financialsStore.invalidateAnnual(displayYear.value)
+  }
+}
+
+function removeActiveExpense(id: string): void {
+  if (showAnnual.value) {
+    financialsStore.removeAnnualExpense(displayYear.value, id)
+  } else {
+    financialsStore.removeMonthlyExpense(displayYear.value, displayMonth.value, id)
+    financialsStore.invalidateAnnual(displayYear.value)
+  }
+}
 
 function onStartEditMF() {
   mfInput.value = membershipFeeAmount.value ? String(membershipFeeAmount.value) : ''
@@ -167,27 +247,25 @@ async function onSaveMF() {
   }
   mfSaving.value = true
   try {
-    const existing = membershipFeeItem.value
-    if (existing && !isStartMonth(existing)) {
+    const existing = activeMembershipFeeItem.value
+    if (existing && !isCurrentPeriodStart(existing)) {
       const { item } = await $fetch<{ item: IncomeItem }>(`/api/ini/${slug}/income`, {
         method: 'POST',
         body: {
           name: existing.name,
           amount: value,
           recurrenceType: 'recurring',
-          startAt: displayMonthDate(),
+          startAt: currentPeriodDate(),
           itemType: 'membership_fee',
         },
       })
-      financialsStore.patchMonthlyIncome(displayYear.value, displayMonth.value, item)
-      financialsStore.invalidateAnnual(displayYear.value)
+      patchActiveIncome(item)
     } else if (existing) {
       const { item } = await $fetch<{ item: IncomeItem }>(
         `/api/ini/${slug}/income/${existing.id}`,
         { method: 'PATCH', body: { amount: value } },
       )
-      financialsStore.patchMonthlyIncome(displayYear.value, displayMonth.value, item)
-      financialsStore.invalidateAnnual(displayYear.value)
+      patchActiveIncome(item)
     } else {
       const { item } = await $fetch<{ item: IncomeItem }>(`/api/ini/${slug}/income`, {
         method: 'POST',
@@ -195,12 +273,11 @@ async function onSaveMF() {
           name: 'Mitgliedsbeitrag',
           amount: value,
           recurrenceType: 'recurring',
-          startAt: displayMonthDate(),
+          startAt: currentPeriodDate(),
           itemType: 'membership_fee',
         },
       })
-      financialsStore.patchMonthlyIncome(displayYear.value, displayMonth.value, item)
-      financialsStore.invalidateAnnual(displayYear.value)
+      patchActiveIncome(item)
     }
     mfInput.value = ''
     mfEditing.value = false
@@ -214,8 +291,12 @@ async function onSaveMF() {
 async function onDeleteMF(item: IncomeItem) {
   if (!confirm(`Mitgliedsbeitrag ab ${formatStartAt(item.startAt)} löschen?`)) return
   await $fetch(`/api/ini/${slug}/income/${item.id}`, { method: 'DELETE' })
-  financialsStore.invalidateAllMonths()
-  await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
+  if (showAnnual.value) {
+    financialsStore.removeAnnualIncome(displayYear.value, item.id)
+  } else {
+    financialsStore.invalidateAllMonths()
+    await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
+  }
 }
 
 // ── Extra income CRUD ─────────────────────────────────────────────────────
@@ -246,9 +327,9 @@ function onStartEditIncome(item: IncomeItem) {
   incomeEditName.value = item.name
   incomeEditAmount.value = String(item.amount)
   incomeEditRecurrenceType.value = item.recurrenceType
-  incomeEditStartAt.value = isStartMonth(item)
+  incomeEditStartAt.value = isCurrentPeriodStart(item)
     ? item.startAt.slice(0, 7)
-    : displayMonthDate().slice(0, 7)
+    : currentPeriodDate().slice(0, 7)
   incomeEditEndAt.value = item.endAt ? item.endAt.slice(0, 7) : ''
   incomeError.value = null
 }
@@ -281,9 +362,11 @@ async function onSaveEditIncome(item: IncomeItem) {
         body: { name, amount, recurrenceType: incomeEditRecurrenceType.value, startAt, endAt },
       },
     )
-    financialsStore.patchMonthlyIncome(displayYear.value, displayMonth.value, updated)
-    financialsStore.invalidateAnnual(displayYear.value)
-    if (incomeEditRecurrenceType.value !== 'once' || item.recurrenceType !== 'once') {
+    patchActiveIncome(updated)
+    if (
+      (incomeEditRecurrenceType.value !== 'once' || item.recurrenceType !== 'once') &&
+      !showAnnual.value
+    ) {
       financialsStore.invalidateOtherMonths(displayYear.value, displayMonth.value)
     }
     incomeEditId.value = null
@@ -297,7 +380,9 @@ async function onSaveEditIncome(item: IncomeItem) {
 async function onDeleteIncome(item: IncomeItem) {
   if (!confirm(`„${item.name}" löschen?`)) return
   await $fetch(`/api/ini/${slug}/income/${item.id}`, { method: 'DELETE' })
-  if (item.recurrenceType !== 'once') {
+  if (showAnnual.value) {
+    financialsStore.removeAnnualIncome(displayYear.value, item.id)
+  } else if (item.recurrenceType !== 'once') {
     financialsStore.invalidateAllMonths()
     await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
   } else {
@@ -321,7 +406,7 @@ async function onAddIncome() {
   try {
     const isPeriod = newIncomeRecurrenceType.value === 'period'
     const startAt =
-      isPeriod && newIncomeStartAt.value ? `${newIncomeStartAt.value}-01` : displayMonthDate()
+      isPeriod && newIncomeStartAt.value ? `${newIncomeStartAt.value}-01` : currentPeriodDate()
     const endAt = isPeriod && newIncomeEndAt.value ? `${newIncomeEndAt.value}-01` : null
     const { item } = await $fetch<{ item: IncomeItem }>(`/api/ini/${slug}/income`, {
       method: 'POST',
@@ -334,9 +419,8 @@ async function onAddIncome() {
         itemType: null,
       },
     })
-    financialsStore.patchMonthlyIncome(displayYear.value, displayMonth.value, item)
-    financialsStore.invalidateAnnual(displayYear.value)
-    if (newIncomeRecurrenceType.value !== 'once') {
+    patchActiveIncome(item)
+    if (newIncomeRecurrenceType.value !== 'once' && !showAnnual.value) {
       financialsStore.invalidateOtherMonths(displayYear.value, displayMonth.value)
     }
     newIncomeName.value = ''
@@ -376,9 +460,9 @@ function onStartEditExpense(item: ExpenseItem) {
   expenseEditName.value = item.name
   expenseEditAmount.value = String(item.amount)
   expenseEditRecurrenceType.value = item.recurrenceType
-  expenseEditStartAt.value = isStartMonth(item)
+  expenseEditStartAt.value = isCurrentPeriodStart(item)
     ? item.startAt.slice(0, 7)
-    : displayMonthDate().slice(0, 7)
+    : currentPeriodDate().slice(0, 7)
   expenseEditEndAt.value = item.endAt ? item.endAt.slice(0, 7) : ''
   expenseError.value = null
 }
@@ -411,9 +495,11 @@ async function onSaveEditExpense(item: ExpenseItem) {
         body: { name, amount, recurrenceType: expenseEditRecurrenceType.value, startAt, endAt },
       },
     )
-    financialsStore.patchMonthlyExpense(displayYear.value, displayMonth.value, updated)
-    financialsStore.invalidateAnnual(displayYear.value)
-    if (expenseEditRecurrenceType.value !== 'once' || item.recurrenceType !== 'once') {
+    patchActiveExpense(updated)
+    if (
+      (expenseEditRecurrenceType.value !== 'once' || item.recurrenceType !== 'once') &&
+      !showAnnual.value
+    ) {
       financialsStore.invalidateOtherMonths(displayYear.value, displayMonth.value)
     }
     expenseEditId.value = null
@@ -427,7 +513,9 @@ async function onSaveEditExpense(item: ExpenseItem) {
 async function onDeleteExpense(item: ExpenseItem) {
   if (!confirm(`„${item.name}" löschen?`)) return
   await $fetch(`/api/ini/${slug}/expenses/${item.id}`, { method: 'DELETE' })
-  if (item.recurrenceType !== 'once') {
+  if (showAnnual.value) {
+    financialsStore.removeAnnualExpense(displayYear.value, item.id)
+  } else if (item.recurrenceType !== 'once') {
     financialsStore.invalidateAllMonths()
     await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
   } else {
@@ -451,7 +539,7 @@ async function onAddExpense() {
   try {
     const isPeriod = newExpenseRecurrenceType.value === 'period'
     const startAt =
-      isPeriod && newExpenseStartAt.value ? `${newExpenseStartAt.value}-01` : displayMonthDate()
+      isPeriod && newExpenseStartAt.value ? `${newExpenseStartAt.value}-01` : currentPeriodDate()
     const endAt = isPeriod && newExpenseEndAt.value ? `${newExpenseEndAt.value}-01` : null
     const { item } = await $fetch<{ item: ExpenseItem }>(`/api/ini/${slug}/expenses`, {
       method: 'POST',
@@ -463,9 +551,8 @@ async function onAddExpense() {
         endAt,
       },
     })
-    financialsStore.patchMonthlyExpense(displayYear.value, displayMonth.value, item)
-    financialsStore.invalidateAnnual(displayYear.value)
-    if (newExpenseRecurrenceType.value !== 'once') {
+    patchActiveExpense(item)
+    if (newExpenseRecurrenceType.value !== 'once' && !showAnnual.value) {
       financialsStore.invalidateOtherMonths(displayYear.value, displayMonth.value)
     }
     newExpenseName.value = ''
@@ -1167,8 +1254,153 @@ function formatEurExpense(value: number): string {
         </div>
       </template>
 
-      <!-- ── Jahresansicht ───────────────────────────────────────────────── -->
-      <template v-else-if="showAnnual">
+      <!-- ── Jahresansicht: Bearbeitungsmodus ─────────────────────────────── -->
+      <template v-else-if="showAnnual && isEditing">
+        <div class="card">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-sm font-medium text-gray-900">Jahresansicht {{ displayYear }} bearbeiten</h2>
+            <button type="button" class="btn-secondary text-xs" @click="router.replace({ query: { ...route.query, edit: undefined } })">Fertig</button>
+          </div>
+          <div class="mb-4 flex border-b border-gray-200">
+            <button
+              type="button"
+              class="pb-2 pr-4 text-sm"
+              :class="editTab === 'income' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+              @click="router.replace({ query: { ...route.query, tab: undefined } })"
+            >Einnahmen</button>
+            <button
+              type="button"
+              class="pb-2 pr-4 text-sm"
+              :class="editTab === 'expenses' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+              @click="router.replace({ query: { ...route.query, tab: 'expenses' } })"
+            >Ausgaben</button>
+          </div>
+
+          <template v-if="editTab === 'income'">
+            <!-- Mitgliedsbeitrag -->
+            <div class="mb-4 rounded-md bg-gray-50 p-3">
+              <div class="mb-1 flex items-center justify-between">
+                <p class="text-xs font-medium text-gray-700">Monatlicher Beitrag pro Kind<template v-if="activeMembershipFeeItem && !activeMembershipFeeItem.startAt.startsWith(String(displayYear))"> · seit <NuxtLink :to="{ query: { year: Number(activeMembershipFeeItem.startAt.slice(0, 4)), month: Number(activeMembershipFeeItem.startAt.slice(5, 7)), edit: '1' } }" class="inline-flex items-center gap-0.5 text-blue-600 hover:underline">{{ formatStartAt(activeMembershipFeeItem.startAt) }}<AppIcon name="pencil" class="size-3" /></NuxtLink></template></p>
+                <div class="flex items-center gap-2">
+                  <button v-if="!mfEditing" type="button" class="btn-secondary py-1 text-xs" @click="onStartEditMF">Ändern</button>
+                  <button v-if="activeMembershipFeeItem && !mfEditing" type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteMF(activeMembershipFeeItem)">Löschen</button>
+                </div>
+              </div>
+              <template v-if="mfEditing">
+                <div class="mt-2 flex items-center gap-2">
+                  <input v-model="mfInput" type="text" inputmode="decimal" placeholder="0,00" class="input w-28 py-1 text-sm" @keydown.enter="onSaveMF" @keydown.escape="onCancelMF" />
+                  <span class="text-sm text-gray-500">€</span>
+                  <button type="button" class="btn-primary py-1 text-xs" :disabled="mfSaving" @click="onSaveMF">Speichern</button>
+                  <button type="button" class="btn-secondary py-1 text-xs" @click="onCancelMF">Abbrechen</button>
+                </div>
+                <p v-if="mfError" class="mt-1 text-xs text-red-600">{{ mfError }}</p>
+              </template>
+              <p v-else class="font-mono text-lg font-bold text-gray-900">{{ activeMembershipFeeItem ? activeMembershipFeeItem.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '–' }}<span class="pl-1 text-sm font-normal text-gray-500">€ / Kind</span></p>
+            </div>
+
+            <!-- Extra Einnahmen -->
+            <ul v-if="activeExtraIncomeItems.length > 0" class="mb-3 divide-y divide-gray-100">
+              <li v-for="item in activeExtraIncomeItems" :key="item.id" class="py-2">
+                <template v-if="incomeEditId === item.id">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <input v-model="incomeEditName" type="text" placeholder="Bezeichnung" class="input flex-1 py-1 text-sm" />
+                    <input v-model="incomeEditAmount" type="text" inputmode="decimal" placeholder="0,00" class="input w-24 py-1 text-sm" />
+                    <span class="text-sm text-gray-500">€</span>
+                    <button type="button" class="btn-primary py-1 text-xs" :disabled="incomeSaving" @click="onSaveEditIncome(item)">Speichern</button>
+                    <button type="button" class="btn-secondary py-1 text-xs" @click="onCancelEditIncome">Abbrechen</button>
+                  </div>
+                  <p v-if="incomeError" class="mt-1 text-xs text-red-600">{{ incomeError }}</p>
+                </template>
+                <div v-else class="flex items-center gap-2">
+                  <span class="flex-1 text-sm text-gray-700">{{ item.name }}
+                    <span v-if="item.recurrenceType === 'recurring'" class="ml-1.5 text-xs text-gray-400">wiederkehrend<template v-if="!item.startAt.startsWith(String(displayYear))"> · seit <NuxtLink :to="{ query: { year: Number(item.startAt.slice(0, 4)), month: Number(item.startAt.slice(5, 7)), edit: '1', tab: 'income' } }" class="inline-flex items-center gap-0.5 text-blue-600 hover:underline">{{ formatStartAt(item.startAt) }}<AppIcon name="pencil" class="size-3" /></NuxtLink></template></span>
+                    <span v-else-if="item.recurrenceType === 'period'" class="ml-1.5 text-xs text-gray-400">{{ formatStartAt(item.startAt) }} – {{ item.endAt ? formatStartAt(item.endAt) : '…' }}</span>
+                    <span v-else class="ml-1.5 text-xs text-gray-400">{{ formatStartAt(item.startAt) }}</span>
+                  </span>
+                  <span class="font-mono text-sm font-medium text-gray-900">{{ item.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} €</span>
+                  <button type="button" class="btn-secondary py-1 text-xs" @click="onStartEditIncome(item)">Ändern</button>
+                  <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteIncome(item)">Löschen</button>
+                </div>
+              </li>
+            </ul>
+
+            <template v-if="newIncomeVisible">
+              <div class="flex flex-wrap items-center gap-2 rounded-md bg-gray-50 p-3">
+                <input v-model="newIncomeName" type="text" placeholder="Bezeichnung" class="input flex-1 py-1 text-sm" />
+                <input v-model="newIncomeAmount" type="text" inputmode="decimal" placeholder="0,00" class="input w-24 py-1 text-sm" />
+                <span class="text-sm text-gray-500">€</span>
+                <select v-model="newIncomeRecurrenceType" class="input py-1 text-sm">
+                  <option value="once">Einmalig</option>
+                  <option value="recurring">Wiederkehrend</option>
+                  <option value="period">Zeitraum</option>
+                </select>
+                <template v-if="newIncomeRecurrenceType === 'period'">
+                  <input v-model="newIncomeStartAt" type="month" class="input py-1 text-sm" :min="`${displayYear}-01`" :max="`${displayYear}-12`" />
+                  <span class="text-sm text-gray-400">–</span>
+                  <input v-model="newIncomeEndAt" type="month" class="input py-1 text-sm" :min="`${displayYear}-01`" />
+                </template>
+                <button type="button" class="btn-primary py-1 text-xs" :disabled="newIncomeAdding" @click="onAddIncome">Hinzufügen</button>
+                <button type="button" class="btn-secondary py-1 text-xs" @click="newIncomeVisible = false">Abbrechen</button>
+              </div>
+              <p v-if="newIncomeError" class="mt-1 text-xs text-red-600">{{ newIncomeError }}</p>
+            </template>
+            <button v-else type="button" class="btn-secondary text-sm" @click="newIncomeVisible = true; newIncomeStartAt = `${displayYear}-01`">+ Eintrag hinzufügen</button>
+          </template>
+
+          <template v-else>
+            <!-- Ausgaben -->
+            <ul v-if="activeExpenseItems.length > 0" class="mb-3 divide-y divide-gray-100">
+              <li v-for="item in activeExpenseItems" :key="item.id" class="py-2">
+                <template v-if="expenseEditId === item.id">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <input v-model="expenseEditName" type="text" placeholder="Bezeichnung" class="input flex-1 py-1 text-sm" />
+                    <input v-model="expenseEditAmount" type="text" inputmode="decimal" placeholder="0,00" class="input w-24 py-1 text-sm" />
+                    <span class="text-sm text-gray-500">€</span>
+                    <button type="button" class="btn-primary py-1 text-xs" :disabled="expenseSaving" @click="onSaveEditExpense(item)">Speichern</button>
+                    <button type="button" class="btn-secondary py-1 text-xs" @click="onCancelEditExpense">Abbrechen</button>
+                  </div>
+                  <p v-if="expenseError" class="mt-1 text-xs text-red-600">{{ expenseError }}</p>
+                </template>
+                <div v-else class="flex items-center gap-2">
+                  <span class="flex-1 text-sm text-gray-700">{{ item.name }}
+                    <span v-if="item.recurrenceType === 'recurring'" class="ml-1.5 text-xs text-gray-400">wiederkehrend<template v-if="!item.startAt.startsWith(String(displayYear))"> · seit <NuxtLink :to="{ query: { year: Number(item.startAt.slice(0, 4)), month: Number(item.startAt.slice(5, 7)), edit: '1', tab: 'expenses' } }" class="inline-flex items-center gap-0.5 text-blue-600 hover:underline">{{ formatStartAt(item.startAt) }}<AppIcon name="pencil" class="size-3" /></NuxtLink></template></span>
+                    <span v-else-if="item.recurrenceType === 'period'" class="ml-1.5 text-xs text-gray-400">{{ formatStartAt(item.startAt) }} – {{ item.endAt ? formatStartAt(item.endAt) : '…' }}</span>
+                    <span v-else class="ml-1.5 text-xs text-gray-400">{{ formatStartAt(item.startAt) }}</span>
+                  </span>
+                  <span class="font-mono text-sm font-medium text-gray-900">{{ item.amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} €</span>
+                  <button type="button" class="btn-secondary py-1 text-xs" @click="onStartEditExpense(item)">Ändern</button>
+                  <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteExpense(item)">Löschen</button>
+                </div>
+              </li>
+            </ul>
+
+            <template v-if="newExpenseVisible">
+              <div class="flex flex-wrap items-center gap-2 rounded-md bg-gray-50 p-3">
+                <input v-model="newExpenseName" type="text" placeholder="Bezeichnung" class="input flex-1 py-1 text-sm" />
+                <input v-model="newExpenseAmount" type="text" inputmode="decimal" placeholder="0,00" class="input w-24 py-1 text-sm" />
+                <span class="text-sm text-gray-500">€</span>
+                <select v-model="newExpenseRecurrenceType" class="input py-1 text-sm">
+                  <option value="once">Einmalig</option>
+                  <option value="recurring">Wiederkehrend</option>
+                  <option value="period">Zeitraum</option>
+                </select>
+                <template v-if="newExpenseRecurrenceType === 'period'">
+                  <input v-model="newExpenseStartAt" type="month" class="input py-1 text-sm" :min="`${displayYear}-01`" :max="`${displayYear}-12`" />
+                  <span class="text-sm text-gray-400">–</span>
+                  <input v-model="newExpenseEndAt" type="month" class="input py-1 text-sm" :min="`${displayYear}-01`" />
+                </template>
+                <button type="button" class="btn-primary py-1 text-xs" :disabled="newExpenseAdding" @click="onAddExpense">Hinzufügen</button>
+                <button type="button" class="btn-secondary py-1 text-xs" @click="newExpenseVisible = false">Abbrechen</button>
+              </div>
+              <p v-if="newExpenseError" class="mt-1 text-xs text-red-600">{{ newExpenseError }}</p>
+            </template>
+            <button v-else type="button" class="btn-secondary text-sm" @click="newExpenseVisible = true; newExpenseStartAt = `${displayYear}-01`">+ Eintrag hinzufügen</button>
+          </template>
+        </div>
+      </template>
+
+      <!-- ── Jahresansicht: Lese-Modus ──────────────────────────────────────── -->
+      <template v-else-if="showAnnual && !isEditing">
         <!-- Jahres Header (mit Chart) -->
         <CalculationsTitleCard
           v-if="annualReimbursement && annualByMonth"
@@ -1182,6 +1414,9 @@ function formatEurExpense(value: number): string {
           :annual-rate-sources="annualRateSources"
           :members="membersStore.members"
         >
+          <template #action>
+            <button type="button" class="btn-secondary text-xs" @click="router.replace({ query: { ...route.query, edit: '1' } })">Bearbeiten</button>
+          </template>
           <div class="flex items-end justify-between">
             <div v-if="!isFutureYear" class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
               <p class="text-sm text-gray-500">Einnahmen</p>
