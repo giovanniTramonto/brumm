@@ -1,3 +1,4 @@
+import { getMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { s3GetPresignedUrl } from '~/server/utils/storage/s3/files'
 
@@ -11,8 +12,22 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'ID fehlt' })
   }
 
-  if (currentUser.role !== 'SUPERUSER' && currentUser.role !== 'TEAM') {
-    throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
+  const canViewAll =
+    currentUser.role === 'SUPERUSER' ||
+    currentUser.role === 'TEAM' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+
+  if (!canViewAll) {
+    const md = await getMemberData(memberId, club)
+    const ownMd = await getMemberData(currentUser.id, club)
+    const ownEmails = [ownMd?.email1?.toLowerCase(), ownMd?.email2?.toLowerCase()].filter(Boolean)
+    const isGuardian =
+      (md?.email1 && ownEmails.includes(md.email1.toLowerCase())) ||
+      (md?.email2 && ownEmails.includes(md.email2.toLowerCase())) ||
+      currentUser.id === memberId
+    if (!isGuardian) {
+      throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
+    }
   }
 
   const submission = await prisma.memberDocument.findUnique({

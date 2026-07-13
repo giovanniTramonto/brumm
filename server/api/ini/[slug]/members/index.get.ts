@@ -39,6 +39,11 @@ export default defineEventHandler(async (event) => {
   const groupMap = new Map(groups.map((g) => [g.id, g]))
   const memberDataMap = new Map(allMemberData.map((md) => [md.userId, md]))
 
+  const canManageMembers =
+    currentUser.role === 'SUPERUSER' ||
+    currentUser.role === 'TEAM' ||
+    (currentUser.role === 'MANAGER' && currentUser.isMemberManager)
+
   let guardianEmails: Set<string> | null = null
   if (currentUser.role === 'MEMBER') {
     const ownMd = memberDataMap.get(currentUser.id)
@@ -76,7 +81,7 @@ export default defineEventHandler(async (event) => {
         phone2: md.phone2,
         groupId: md.groupId,
         careType: md.careType,
-        surcharges: md.surcharges,
+        surcharges: canManageMembers || isOwnChild ? md.surcharges : null,
         group: md.groupId ? (groupMap.get(md.groupId) ?? null) : null,
         storageRef: md.storageRef,
         contractEnd: md.contractEnd,
