@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMembersStore } from '~/stores/members'
-import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
+import { CARE_TYPE_OPTIONS, isContractStarted } from '~/utils/reimbursement'
 
 const props = defineProps<{ slug: string }>()
 
@@ -10,7 +10,16 @@ await membersStore.fetchMembers(props.slug)
 const totalCount = computed(
   () => membersStore.members.filter((m) => m.status !== 'DEACTIVATED').length,
 )
-const activeCount = computed(() => membersStore.members.filter((m) => m.status === 'ACTIVE').length)
+const now = new Date()
+const nowYear = now.getFullYear()
+const nowMonth = now.getMonth() + 1
+
+const activeCount = computed(
+  () =>
+    membersStore.members.filter(
+      (m) => m.status === 'ACTIVE' && isContractStarted(m.contractStart, nowYear, nowMonth),
+    ).length,
+)
 const inactiveCount = computed(
   () =>
     membersStore.members.filter(
@@ -57,7 +66,8 @@ const activeByGroup = computed(() => {
     const key = m.group?.name ?? '–'
     if (key === '–') continue
     const entry = map.get(key) ?? { active: 0, inactive: 0 }
-    if (m.status === 'ACTIVE') entry.active++
+    if (m.status === 'ACTIVE' && isContractStarted(m.contractStart, nowYear, nowMonth))
+      entry.active++
     else entry.inactive++
     map.set(key, entry)
   }
@@ -71,7 +81,8 @@ const byCareType = computed(() => {
   for (const m of membersStore.members) {
     if (m.status === 'DEACTIVATED' || !m.careType) continue
     const entry = map.get(m.careType) ?? { active: 0, inactive: 0 }
-    if (m.status === 'ACTIVE') entry.active++
+    if (m.status === 'ACTIVE' && isContractStarted(m.contractStart, nowYear, nowMonth))
+      entry.active++
     else entry.inactive++
     map.set(m.careType, entry)
   }

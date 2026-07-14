@@ -62,6 +62,11 @@ export const createMemberSchema = z
     phone2: z.string().optional().or(z.literal('')),
     groupId: z.string().optional(),
     careType: z.string().optional(),
+    contractStart: z
+      .string()
+      .regex(/^\d{4}-\d{2}$/, 'Ungültiges Datum (YYYY-MM)')
+      .optional()
+      .or(z.literal('')),
     surcharges: z.array(z.string()).optional(),
     contractEnd: contractEndField,
     address: z.string().optional().or(z.literal('')),
@@ -86,6 +91,11 @@ export const updateMemberSchema = z
     phone2: z.string().optional().or(z.literal('')),
     groupId: z.string().optional(),
     careType: z.string().optional(),
+    contractStart: z
+      .string()
+      .regex(/^\d{4}-\d{2}$/, 'Ungültiges Datum (YYYY-MM)')
+      .optional()
+      .or(z.literal('')),
     surcharges: z.array(z.string()).optional(),
     contractEnd: contractEndField,
     address: z.string().optional().or(z.literal('')),

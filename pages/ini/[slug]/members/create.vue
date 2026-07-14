@@ -44,6 +44,7 @@ const form = reactive({
   phone2: '',
   groupId: '',
   careType: '',
+  contractStart: '',
   contractEnd: '',
   address: '',
   surcharges: [] as string[],
@@ -102,6 +103,7 @@ async function onSubmit() {
       phone2: form.phone2.trim() || undefined,
       groupId: form.groupId || undefined,
       careType: form.careType || undefined,
+      contractStart: form.contractStart || undefined,
       contractEnd: form.contractEnd.trim() || undefined,
       address: form.address.trim() || undefined,
       surcharges: form.surcharges.length > 0 ? form.surcharges : undefined,
@@ -205,9 +207,15 @@ async function onSubmit() {
         </div>
       </div>
 
-      <div>
-        <label class="label">Vertragsende</label>
-        <input v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="label">Vertragsbeginn</label>
+          <input v-model="form.contractStart" type="month" class="input mt-1" />
+        </div>
+        <div>
+          <label class="label">Vertragsende</label>
+          <input v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
+        </div>
       </div>
 
       <GuardianField

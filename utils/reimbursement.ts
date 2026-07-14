@@ -22,6 +22,29 @@ function isContractActive(contractEnd: string | null, year: number, month: numbe
   return false
 }
 
+// contractStart "2026-09" means the contract begins in September 2026
+export function isContractStarted(
+  contractStart: string | null,
+  year: number,
+  month: number,
+): boolean {
+  if (!contractStart) return true
+  const [startYear, startMonth] = contractStart.split('-').map(Number)
+  if (Number.isNaN(startYear) || Number.isNaN(startMonth)) return true
+  return year > startYear || (year === startYear && month >= startMonth)
+}
+
+function isContractInPeriod(
+  member: { contractEnd: string | null; contractStart: string | null },
+  year: number,
+  month: number,
+): boolean {
+  return (
+    isContractActive(member.contractEnd, year, month) &&
+    isContractStarted(member.contractStart, year, month)
+  )
+}
+
 // Age group changes in the month AFTER the birthday (per KitaFöG calculation rules)
 function getAgeGroup(birthDate: string, year: number, month: number): AgeGroup {
   const birth = new Date(birthDate)
@@ -38,9 +61,7 @@ export function getMealAllowance(year: number, month: number): number {
 }
 
 export function countContractActiveMembers(members: Member[], year: number, month: number): number {
-  return members.filter(
-    (m) => m.status === 'ACTIVE' && isContractActive(m.contractEnd, year, month),
-  ).length
+  return members.filter((m) => m.status === 'ACTIVE' && isContractInPeriod(m, year, month)).length
 }
 
 export function getAgeGroupBreakdown(
@@ -50,7 +71,7 @@ export function getAgeGroupBreakdown(
 ): { '01': number; '2': number; '3plus': number } {
   const counts = { '01': 0, '2': 0, '3plus': 0 }
   for (const m of members) {
-    if (m.status !== 'ACTIVE' || !isContractActive(m.contractEnd, year, month)) continue
+    if (m.status !== 'ACTIVE' || !isContractInPeriod(m, year, month)) continue
     counts[getAgeGroup(m.birthDate, year, month)]++
   }
   return counts
@@ -89,7 +110,7 @@ export interface StaffingResult {
 export function calculateStaffing(members: Member[], year: number, month: number): StaffingResult {
   const rates = getRatesForDate(new Date(year, month - 1, 1))
   const activeMembers = members.filter(
-    (m) => m.status === 'ACTIVE' && isContractActive(m.contractEnd, year, month),
+    (m) => m.status === 'ACTIVE' && isContractInPeriod(m, year, month),
   )
 
   let positions = 0
@@ -183,7 +204,7 @@ export function calculateReimbursement(
 ): ReimbursementResult {
   const rates = getRatesForDate(new Date(year, month - 1, 1))
   const activeMembers = members.filter(
-    (m) => m.status === 'ACTIVE' && isContractActive(m.contractEnd, year, month),
+    (m) => m.status === 'ACTIVE' && isContractInPeriod(m, year, month),
   )
 
   let baseTotal = 0

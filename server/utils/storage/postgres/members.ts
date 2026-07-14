@@ -17,6 +17,7 @@ type Row = {
   phone2: string | null
   surcharges: string | null
   care_type: string | null
+  contract_start: string | null
   last_edited_at: string | null
   last_edited_by: string | null
   address: string | null
@@ -39,6 +40,7 @@ function rowToMemberData(row: Row): MemberData {
     phone2: row.phone2 ?? null,
     surcharges: row.surcharges ? row.surcharges.split(',').filter(Boolean) : [],
     careType: row.care_type ?? null,
+    contractStart: row.contract_start ?? null,
     lastEditedAt: row.last_edited_at ?? null,
     lastEditedBy: row.last_edited_by ?? null,
     address: row.address ?? null,
@@ -62,14 +64,15 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
     INSERT INTO members (
       user_id, storage_ref, first_name, last_name, birth_date,
       guardian1_name, guardian2_name, email1, email2, group_id,
-      contract_end, phone1, phone2, surcharges, care_type,
+      contract_end, phone1, phone2, surcharges, care_type, contract_start,
       last_edited_at, last_edited_by, address
     ) VALUES (
       ${data.userId}, ${data.storageRef}, ${data.firstName}, ${data.lastName}, ${data.birthDate},
       ${data.guardian1Name}, ${data.guardian2Name}, ${data.email1}, ${data.email2 ?? null},
       ${data.groupId ?? null}, ${data.contractEnd ?? null}, ${data.phone1 ?? null},
       ${data.phone2 ?? null}, ${data.surcharges.join(',')}, ${data.careType ?? null},
-      ${data.lastEditedAt ?? null}, ${data.lastEditedBy ?? null}, ${data.address ?? null}
+      ${data.contractStart ?? null}, ${data.lastEditedAt ?? null}, ${data.lastEditedBy ?? null},
+      ${data.address ?? null}
     )
     ON CONFLICT (user_id) DO UPDATE SET
       storage_ref    = EXCLUDED.storage_ref,
@@ -86,6 +89,7 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
       phone2         = EXCLUDED.phone2,
       surcharges     = EXCLUDED.surcharges,
       care_type      = EXCLUDED.care_type,
+      contract_start = EXCLUDED.contract_start,
       last_edited_at = EXCLUDED.last_edited_at,
       last_edited_by = EXCLUDED.last_edited_by,
       address        = EXCLUDED.address

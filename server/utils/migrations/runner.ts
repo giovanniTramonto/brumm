@@ -144,6 +144,10 @@ ALTER TABLE expenses
   DROP COLUMN IF EXISTS year,
   DROP COLUMN IF EXISTS is_recurring;`,
   },
+  {
+    filename: '012_member_contract_start.sql',
+    sql: `ALTER TABLE members ADD COLUMN IF NOT EXISTS contract_start TEXT;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {

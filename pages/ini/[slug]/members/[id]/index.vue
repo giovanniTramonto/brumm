@@ -160,6 +160,7 @@ const hasChanges = computed(() => {
     (form.phone2.trim() || null) !== (m.phone2 ?? null) ||
     (form.groupId || null) !== (m.groupId ?? null) ||
     (form.careType || null) !== (m.careType ?? null) ||
+    (form.contractStart || null) !== (m.contractStart ?? null) ||
     form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
     (form.contractEnd.trim() || null) !== (m.contractEnd ?? null) ||
     (form.address.trim() || null) !== (m.address ?? null)
@@ -178,6 +179,7 @@ const form = reactive({
   phone2: '',
   groupId: '',
   careType: '',
+  contractStart: '',
   surcharges: [] as string[],
   contractEnd: '',
 
@@ -395,6 +397,7 @@ onMounted(async () => {
     form.phone2 = m.phone2 ?? ''
     form.groupId = m.groupId ?? ''
     form.careType = m.careType ?? ''
+    form.contractStart = m.contractStart ?? ''
     form.surcharges = m.surcharges ?? []
     form.contractEnd = m.contractEnd ?? ''
     form.address = m.address ?? ''
@@ -449,6 +452,7 @@ async function onSave() {
         phone2: form.phone2.trim() || undefined,
         groupId: form.groupId || undefined,
         careType: canManageMembers.value ? form.careType || undefined : undefined,
+        contractStart: canManageMembers.value ? form.contractStart || undefined : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
         address: form.address.trim() || undefined,
@@ -781,10 +785,34 @@ async function onSubmit() {
             </div>
           </div>
 
-          <div>
-            <label for="field-contractEnd" class="label">Vertragsende</label>
+          <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="field-contractStart" class="label">Vertragsbeginn</label>
+              <input
+                id="field-contractStart"
+                v-model="form.contractStart"
+                type="month"
+                class="input mt-1"
+                :disabled="isKidDataLocked"
+              />
+            </div>
+            <div>
+              <label for="field-contractEnd" class="label">Vertragsende</label>
+              <input
+                id="field-contractEnd"
+                v-model="form.contractEnd"
+                type="text"
+                class="input mt-1"
+                placeholder="YYYY"
+                maxlength="4"
+                :readonly="isKidDataLocked"
+              />
+            </div>
+          </div>
+          <div v-else>
+            <label for="field-contractEnd2" class="label">Vertragsende</label>
             <input
-              id="field-contractEnd"
+              id="field-contractEnd2"
               v-model="form.contractEnd"
               type="text"
               class="input mt-1"
@@ -973,6 +1001,10 @@ async function onSubmit() {
           <div v-if="member.guardian2Name" class="flex gap-2">
             <dt class="w-40 text-gray-500">Erziehungsber. 2</dt>
             <dd class="text-gray-900">{{ member.guardian2Name }}</dd>
+          </div>
+          <div v-if="member.contractStart" class="flex gap-2">
+            <dt class="w-40 text-gray-500">Vertragsbeginn</dt>
+            <dd class="text-gray-900">{{ member.contractStart }}</dd>
           </div>
           <div v-if="member.contractEnd" class="flex gap-2">
             <dt class="w-40 text-gray-500">Vertragsende</dt>
