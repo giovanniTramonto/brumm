@@ -21,8 +21,23 @@ export function decodeS3FileId(fileId: string): string {
 }
 
 export function sanitizeFilename(filename: string): string {
-  // Only strip chars that are problematic in S3 keys or HTTP: path separators and control chars
-  return filename.replace(/[/\\<>:"|?*]/g, '-').replace(/-+/g, '-') || 'file'
+  const dotIndex = filename.lastIndexOf('.')
+  const ext = dotIndex > 0 ? filename.slice(dotIndex) : ''
+  const base = (dotIndex > 0 ? filename.slice(0, dotIndex) : filename)
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/Ä/g, 'Ae')
+    .replace(/Ö/g, 'Oe')
+    .replace(/Ü/g, 'Ue')
+    .replace(/ß/g, 'ss')
+    .normalize('NFD')
+    .replace(/\p{Mn}/gu, '') // strip combining diacritics (é→e etc.)
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9._()-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^[-_]+|[-_]+$/g, '')
+  return base + ext || 'file'
 }
 
 export async function s3UploadFile(
@@ -35,9 +50,25 @@ export async function s3UploadFile(
   const { client, bucket } = await getClubS3(clubId)
   const uid = createId()
   const key = `${prefix}/${uid}/${sanitizeFilename(filename)}`
-  await client.send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: buffer, ContentType: mimeType }),
-  )
+  try {
+    await client.send(
+      new PutObjectCommand({ Bucket: bucket, Key: key, Body: buffer, ContentType: mimeType }),
+    )
+  } catch (err) {
+    const code = err instanceof Error ? err.name : ''
+    const s3Messages: Record<string, string> = {
+      InvalidAccessKeyId: 'S3 Access Key ungültig',
+      SignatureDoesNotMatch: 'S3 Secret Key ungültig',
+      NoSuchBucket: 'Bucket nicht gefunden',
+      AccessDenied: 'Zugriff verweigert',
+      EntityTooLarge: 'Datei zu groß',
+      RequestTimeout: 'Zeitüberschreitung',
+      SlowDown: 'Zu viele Anfragen',
+      ServiceUnavailable: 'Speicher nicht erreichbar',
+    }
+    const message = s3Messages[code] ?? `Upload fehlgeschlagen (${code || 'Unbekannter Fehler'})`
+    throw createError({ statusCode: 500, statusMessage: message })
+  }
   return { fileId: encodeS3FileId(key), key }
 }
 
