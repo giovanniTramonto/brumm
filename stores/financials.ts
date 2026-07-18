@@ -12,7 +12,6 @@ export const useFinancialsStore = defineStore('financials', () => {
   const monthlyCache = ref(new Map<string, MonthlyData>())
   const annualCache = ref(new Map<number, AnnualData>())
 
-  const monthlyPromises = new Map<string, Promise<void>>()
   const annualPromises = new Map<number, Promise<void>>()
 
   function monthKey(year: number, month: number) {
@@ -33,37 +32,24 @@ export const useFinancialsStore = defineStore('financials', () => {
     return { income: data.income, expenses: data.expenses }
   }
 
-  async function fetchMonthly(slug: string, year: number, month: number): Promise<void> {
-    const key = monthKey(year, month)
-    if (monthlyCache.value.has(key)) return
-    if (monthlyPromises.has(key)) return monthlyPromises.get(key)
-
-    const promise = $fetch<{ income: IncomeItem[]; expenses: ExpenseItem[] }>(
-      `/api/ini/${slug}/financials`,
-      { query: { year, month } },
-    )
-      .then((data) => {
-        monthlyCache.value = new Map(monthlyCache.value).set(key, data)
-      })
-      .finally(() => {
-        monthlyPromises.delete(key)
-      })
-
-    monthlyPromises.set(key, promise)
-    return promise
-  }
-
   async function fetchAnnual(slug: string, year: number): Promise<void> {
     if (annualCache.value.has(year)) return
     if (annualPromises.has(year)) return annualPromises.get(year)
 
     const promise = $fetch<{
       byMonth: AnnualFinancialsByMonth[]
+      byMonthItems: { income: IncomeItem[]; expenses: ExpenseItem[] }[]
       income: IncomeItem[]
       expenses: ExpenseItem[]
     }>(`/api/ini/${slug}/financials`, { query: { year } })
       .then((data) => {
-        annualCache.value = new Map(annualCache.value).set(year, data)
+        const { byMonthItems, ...annualData } = data
+        annualCache.value = new Map(annualCache.value).set(year, annualData)
+        const nextMonthly = new Map(monthlyCache.value)
+        byMonthItems.forEach((items, i) => {
+          nextMonthly.set(monthKey(year, i + 1), items)
+        })
+        monthlyCache.value = nextMonthly
       })
       .finally(() => {
         annualPromises.delete(year)
@@ -71,13 +57,6 @@ export const useFinancialsStore = defineStore('financials', () => {
 
     annualPromises.set(year, promise)
     return promise
-  }
-
-  function invalidateMonth(year: number, month: number): void {
-    const key = monthKey(year, month)
-    const next = new Map(monthlyCache.value)
-    next.delete(key)
-    monthlyCache.value = next
   }
 
   function invalidateAllMonths(): void {
@@ -98,10 +77,6 @@ export const useFinancialsStore = defineStore('financials', () => {
     const next = new Map(annualCache.value)
     next.delete(year)
     annualCache.value = next
-  }
-
-  function setMonthly(year: number, month: number, data: MonthlyData): void {
-    monthlyCache.value = new Map(monthlyCache.value).set(monthKey(year, month), data)
   }
 
   function patchMonthlyIncome(year: number, month: number, item: IncomeItem): void {
@@ -180,13 +155,10 @@ export const useFinancialsStore = defineStore('financials', () => {
     getMonthly,
     getAnnual,
     getAnnualItems,
-    fetchMonthly,
     fetchAnnual,
-    invalidateMonth,
     invalidateAllMonths,
     invalidateOtherMonths,
     invalidateAnnual,
-    setMonthly,
     patchMonthlyIncome,
     removeMonthlyIncome,
     patchMonthlyExpense,

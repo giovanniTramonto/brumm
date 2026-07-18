@@ -25,7 +25,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
     useManagersStore().fetchManagers(slug)
     useDocumentsStore().fetchDocuments(slug)
     useParentJobsStore().fetchParentJobs(slug)
-    const now = new Date()
-    useFinancialsStore().fetchMonthly(slug, now.getFullYear(), now.getMonth() + 1)
+    useFinancialsStore().fetchAnnual(slug, new Date().getFullYear())
   }
 })

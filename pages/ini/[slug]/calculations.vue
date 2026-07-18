@@ -88,20 +88,18 @@ const mfError = ref<string | null>(null)
 
 watch(
   () => route.query.edit,
-  async (val) => {
+  async (val, oldVal) => {
     const entering = val === '1'
     if (!entering) {
       mfEditing.value = false
       mfError.value = null
     }
     isEditing.value = entering
-    if (!entering) {
+    if (!entering && oldVal === '1') {
       if (showAnnual.value) {
         financialsStore.invalidateAnnual(displayYear.value)
-        await financialsStore.fetchAnnual(slug, displayYear.value)
-      } else if (!annualByMonth.value) {
-        await financialsStore.fetchAnnual(slug, displayYear.value)
       }
+      await financialsStore.fetchAnnual(slug, displayYear.value)
     }
   },
   { immediate: true },
@@ -111,14 +109,7 @@ watch(
   [displayYear, displayMonth, showAnnual],
   async () => {
     if (!canManageClub.value) return
-    if (showAnnual.value) {
-      await financialsStore.fetchAnnual(slug, displayYear.value)
-    } else {
-      await Promise.all([
-        financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value),
-        financialsStore.fetchAnnual(slug, displayYear.value),
-      ])
-    }
+    await financialsStore.fetchAnnual(slug, displayYear.value)
   },
   { immediate: true },
 )
@@ -295,7 +286,7 @@ async function onDeleteMF(item: IncomeItem) {
     financialsStore.removeAnnualIncome(displayYear.value, item.id)
   } else {
     financialsStore.invalidateAllMonths()
-    await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
+    await financialsStore.fetchAnnual(slug, displayYear.value)
   }
 }
 
@@ -384,7 +375,7 @@ async function onDeleteIncome(item: IncomeItem) {
     financialsStore.removeAnnualIncome(displayYear.value, item.id)
   } else if (item.recurrenceType !== 'once') {
     financialsStore.invalidateAllMonths()
-    await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
+    await financialsStore.fetchAnnual(slug, displayYear.value)
   } else {
     financialsStore.removeMonthlyIncome(displayYear.value, displayMonth.value, item.id)
     financialsStore.invalidateAnnual(displayYear.value)
@@ -517,7 +508,7 @@ async function onDeleteExpense(item: ExpenseItem) {
     financialsStore.removeAnnualExpense(displayYear.value, item.id)
   } else if (item.recurrenceType !== 'once') {
     financialsStore.invalidateAllMonths()
-    await financialsStore.fetchMonthly(slug, displayYear.value, displayMonth.value)
+    await financialsStore.fetchAnnual(slug, displayYear.value)
   } else {
     financialsStore.removeMonthlyExpense(displayYear.value, displayMonth.value, item.id)
     financialsStore.invalidateAnnual(displayYear.value)

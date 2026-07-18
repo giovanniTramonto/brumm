@@ -108,6 +108,7 @@ export async function getAnnualFinancialsSummary(
   year: number,
 ): Promise<{
   byMonth: import('~/types').AnnualFinancialsByMonth[]
+  byMonthItems: { income: IncomeItem[]; expenses: ExpenseItem[] }[]
   income: IncomeItem[]
   expenses: ExpenseItem[]
 }> {
@@ -135,29 +136,36 @@ export async function getAnnualFinancialsSummary(
     `,
   ])
 
-  const byMonth = Array.from({ length: 12 }, (_, i) => {
-    const m = i + 1
-    const date = monthDate(year, m)
-    const income = allIncome.filter((r) => itemAppearsInMonth(r, date))
-    const expenses = allExpenses.filter((r) => itemAppearsInMonth(r, date))
-    const mfItems = income.filter((r) => r.item_type === 'membership_fee')
-    const mfItem =
-      mfItems.length === 0
-        ? null
-        : mfItems.reduce((best, r) =>
-            toDateString(r.start_at) > toDateString(best.start_at) ? r : best,
-          )
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const date = monthDate(year, i + 1)
+    const incomeRows = allIncome.filter((r) => itemAppearsInMonth(r, date))
+    const expenseRows = allExpenses.filter((r) => itemAppearsInMonth(r, date))
+    const mfItem = incomeRows
+      .filter((r) => r.item_type === 'membership_fee')
+      .reduce<IncomeRow | null>(
+        (best, r) => (!best || toDateString(r.start_at) > toDateString(best.start_at) ? r : best),
+        null,
+      )
     return {
-      membershipFee: Number(mfItem?.amount ?? 0),
-      extraIncome: income
-        .filter((r) => r.item_type !== 'membership_fee')
-        .reduce((s, r) => s + Number(r.amount), 0),
-      expenses: expenses.reduce((s, r) => s + Number(r.amount), 0),
+      summary: {
+        membershipFee: Number(mfItem?.amount ?? 0),
+        extraIncome: incomeRows
+          .filter((r) => r.item_type !== 'membership_fee')
+          .reduce((s, r) => s + Number(r.amount), 0),
+        expenses: expenseRows.reduce((s, r) => s + Number(r.amount), 0),
+      },
+      items: {
+        income: incomeRows.map(rowToIncome),
+        expenses: expenseRows.map(rowToExpense),
+      },
     }
   })
+  const byMonth = months.map((m) => m.summary)
+  const byMonthItems = months.map((m) => m.items)
 
   return {
     byMonth,
+    byMonthItems,
     income: allIncome.map(rowToIncome),
     expenses: allExpenses.map(rowToExpense),
   }
