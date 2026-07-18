@@ -706,6 +706,25 @@ const annualSaldoToDate = computed(
   () => annualIncomeTotalToDate.value - annualExpensesTotalToDate.value,
 )
 
+const completedMonths = currentMonth - 1
+const completedPeriodLabel = (() => {
+  if (completedMonths <= 0) return null
+  const lastDay = new Date(currentYear, completedMonths, 0).toLocaleDateString('de-DE', {
+    day: 'numeric',
+    month: 'long',
+  })
+  return `1. Januar bis ${lastDay}`
+})()
+const annualIncomeTotalCompleted = computed(() =>
+  annualMonthlyIncome.value.slice(0, completedMonths).reduce((sum, v) => sum + v, 0),
+)
+const annualExpensesTotalCompleted = computed(() =>
+  (annualByMonth.value ?? []).slice(0, completedMonths).reduce((sum, m) => sum + m.expenses, 0),
+)
+const annualSaldoCompleted = computed(
+  () => annualIncomeTotalCompleted.value - annualExpensesTotalCompleted.value,
+)
+
 const annualMonthlySaldos = computed(() => {
   const reimbursement = annualReimbursement.value
   const byMonth = annualByMonth.value
@@ -1073,34 +1092,33 @@ function formatEurExpense(value: number): string {
           <template #action>
             <button type="button" class="btn-secondary text-xs" @click="router.replace({ query: { ...route.query, edit: '1' } })">Bearbeiten</button>
           </template>
-          <div class="flex flex-wrap items-start gap-4 mobile:gap-6">
-            <template v-if="reimbursement">
-              <div>
-                <p class="text-sm text-gray-500">Aktive Kinder</p>
-                <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ activeCount }}</p>
-              </div>
-              <div class="hidden mobile:block">
-                <p class="text-sm text-gray-500">0–1 J.</p>
-                <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['01'] }}</p>
-              </div>
-              <div class="hidden mobile:block">
-                <p class="text-sm text-gray-500">2 J.</p>
-                <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['2'] }}</p>
-              </div>
-              <div class="hidden mobile:block">
-                <p class="text-sm text-gray-500">3+ J.</p>
-                <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['3plus'] }}</p>
-              </div>
-            </template>
-            <div class="ml-auto text-right">
-              <p class="text-sm text-gray-500">Saldo</p>
-              <p class="mt-1 font-mono text-3xl font-bold" :class="monthlySaldo > 0 ? 'text-gray-900' : monthlySaldo < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(monthlySaldo) }}<span class="pl-1">€</span></p>
-            </div>
-          </div>
         </CalculationsTitleCard>
 
+        <div v-if="reimbursement" class="card mt-4 flex flex-wrap items-start gap-4 mobile:gap-6">
+          <div>
+            <p class="text-sm text-gray-500">Aktive Kinder</p>
+            <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ activeCount }}</p>
+          </div>
+          <div class="hidden mobile:block">
+            <p class="text-sm text-gray-500">0–1 J.</p>
+            <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['01'] }}</p>
+          </div>
+          <div class="hidden mobile:block">
+            <p class="text-sm text-gray-500">2 J.</p>
+            <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['2'] }}</p>
+          </div>
+          <div class="hidden mobile:block">
+            <p class="text-sm text-gray-500">3+ J.</p>
+            <p class="mt-1 font-mono text-3xl font-bold text-gray-300">{{ ageBreakdown['3plus'] }}</p>
+          </div>
+          <div class="ml-auto text-right">
+            <p class="text-sm text-gray-500">Saldo</p>
+            <p class="mt-1 font-mono text-3xl font-bold" :class="monthlySaldo > 0 ? 'text-gray-900' : monthlySaldo < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(monthlySaldo) }}<span class="pl-1">€</span></p>
+          </div>
+        </div>
+
         <!-- Einnahmen -->
-        <div class="card min-h-[290px]">
+        <div class="card mt-4 min-h-[290px]">
           <div class="mb-4 flex items-start justify-between">
             <div>
               <h2 class="text-sm font-medium text-gray-900">Einnahmen</h2>
@@ -1405,7 +1423,6 @@ function formatEurExpense(value: number): string {
         <CalculationsTitleCard
           v-if="annualReimbursement && annualByMonth"
           :title="displayYear === currentYear ? 'Jahresansicht' : `Jahresansicht ${displayYear}`"
-          :title-suffix="displayYear === currentYear ? `– Stand ${currentDateFull}` : undefined"
           :display-year="displayYear"
           :annual-monthly-income="annualMonthlyIncome"
           :annual-by-month="annualByMonth"
@@ -1413,37 +1430,45 @@ function formatEurExpense(value: number): string {
           :annual-monthly-saldos="annualMonthlySaldos"
           :annual-rate-sources="annualRateSources"
           :members="membersStore.members"
-        >
-          <template #action>
-            <button type="button" class="btn-secondary text-xs" @click="router.replace({ query: { ...route.query, edit: '1' } })">Bearbeiten</button>
-          </template>
-          <div class="flex items-end justify-between">
-            <div v-if="!isFutureYear" class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
-              <p class="text-sm text-gray-500">Einnahmen</p>
-              <p class="text-right font-mono text-sm font-bold text-gray-900">{{ formatEur(annualIncomeTotalToDate) }}<span class="pl-1">€</span></p>
-              <p v-if="annualExpensesTotalToDate > 0" class="text-sm text-gray-500">Ausgaben</p>
-              <p v-if="annualExpensesTotalToDate > 0" class="text-right font-mono text-sm font-bold text-expense-700">−{{ formatEur(annualExpensesTotalToDate) }}<span class="pl-1">€</span></p>
+        />
+
+        <div class="mt-4 flex flex-col gap-4 tablet:flex-row">
+          <div v-if="!isFutureYear && completedPeriodLabel && annualReimbursement && annualByMonth" class="card flex-1">
+            <h2 class="mb-4 text-sm font-medium text-gray-900">{{ completedPeriodLabel }}</h2>
+            <div class="flex items-end justify-between">
+              <div class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
+                <p class="text-sm text-gray-500">Einnahmen</p>
+                <p class="text-right font-mono text-sm font-bold text-gray-900">{{ formatEur(annualIncomeTotalCompleted) }}<span class="pl-1">€</span></p>
+                <template v-if="annualExpensesTotalCompleted > 0">
+                  <p class="text-sm text-gray-500">Ausgaben</p>
+                  <p class="text-right font-mono text-sm font-bold text-expense-700">−{{ formatEur(annualExpensesTotalCompleted) }}<span class="pl-1">€</span></p>
+                </template>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500">Saldo</p>
+                <p class="mt-1 font-mono text-2xl font-bold" :class="annualSaldoCompleted > 0 ? 'text-gray-900' : annualSaldoCompleted < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(annualSaldoCompleted) }}<span class="pl-1">€</span></p>
+              </div>
             </div>
-            <div class="text-right" :class="isFutureYear ? 'w-full' : ''">
-              <p class="text-sm text-gray-500">Saldo</p>
-              <p v-if="isFutureYear" class="mt-1 font-mono text-3xl font-bold text-gray-300">–</p>
-              <p v-else class="mt-1 font-mono text-3xl font-bold" :class="annualSaldoToDate > 0 ? 'text-gray-900' : annualSaldoToDate < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(annualSaldoToDate) }}<span class="pl-1">€</span></p>
+            <div class="mt-2 border-t border-gray-100" />
+            <div class="mt-1.5 flex items-baseline justify-between">
+              <p class="whitespace-nowrap text-sm text-gray-500">Ø Monat</p>
+              <p class="font-mono text-sm font-bold" :class="annualSaldoCompleted > 0 ? 'text-gray-900' : annualSaldoCompleted < 0 ? 'text-expense-700' : 'text-gray-300'">{{ formatEur(annualSaldoCompleted / completedMonths) }}<span class="pl-1">€</span></p>
             </div>
           </div>
-        </CalculationsTitleCard>
 
-        <div v-if="saldoForecast !== null" class="card mt-4">
-          <h2 class="mb-4 text-sm font-medium text-gray-900">{{ isFutureYear ? `Vorschau ${displayYear}` : `Prognose ${displayYear}` }}</h2>
-          <div class="flex items-end justify-between">
-            <div class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
-              <p class="text-sm text-gray-500">Einnahmen</p>
-              <p class="whitespace-nowrap text-right font-mono text-sm font-bold text-gray-900">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(incomeForecast!) }}<span class="pl-1">€</span></p>
-              <p class="text-sm text-gray-500">Ausgaben</p>
-              <p class="whitespace-nowrap text-right font-mono text-sm font-bold text-expense-700">{{ isFutureYear ? '' : '≈ ' }}−{{ formatEur(expensesForecast!) }}<span class="pl-1">€</span></p>
-            </div>
-            <div class="text-right">
-              <p class="text-sm text-gray-500">Saldo</p>
-              <p class="mt-1 whitespace-nowrap font-mono text-2xl font-bold" :class="saldoForecast > 0 ? 'text-gray-900' : saldoForecast < 0 ? 'text-expense-700' : 'text-gray-300'">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(saldoForecast) }}<span class="pl-1">€</span></p>
+          <div v-if="saldoForecast !== null" class="card flex-1">
+            <h2 class="mb-4 text-sm font-medium text-gray-900">{{ isFutureYear ? `Vorschau ${displayYear}` : `Prognose ${displayYear}` }}</h2>
+            <div class="flex items-end justify-between">
+              <div class="grid grid-cols-[auto_auto] items-baseline gap-x-4 gap-y-0.5">
+                <p class="text-sm text-gray-500">Einnahmen</p>
+                <p class="whitespace-nowrap text-right font-mono text-sm font-bold text-gray-900">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(incomeForecast!) }}<span class="pl-1">€</span></p>
+                <p class="text-sm text-gray-500">Ausgaben</p>
+                <p class="whitespace-nowrap text-right font-mono text-sm font-bold text-expense-700">{{ isFutureYear ? '' : '≈ ' }}−{{ formatEur(expensesForecast!) }}<span class="pl-1">€</span></p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-gray-500">Saldo</p>
+                <p class="mt-1 whitespace-nowrap font-mono text-2xl font-bold" :class="saldoForecast > 0 ? 'text-gray-900' : saldoForecast < 0 ? 'text-expense-700' : 'text-gray-300'">{{ isFutureYear ? '' : '≈ ' }}{{ formatEur(saldoForecast) }}<span class="pl-1">€</span></p>
+              </div>
             </div>
           </div>
         </div>
@@ -1451,14 +1476,14 @@ function formatEurExpense(value: number): string {
         <div class="card mt-4 min-h-[235px]">
           <template v-if="annualStaffing">
             <h2 class="mb-4 text-sm font-medium text-gray-900">Personalschlüssel {{ annualStaffing.year }}</h2>
-            <div class="flex items-end justify-between">
+            <div class="flex items-end gap-6">
               <div>
                 <p class="text-sm text-gray-500">Ø Betreuungsstunden</p>
                 <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageCareHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
               </div>
-              <div class="text-right">
+              <div>
                 <p class="text-sm text-gray-500">Ø Leitungsstunden</p>
-                <p class="mt-1 font-mono text-2xl font-bold text-gray-900">{{ annualStaffing.averageLeadershipHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
+                <p class="mt-1 font-mono text-2xl font-bold text-gray-400">{{ annualStaffing.averageLeadershipHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }}</p>
               </div>
             </div>
             <div class="mt-4 overflow-x-auto">
