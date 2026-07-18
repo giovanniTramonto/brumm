@@ -7,9 +7,7 @@ const props = defineProps<{ slug: string }>()
 const membersStore = useMembersStore()
 await membersStore.fetchMembers(props.slug)
 
-const totalCount = computed(
-  () => membersStore.members.filter((m) => m.status !== 'DEACTIVATED').length,
-)
+const totalCount = computed(() => membersStore.members.filter((m) => m.status === 'ACTIVE').length)
 const now = new Date()
 const nowYear = now.getFullYear()
 const nowMonth = now.getMonth() + 1
@@ -66,8 +64,7 @@ const activeByGroup = computed(() => {
     const key = m.group?.name ?? '–'
     if (key === '–') continue
     const entry = map.get(key) ?? { active: 0, inactive: 0 }
-    if (m.status === 'ACTIVE' && isContractStarted(m.contractStart, nowYear, nowMonth))
-      entry.active++
+    if (m.status === 'ACTIVE') entry.active++
     else entry.inactive++
     map.set(key, entry)
   }
@@ -81,8 +78,7 @@ const byCareType = computed(() => {
   for (const m of membersStore.members) {
     if (m.status === 'DEACTIVATED' || !m.careType) continue
     const entry = map.get(m.careType) ?? { active: 0, inactive: 0 }
-    if (m.status === 'ACTIVE' && isContractStarted(m.contractStart, nowYear, nowMonth))
-      entry.active++
+    if (m.status === 'ACTIVE') entry.active++
     else entry.inactive++
     map.set(m.careType, entry)
   }
@@ -103,11 +99,11 @@ function deletionDate(deactivatedAt: string) {
     <div class="card desktop:col-span-2">
       <div class="grid grid-cols-3">
         <div>
-          <p class="text-sm font-medium text-gray-500">Angemeldete Kinder</p>
+          <p class="text-sm font-medium text-gray-500">Aktive Kinder</p>
           <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ totalCount }}</p>
         </div>
         <div>
-          <p class="text-sm font-medium text-green-500">Aktiv</p>
+          <p class="text-sm font-medium text-green-500">Aktiv in Betreuung</p>
           <p class="mt-1 font-mono text-3xl font-bold text-green-600">{{ activeCount }}</p>
         </div>
         <div>
