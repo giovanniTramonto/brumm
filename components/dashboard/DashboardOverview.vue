@@ -97,19 +97,13 @@ function deletionDate(deactivatedAt: string) {
 <template>
   <div class="grid gap-4 desktop:grid-cols-3">
     <div class="card desktop:col-span-2">
-      <div class="grid grid-cols-3">
-        <div>
-          <p class="text-sm font-medium text-gray-500">Aktive Kinder</p>
-          <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ totalCount }}</p>
-        </div>
-        <div>
-          <p class="text-sm font-medium text-green-500">Aktiv in Betreuung</p>
-          <p class="mt-1 font-mono text-3xl font-bold text-green-600">{{ activeCount }}</p>
-        </div>
-        <div>
-          <p class="text-sm font-medium text-purple-500">Inaktiv</p>
-          <p class="mt-1 font-mono text-3xl font-bold text-purple-800">{{ inactiveCount }}</p>
-        </div>
+      <div class="grid grid-cols-3 items-start">
+        <p class="text-sm font-medium text-gray-500">Aktive Kinder</p>
+        <p class="text-sm font-medium text-green-500">Aktiv in Betreuung</p>
+        <p class="text-sm font-medium text-purple-500">Inaktiv</p>
+        <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ totalCount }}</p>
+        <p class="mt-1 font-mono text-3xl font-bold text-green-600">{{ activeCount }}</p>
+        <p class="mt-1 font-mono text-3xl font-bold text-purple-800">{{ inactiveCount }}</p>
       </div>
       <div v-if="activeByGroup.length > 0" class="mt-6 grid grid-cols-3 gap-y-1">
         <template v-for="[group, counts] in activeByGroup" :key="group">
