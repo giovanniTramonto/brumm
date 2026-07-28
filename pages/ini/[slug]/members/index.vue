@@ -6,6 +6,7 @@ import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 definePageMeta({ middleware: ['auth'] })
 
 const route = useRoute()
+const router = useRouter()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
 const membersStore = useMembersStore()
@@ -13,8 +14,12 @@ const membersStore = useMembersStore()
 const search = ref('')
 
 type SortKey = 'name' | 'group' | 'careType' | 'birthDate' | 'contractEnd' | 'status'
-const sortKey = ref<SortKey>('name')
-const sortDir = ref<'asc' | 'desc'>('asc')
+const SORT_KEYS: SortKey[] = ['name', 'group', 'careType', 'birthDate', 'contractEnd', 'status']
+
+const sortKey = computed<SortKey>(() =>
+  SORT_KEYS.includes(route.query.sort as SortKey) ? (route.query.sort as SortKey) : 'name',
+)
+const sortDir = computed<'asc' | 'desc'>(() => (route.query.dir === 'desc' ? 'desc' : 'asc'))
 
 const STATUS_ORDER: Record<string, number> = {
   ACTIVE: 0,
@@ -25,12 +30,8 @@ const STATUS_ORDER: Record<string, number> = {
 }
 
 function toggleSort(key: string) {
-  if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortKey.value = key as SortKey
-    sortDir.value = 'asc'
-  }
+  const dir = sortKey.value === key && sortDir.value === 'asc' ? 'desc' : 'asc'
+  router.replace({ query: { ...route.query, sort: key, dir } })
 }
 
 const { isMember, canManageMembers } = storeToRefs(authStore)
