@@ -12,7 +12,7 @@ const membersStore = useMembersStore()
 
 const search = ref('')
 
-type SortKey = 'name' | 'group' | 'careType' | 'contractEnd' | 'status'
+type SortKey = 'name' | 'group' | 'careType' | 'birthDate' | 'contractEnd' | 'status'
 const sortKey = ref<SortKey>('name')
 const sortDir = ref<'asc' | 'desc'>('asc')
 
@@ -59,6 +59,8 @@ const filteredMembers = computed(() => {
         return dir * (a.group?.name ?? '').localeCompare(b.group?.name ?? '', 'de')
       case 'careType':
         return dir * (a.careType ?? '').localeCompare(b.careType ?? '', 'de')
+      case 'birthDate':
+        return dir * (a.birthDate ?? '').localeCompare(b.birthDate ?? '')
       case 'contractEnd':
         return dir * (a.contractEnd ?? '').localeCompare(b.contractEnd ?? '')
       case 'status':
@@ -118,11 +120,12 @@ const filteredMembers = computed(() => {
       <p class="text-sm text-gray-500">Keine Kinder gefunden.</p>
     </div>
 
-    <div v-else class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5">
+    <div v-else class="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-gray-900/5">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <SortableTableHeader label="Name" columnKey="name" :activeSortKey="sortKey" :activeSortDir="sortDir" class="w-1/2" @sort="toggleSort" />
+            <SortableTableHeader label="Geburtsdatum" columnKey="birthDate" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
             <SortableTableHeader label="Gruppe" columnKey="group" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
             <SortableTableHeader v-if="canManageMembers || isMember" label="Betreuungsumfang" columnKey="careType" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
             <SortableTableHeader label="Vertragsende" columnKey="contractEnd" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
@@ -136,6 +139,9 @@ const filteredMembers = computed(() => {
               <NuxtLink :to="`/ini/${slug}/members/${member.id}`" class="font-medium hover:text-primary-700" :class="member.status === 'DEACTIVATED' ? 'text-gray-500' : 'text-gray-900'">
                 {{ member.lastName }}, {{ member.firstName }}
               </NuxtLink>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-600">
+              {{ new Date(member.birthDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
             </td>
             <td class="px-4 py-3 text-sm">
               <span v-if="member.group?.name" class="text-gray-600">{{ member.group.name }}</span>
