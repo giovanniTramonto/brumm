@@ -21,7 +21,7 @@ export const pinSchema = z.object({
 
 const contractEndField = z
   .string()
-  .regex(/^\d{4}$/, 'Vertragsende muss ein Jahr sein (YYYY)')
+  .regex(/^\d{4}(-\d{2})?$/, 'Ungültiges Datum (YYYY-MM)')
   .optional()
   .or(z.literal(''))
 

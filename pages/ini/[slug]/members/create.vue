@@ -214,7 +214,7 @@ async function onSubmit() {
         </div>
         <div>
           <label class="label">Vertragsende</label>
-          <input v-model="form.contractEnd" type="text" class="input mt-1" placeholder="YYYY" maxlength="4" />
+          <input v-model="form.contractEnd" type="month" class="input mt-1" />
         </div>
       </div>
 

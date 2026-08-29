@@ -162,7 +162,7 @@ const hasChanges = computed(() => {
     (form.careType || null) !== (m.careType ?? null) ||
     (form.contractStart || null) !== (m.contractStart ?? null) ||
     form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
-    (form.contractEnd.trim() || null) !== (m.contractEnd ?? null) ||
+    (form.contractEnd.trim() || null) !== (toContractEndMonthValue(m.contractEnd) || null) ||
     (form.address.trim() || null) !== (m.address ?? null)
   )
 })
@@ -359,6 +359,15 @@ async function loadMemberDocTemplates() {
   }
 }
 
+// Legacy contractEnd values are a plain year ("2026", meaning "ends July 31
+// 2026"). The <input type="month"> needs YYYY-MM, so show those as
+// "YYYY-07" — saving without further edits then upgrades the record to the
+// precise format transparently.
+function toContractEndMonthValue(contractEnd: string | null): string {
+  if (contractEnd && /^\d{4}$/.test(contractEnd)) return `${contractEnd}-07`
+  return contractEnd ?? ''
+}
+
 function computeIsOwnChild(m: Member): boolean {
   if (isMember.value) return true // MEMBER kann nur auf eigene Kinder zugreifen (Server erzwingt dies)
   if (authStore.currentUser?.role === 'SUPERUSER') {
@@ -399,7 +408,7 @@ onMounted(async () => {
     form.careType = m.careType ?? ''
     form.contractStart = m.contractStart ?? ''
     form.surcharges = m.surcharges ?? []
-    form.contractEnd = m.contractEnd ?? ''
+    form.contractEnd = toContractEndMonthValue(m.contractEnd)
     form.address = m.address ?? ''
 
     isLoading.value = false
@@ -799,11 +808,9 @@ async function onSubmit() {
               <input
                 id="field-contractEnd"
                 v-model="form.contractEnd"
-                type="text"
+                type="month"
                 class="input mt-1"
-                placeholder="YYYY"
-                maxlength="4"
-                :readonly="isKidDataLocked"
+                :disabled="isKidDataLocked"
               />
             </div>
           </div>
@@ -812,11 +819,9 @@ async function onSubmit() {
             <input
               id="field-contractEnd2"
               v-model="form.contractEnd"
-              type="text"
+              type="month"
               class="input mt-1"
-              placeholder="YYYY"
-              maxlength="4"
-              :readonly="isKidDataLocked"
+              :disabled="isKidDataLocked"
             />
           </div>
           </div>

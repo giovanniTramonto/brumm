@@ -30,16 +30,24 @@ const pendingMembers = computed(() =>
 const noCareTypeMembers = computed(() =>
   membersStore.members.filter((m) => m.status !== 'DEACTIVATED' && !m.careType),
 )
+// New contractEnd values are "YYYY-MM"; legacy ones are a plain "YYYY" year
+// meaning "ends July 31 of that year" (the Kita contract year's end).
+function parseContractEnd(contractEnd: string): { year: number; monthIndex: number } | null {
+  const monthMatch = contractEnd.match(/^(\d{4})-(\d{2})$/)
+  if (monthMatch) return { year: Number(monthMatch[1]), monthIndex: Number(monthMatch[2]) - 1 }
+  if (/^\d{4}$/.test(contractEnd)) return { year: Number(contractEnd), monthIndex: 6 }
+  return null
+}
 const contractEndingSoon = computed(() => {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
-  return membersStore.members.filter(
-    (m) =>
-      (m.status === 'ACTIVE' || m.status === 'INACTIVE') &&
-      Number(m.contractEnd) === year &&
-      month < 7,
-  )
+  return membersStore.members.filter((m) => {
+    if (m.status !== 'ACTIVE' && m.status !== 'INACTIVE') return false
+    if (!m.contractEnd) return false
+    const parsed = parseContractEnd(m.contractEnd)
+    return !!parsed && parsed.year === year && month <= parsed.monthIndex
+  })
 })
 const deactivatedMembers = computed(() =>
   membersStore.members
@@ -53,8 +61,9 @@ const expiredContractMembers = computed(() => {
   return membersStore.members.filter((m) => {
     if (m.status !== 'ACTIVE' && m.status !== 'INACTIVE') return false
     if (!m.contractEnd) return false
-    const endYear = Number(m.contractEnd)
-    return endYear < year || (endYear === year && month >= 7)
+    const parsed = parseContractEnd(m.contractEnd)
+    if (!parsed) return false
+    return parsed.year < year || (parsed.year === year && month > parsed.monthIndex)
   })
 })
 const activeByGroup = computed(() => {

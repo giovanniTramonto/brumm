@@ -13,6 +13,13 @@ const membersStore = useMembersStore()
 
 const search = ref('')
 
+// New contractEnd values are "YYYY-MM"; legacy ones are a plain "YYYY" year.
+function formatContractEnd(contractEnd: string): string {
+  const match = contractEnd.match(/^(\d{4})-(\d{2})$/)
+  if (!match) return contractEnd
+  return `${match[2]}/${match[1]}`
+}
+
 type SortKey = 'name' | 'group' | 'careType' | 'birthDate' | 'contractEnd' | 'status'
 const SORT_KEYS: SortKey[] = ['name', 'group', 'careType', 'birthDate', 'contractEnd', 'status']
 
@@ -155,7 +162,7 @@ const filteredMembers = computed(() => {
               <span v-else class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
             </td>
             <td class="px-4 py-3 text-sm">
-              <span v-if="member.contractEnd" class="text-gray-600">{{ member.contractEnd }}</span>
+              <span v-if="member.contractEnd" class="text-gray-600">{{ formatContractEnd(member.contractEnd) }}</span>
               <span v-else class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">fehlt</span>
             </td>
             <td class="px-4 py-3">

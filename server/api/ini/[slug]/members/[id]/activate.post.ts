@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
 
   const updated = await prisma.user.update({
     where: { id: memberId },
-    data: { status: 'ACTIVE', activatedAt: user.activatedAt ?? new Date() },
+    data: { status: 'ACTIVE' },
   })
 
   const [md, readTemplates, existingReadDocs] = await Promise.all([
