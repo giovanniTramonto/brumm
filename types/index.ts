@@ -65,6 +65,7 @@ export interface User {
   status: MemberStatus
   isMemberManager: boolean
   storageId: string | null
+  activatedAt: string | null
   deactivatedAt: string | null
   deletedAt: string | null
   createdAt: string

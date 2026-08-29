@@ -39,6 +39,7 @@ model User {
 
   isMemberManager         Boolean   @default(false)
   hasSubmittedDocuments   Boolean   @default(false)
+  activatedAt             DateTime?
   deactivatedAt           DateTime?
   deletedAt               DateTime?
 

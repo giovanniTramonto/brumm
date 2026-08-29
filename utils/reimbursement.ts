@@ -45,20 +45,36 @@ function isContractInPeriod(
   )
 }
 
-// A deregistered (DEACTIVATED) child still counts for months up to and
-// including the one they left in, so past calculations stay unchanged.
-// INACTIVE stays excluded always — it's a deliberate simulation toggle.
+function isOnOrAfterMonth(dateStr: string, year: number, month: number): boolean {
+  const d = new Date(dateStr)
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1
+  return year > y || (year === y && month >= m)
+}
+
+function isOnOrBeforeMonth(dateStr: string, year: number, month: number): boolean {
+  const d = new Date(dateStr)
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1
+  return year < y || (year === y && month <= m)
+}
+
+// A member only counts for months within their actual active window:
+// from the month they were activated (activatedAt) through the month they
+// were deregistered (deactivatedAt, inclusive) — a deregistered (DEACTIVATED)
+// child still counts for past months up to and including the one they left
+// in, so past calculations stay unchanged. INACTIVE stays excluded always —
+// it's a deliberate simulation toggle. Members activated before this field
+// existed have activatedAt = null, so no lower bound applies to them.
 function wasActiveInPeriod(
-  member: { status: string; deactivatedAt: string | null },
+  member: { status: string; activatedAt: string | null; deactivatedAt: string | null },
   year: number,
   month: number,
 ): boolean {
+  if (member.status !== 'ACTIVE' && member.status !== 'DEACTIVATED') return false
+  if (member.activatedAt && !isOnOrAfterMonth(member.activatedAt, year, month)) return false
   if (member.status === 'ACTIVE') return true
-  if (member.status !== 'DEACTIVATED' || !member.deactivatedAt) return false
-  const deactivated = new Date(member.deactivatedAt)
-  const deactivatedYear = deactivated.getFullYear()
-  const deactivatedMonth = deactivated.getMonth() + 1
-  return year < deactivatedYear || (year === deactivatedYear && month <= deactivatedMonth)
+  return !!member.deactivatedAt && isOnOrBeforeMonth(member.deactivatedAt, year, month)
 }
 
 // Age group changes in the month AFTER the birthday (per KitaFöG calculation rules)
