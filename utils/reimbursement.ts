@@ -45,6 +45,22 @@ function isContractInPeriod(
   )
 }
 
+// A deregistered (DEACTIVATED) child still counts for months up to and
+// including the one they left in, so past calculations stay unchanged.
+// INACTIVE stays excluded always — it's a deliberate simulation toggle.
+function wasActiveInPeriod(
+  member: { status: string; deactivatedAt: string | null },
+  year: number,
+  month: number,
+): boolean {
+  if (member.status === 'ACTIVE') return true
+  if (member.status !== 'DEACTIVATED' || !member.deactivatedAt) return false
+  const deactivated = new Date(member.deactivatedAt)
+  const deactivatedYear = deactivated.getFullYear()
+  const deactivatedMonth = deactivated.getMonth() + 1
+  return year < deactivatedYear || (year === deactivatedYear && month <= deactivatedMonth)
+}
+
 // Age group changes in the month AFTER the birthday (per KitaFöG calculation rules)
 function getAgeGroup(birthDate: string, year: number, month: number): AgeGroup {
   const birth = new Date(birthDate)
@@ -61,7 +77,9 @@ export function getMealAllowance(year: number, month: number): number {
 }
 
 export function countContractActiveMembers(members: Member[], year: number, month: number): number {
-  return members.filter((m) => m.status === 'ACTIVE' && isContractInPeriod(m, year, month)).length
+  return members.filter(
+    (m) => wasActiveInPeriod(m, year, month) && isContractInPeriod(m, year, month),
+  ).length
 }
 
 export function getAgeGroupBreakdown(
@@ -71,7 +89,7 @@ export function getAgeGroupBreakdown(
 ): { '01': number; '2': number; '3plus': number } {
   const counts = { '01': 0, '2': 0, '3plus': 0 }
   for (const m of members) {
-    if (m.status !== 'ACTIVE' || !isContractInPeriod(m, year, month)) continue
+    if (!wasActiveInPeriod(m, year, month) || !isContractInPeriod(m, year, month)) continue
     counts[getAgeGroup(m.birthDate, year, month)]++
   }
   return counts
@@ -110,7 +128,7 @@ export interface StaffingResult {
 export function calculateStaffing(members: Member[], year: number, month: number): StaffingResult {
   const rates = getRatesForDate(new Date(year, month - 1, 1))
   const activeMembers = members.filter(
-    (m) => m.status === 'ACTIVE' && isContractInPeriod(m, year, month),
+    (m) => wasActiveInPeriod(m, year, month) && isContractInPeriod(m, year, month),
   )
 
   let positions = 0
@@ -204,7 +222,7 @@ export function calculateReimbursement(
 ): ReimbursementResult {
   const rates = getRatesForDate(new Date(year, month - 1, 1))
   const activeMembers = members.filter(
-    (m) => m.status === 'ACTIVE' && isContractInPeriod(m, year, month),
+    (m) => wasActiveInPeriod(m, year, month) && isContractInPeriod(m, year, month),
   )
 
   let baseTotal = 0
