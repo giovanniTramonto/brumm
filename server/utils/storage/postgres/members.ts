@@ -128,6 +128,49 @@ export async function pgDeleteMember(sql: Sql, userId: string): Promise<void> {
   await sql`DELETE FROM members WHERE user_id = ${userId}`
 }
 
+// Keeps the row (birth_date/care_type/surcharges/contract_*/group_id) for
+// historical reimbursement calculations, but wipes personal fields — used
+// instead of pgDeleteMember once a member was ever ACTIVE.
+export async function pgScrubMember(sql: Sql, userId: string): Promise<void> {
+  // Remove guardian from parent jobs only if no sibling child still shares the same email
+  await sql`
+    DELETE FROM parent_job_members
+    WHERE email IN (
+      SELECT email1 FROM members WHERE user_id = ${userId}
+      UNION
+      SELECT email2 FROM members WHERE user_id = ${userId} AND email2 IS NOT NULL
+    )
+    AND email NOT IN (
+      SELECT email1 FROM members WHERE user_id != ${userId}
+      UNION
+      SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
+    )
+  `
+  await sql`
+    UPDATE parent_jobs SET contact_email = NULL, contact_type = NULL
+    WHERE contact_type = 'PARENT'
+    AND contact_email IN (
+      SELECT email1 FROM members WHERE user_id = ${userId}
+      UNION
+      SELECT email2 FROM members WHERE user_id = ${userId} AND email2 IS NOT NULL
+    )
+    AND contact_email NOT IN (
+      SELECT email1 FROM members WHERE user_id != ${userId}
+      UNION
+      SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
+    )
+  `
+  await sql`
+    UPDATE members SET
+      first_name = NULL, last_name = NULL,
+      guardian1_name = NULL, guardian2_name = NULL,
+      email1 = NULL, email2 = NULL,
+      phone1 = NULL, phone2 = NULL,
+      address = NULL, last_edited_by = NULL
+    WHERE user_id = ${userId}
+  `
+}
+
 export async function pgUpdateMember(
   sql: Sql,
   userId: string,

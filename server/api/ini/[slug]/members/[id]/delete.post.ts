@@ -1,5 +1,5 @@
 import { sendMemberRemovedEmail } from '~/server/utils/email'
-import { deleteMemberData, getMemberData } from '~/server/utils/memberData'
+import { deleteMemberData, getMemberData, scrubMemberData } from '~/server/utils/memberData'
 import { prisma } from '~/server/utils/prisma'
 import { s3DeleteByPrefix } from '~/server/utils/storage/s3/files'
 
@@ -24,6 +24,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
+  const isScrub = user.deactivatedAt !== null
+
   const memberData = await getMemberData(memberId, club)
 
   try {
@@ -41,13 +43,22 @@ export default defineEventHandler(async (event) => {
     )
   }
 
-  await deleteMemberData(memberId, club)
+  if (isScrub) {
+    await scrubMemberData(memberId, club)
+  } else {
+    await deleteMemberData(memberId, club)
+  }
 
   await prisma.session.deleteMany({ where: { userId: memberId } })
   await prisma.invite.deleteMany({ where: { userId: memberId } })
   await prisma.magicLink.deleteMany({ where: { userId: memberId } })
   await prisma.memberDocument.deleteMany({ where: { memberId } })
-  await prisma.user.delete({ where: { id: memberId } })
+
+  if (isScrub) {
+    await prisma.user.update({ where: { id: memberId }, data: { deletedAt: new Date() } })
+  } else {
+    await prisma.user.delete({ where: { id: memberId } })
+  }
 
   return { ok: true }
 })

@@ -29,12 +29,17 @@ export default defineEventHandler(async (event) => {
         createdAt: true,
         hasSubmittedDocuments: true,
         deactivatedAt: true,
+        deletedAt: true,
       },
     }),
     prisma.invite.findFirst({ where: { userId: memberId } }),
   ])
 
   if (!user) {
+    throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
+  }
+
+  if (user.deletedAt) {
     throw createError({ statusCode: 404, statusMessage: 'Mitglied nicht gefunden' })
   }
 
@@ -70,6 +75,7 @@ export default defineEventHandler(async (event) => {
     role: user.role,
     status: user.status,
     deactivatedAt: user.deactivatedAt?.toISOString() ?? null,
+    deletedAt: null,
     storageId: user.storageId,
     isMemberManager: user.isMemberManager,
     createdAt: user.createdAt.toISOString(),

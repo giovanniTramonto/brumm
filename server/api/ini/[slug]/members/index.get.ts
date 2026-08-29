@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
             createdAt: true,
             hasSubmittedDocuments: true,
             deactivatedAt: true,
+            deletedAt: true,
           },
         }),
         prisma.manager.findMany({
@@ -67,6 +68,7 @@ export default defineEventHandler(async (event) => {
         role: u.role,
         status: u.status,
         deactivatedAt: u.deactivatedAt?.toISOString() ?? null,
+        deletedAt: u.deletedAt?.toISOString() ?? null,
         storageId: u.storageId,
         isMemberManager: u.isMemberManager,
         createdAt: u.createdAt.toISOString(),

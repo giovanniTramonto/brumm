@@ -8,6 +8,7 @@ import {
   pgGetAllMembersForClub,
   pgGetMember,
   pgSaveMember,
+  pgScrubMember,
   pgUpdateMember,
 } from './storage/postgres/members'
 
@@ -40,6 +41,11 @@ export async function saveMemberData(data: MemberData, club: { id: string }): Pr
 export async function deleteMemberData(userId: string, club: { id: string }): Promise<void> {
   const sql = await getClubDb(club.id)
   await pgDeleteMember(sql, userId)
+}
+
+export async function scrubMemberData(userId: string, club: { id: string }): Promise<void> {
+  const sql = await getClubDb(club.id)
+  await pgScrubMember(sql, userId)
 }
 
 export async function batchUpdateMembersData(

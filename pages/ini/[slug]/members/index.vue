@@ -43,9 +43,9 @@ const showNoMemberManagerHint = computed(() => {
 
 const filteredMembers = computed(() => {
   const q = search.value.toLowerCase()
-  const base = isMember.value
-    ? membersStore.members.filter((m) => m.isOwnChild)
-    : membersStore.members
+  const base = (
+    isMember.value ? membersStore.members.filter((m) => m.isOwnChild) : membersStore.members
+  ).filter((m) => !m.deletedAt)
   const filtered = base.filter(
     (m) => m.firstName.toLowerCase().includes(q) || m.lastName.toLowerCase().includes(q),
   )

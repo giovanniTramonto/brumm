@@ -41,7 +41,11 @@ async function deleteS3MemberFiles(clubId: string, memberId: string): Promise<vo
   }
 }
 
-async function deleteMemberFromClubDb(clubId: string, userId: string): Promise<void> {
+// Keeps the member row (birth_date/care_type/surcharges/contract_*/group_id)
+// for historical reimbursement calculations, but wipes personal fields —
+// DEACTIVATED (the only status this cleanup targets) always implies the
+// member was once ACTIVE, so it always has real calculation history to keep.
+async function scrubMemberFromClubDb(clubId: string, userId: string): Promise<void> {
   const club = await prisma.club.findUnique({
     where: { id: clubId },
     select: { encryptedDsn: true },
@@ -78,7 +82,15 @@ async function deleteMemberFromClubDb(clubId: string, userId: string): Promise<v
         SELECT email2 FROM members WHERE user_id != ${userId} AND email2 IS NOT NULL
       )
     `
-    await sql`DELETE FROM members WHERE user_id = ${userId}`
+    await sql`
+      UPDATE members SET
+        first_name = NULL, last_name = NULL,
+        guardian1_name = NULL, guardian2_name = NULL,
+        email1 = NULL, email2 = NULL,
+        phone1 = NULL, phone2 = NULL,
+        address = NULL, last_edited_by = NULL
+      WHERE user_id = ${userId}
+    `
   } finally {
     await sql.end()
   }
@@ -105,7 +117,7 @@ export default async function handler() {
     try {
       await Promise.allSettled([
         deleteS3MemberFiles(user.clubId, user.id),
-        deleteMemberFromClubDb(user.clubId, user.id),
+        scrubMemberFromClubDb(user.clubId, user.id),
       ])
 
       await prisma.deviceSession.deleteMany({ where: { userId: user.id } })
@@ -113,7 +125,7 @@ export default async function handler() {
       await prisma.magicLink.deleteMany({ where: { userId: user.id } })
       await prisma.invite.deleteMany({ where: { userId: user.id } })
       await prisma.memberDocument.deleteMany({ where: { memberId: user.id } })
-      await prisma.user.delete({ where: { id: user.id } })
+      await prisma.user.update({ where: { id: user.id }, data: { deletedAt: new Date() } })
 
       cleaned++
       console.log(`Bereinigt: user.id=${user.id}`)

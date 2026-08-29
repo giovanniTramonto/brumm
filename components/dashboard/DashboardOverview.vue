@@ -43,7 +43,7 @@ const contractEndingSoon = computed(() => {
 })
 const deactivatedMembers = computed(() =>
   membersStore.members
-    .filter((m) => m.status === 'DEACTIVATED')
+    .filter((m) => m.status === 'DEACTIVATED' && !m.deletedAt)
     .sort((a, b) => (a.deactivatedAt ?? '').localeCompare(b.deactivatedAt ?? '')),
 )
 const expiredContractMembers = computed(() => {

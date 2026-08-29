@@ -208,7 +208,7 @@ export async function sendMemberRemovedEmail(params: {
     html: `
       <h2>Kind entfernt</h2>
       <p><strong>${params.childName}</strong> wurde aus dem System von <strong>${params.clubName}</strong> entfernt.</p>
-      <p>Alle gespeicherten Daten wurden gelöscht.</p>
+      <p>Alle persönlichen Daten wurden gelöscht.</p>
     `,
   })
 }

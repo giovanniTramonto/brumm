@@ -554,15 +554,13 @@ async function onResendInvite() {
 }
 
 async function onDeleteMember() {
-  if (
-    !member.value ||
-    !confirm(
-      member.value.hasInvite
+  const confirmText =
+    member.value?.status === 'DEACTIVATED'
+      ? 'Kind wirklich löschen? Persönliche Daten (Name, Kontaktdaten, Adresse) werden entfernt. Anonymisierte Daten bleiben für die Kostenerstattungs-Berechnung vergangener Monate erhalten.'
+      : member.value?.hasInvite
         ? 'Kind wirklich dauerhaft entfernen? Die Eltern erhalten eine E-Mail.'
-        : 'Kind wirklich dauerhaft entfernen?',
-    )
-  )
-    return
+        : 'Kind wirklich dauerhaft entfernen?'
+  if (!member.value || !confirm(confirmText)) return
   inviteActionError.value = null
   isCancellingInvite.value = true
   try {
