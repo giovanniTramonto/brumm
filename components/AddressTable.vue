@@ -9,7 +9,6 @@ type Address = {
   email2: string | null
   phone1: string | null
   phone2: string | null
-  address: string | null
   groupId: string | null
 }
 
@@ -23,7 +22,6 @@ defineProps<{ members: Address[] }>()
         <tr class="border-b border-gray-200 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
           <th class="pb-3 pr-8 w-1/5">Kind</th>
           <th class="pb-3 pr-8">Geburtstag</th>
-          <th class="pb-3 pr-8 w-1/5">Adresse</th>
           <th class="pb-3 pr-8">Eltern</th>
           <th class="pb-3 pr-8">E-Mail</th>
           <th class="pb-3">Telefon</th>
@@ -37,9 +35,6 @@ defineProps<{ members: Address[] }>()
             </td>
             <td :rowspan="m.guardian2Name || m.email2 ? 2 : 1" class="py-4 pr-8 text-gray-600 align-middle font-mono">
               {{ new Date(m.birthDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) }}
-            </td>
-            <td :rowspan="m.guardian2Name || m.email2 ? 2 : 1" class="py-4 pr-8 w-1/5 text-gray-600 align-middle">
-              {{ m.address ?? '–' }}
             </td>
             <td class="pt-4 pb-1 pr-8 text-gray-700">{{ m.guardian1Name ?? '' }}</td>
             <td class="pt-4 pb-1 pr-8 text-gray-700"><a :href="`mailto:${m.email1}`" class="text-blue-600 hover:underline">{{ m.email1 }}</a></td>
