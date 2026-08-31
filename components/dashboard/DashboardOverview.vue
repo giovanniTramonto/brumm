@@ -38,6 +38,16 @@ function parseContractEnd(contractEnd: string): { year: number; monthIndex: numb
   if (/^\d{4}$/.test(contractEnd)) return { year: Number(contractEnd), monthIndex: 6 }
   return null
 }
+// The Kita-Jahr runs August through July, not the calendar year — so the
+// "current" contract year's end-year is next calendar year once we're in
+// Aug–Dec (monthIndex >= 7).
+function getKitaJahrEndYear(year: number, monthIndex: number): number {
+  return monthIndex >= 7 ? year + 1 : year
+}
+const kitaJahrEndYear = computed(() => {
+  const now = new Date()
+  return getKitaJahrEndYear(now.getFullYear(), now.getMonth())
+})
 const contractEndingSoon = computed(() => {
   const now = new Date()
   const year = now.getFullYear()
@@ -46,7 +56,8 @@ const contractEndingSoon = computed(() => {
     if (m.status !== 'ACTIVE' && m.status !== 'INACTIVE') return false
     if (!m.contractEnd) return false
     const parsed = parseContractEnd(m.contractEnd)
-    return !!parsed && parsed.year === year && month <= parsed.monthIndex
+    if (!parsed || parsed.year !== kitaJahrEndYear.value) return false
+    return parsed.year > year || (parsed.year === year && parsed.monthIndex >= month)
   })
 })
 const deactivatedMembers = computed(() =>
@@ -163,7 +174,7 @@ function deletionDate(deactivatedAt: string) {
     </div>
     <div class="flex flex-col gap-4">
       <div class="card flex-1">
-        <p class="text-sm font-medium text-gray-500">Vertragsende in {{ new Date().getFullYear() }}</p>
+        <p class="text-sm font-medium text-gray-500">Abgänger {{ kitaJahrEndYear }}</p>
         <p class="mt-1 font-mono text-3xl font-bold text-orange-500">{{ contractEndingSoon.length }}</p>
         <ul v-if="contractEndingSoon.length > 0" class="mt-5 space-y-1">
           <li v-for="m in contractEndingSoon" :key="m.id" class="flex items-center justify-between gap-1">
