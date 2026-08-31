@@ -118,7 +118,7 @@ function deletionDate(deactivatedAt: string) {
   <div class="grid gap-4 desktop:grid-cols-3">
     <div class="card desktop:col-span-2">
       <div class="grid grid-cols-3 items-start">
-        <p class="text-sm font-medium text-gray-500">Aktive Kinder</p>
+        <p class="text-sm font-medium text-gray-500">Kinder</p>
         <p class="text-sm font-medium text-green-500">Aktiv in Betreuung</p>
         <p class="text-sm font-medium text-purple-500">Inaktiv</p>
         <p class="mt-1 font-mono text-3xl font-bold text-gray-900">{{ totalCount }}</p>
