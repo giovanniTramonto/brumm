@@ -120,8 +120,8 @@ type ISBJStatus = {
   hasConfig: boolean
   host?: string
   username?: string
-  traegerNummer?: string
-  einrichtungsNummer?: string
+  providerNumber?: string
+  facilityNumber?: string
 }
 
 const isbjStatus = ref<ISBJStatus>({ hasConfig: false })
@@ -132,8 +132,8 @@ const isbjTestMessage = ref('')
 const isbjForm = ref({
   host: 'ds.traegerportal.isbj.verwalt-berlin.de',
   username: '',
-  traegerNummer: '',
-  einrichtungsNummer: '',
+  providerNumber: '',
+  facilityNumber: '',
   apiKey: '',
   certPassphrase: '',
 })
@@ -158,8 +158,8 @@ async function onSaveISBJ() {
     const form = new FormData()
     form.append('host', isbjForm.value.host.trim())
     form.append('username', isbjForm.value.username.trim())
-    form.append('traegerNummer', isbjForm.value.traegerNummer.trim())
-    form.append('einrichtungsNummer', isbjForm.value.einrichtungsNummer.trim())
+    form.append('providerNumber', isbjForm.value.providerNumber.trim())
+    form.append('facilityNumber', isbjForm.value.facilityNumber.trim())
     if (isbjForm.value.apiKey.trim()) form.append('apiKey', isbjForm.value.apiKey.trim())
     if (isbjForm.value.certPassphrase.trim())
       form.append('certPassphrase', isbjForm.value.certPassphrase.trim())
@@ -171,8 +171,8 @@ async function onSaveISBJ() {
     isbjForm.value = {
       host: 'ds.traegerportal.isbj.verwalt-berlin.de',
       username: '',
-      traegerNummer: '',
-      einrichtungsNummer: '',
+      providerNumber: '',
+      facilityNumber: '',
       apiKey: '',
       certPassphrase: '',
     }
@@ -385,11 +385,11 @@ onMounted(async () => {
           </div>
           <div class="flex gap-2">
             <dt class="w-40 shrink-0 text-gray-500">Trägernummer</dt>
-            <dd class="text-gray-900">{{ isbjStatus.traegerNummer }}</dd>
+            <dd class="text-gray-900">{{ isbjStatus.providerNumber }}</dd>
           </div>
           <div class="flex gap-2">
             <dt class="w-40 shrink-0 text-gray-500">Einrichtungsnummer</dt>
-            <dd class="text-gray-900">{{ isbjStatus.einrichtungsNummer }}</dd>
+            <dd class="text-gray-900">{{ isbjStatus.facilityNumber }}</dd>
           </div>
           <div class="flex gap-2">
             <dt class="w-40 shrink-0 text-gray-500">Host</dt>
@@ -431,11 +431,11 @@ onMounted(async () => {
           </div>
           <div>
             <label class="mb-1 block text-xs text-gray-500">Trägernummer</label>
-            <input v-model="isbjForm.traegerNummer" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
+            <input v-model="isbjForm.providerNumber" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
           </div>
           <div>
             <label class="mb-1 block text-xs text-gray-500">Einrichtungsnummer</label>
-            <input v-model="isbjForm.einrichtungsNummer" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
+            <input v-model="isbjForm.facilityNumber" type="text" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
           </div>
           <div>
             <label class="mb-1 block text-xs text-gray-500">API-Key{{ isbjStatus.hasConfig ? ' (leer = unverändert)' : '' }}</label>

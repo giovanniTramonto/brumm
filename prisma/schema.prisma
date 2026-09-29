@@ -201,8 +201,8 @@ model ClubISBJConfig {
   clubId             String   @unique
   host               String   @default("ds.traegerportal.isbj.verwalt-berlin.de")
   username           String
-  traegerNummer      String
-  einrichtungsNummer String
+  providerNumber     String
+  facilityNumber     String
   encryptedApiKey    String
   encryptedCert      String
   encryptedCertPass  String

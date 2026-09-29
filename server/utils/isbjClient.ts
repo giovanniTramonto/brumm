@@ -15,8 +15,8 @@ export async function getISBJConfig(clubId: string) {
   return {
     host: record.host,
     username: record.username,
-    traegerNummer: record.traegerNummer,
-    einrichtungsNummer: record.einrichtungsNummer,
+    providerNumber: record.providerNumber,
+    facilityNumber: record.facilityNumber,
     apiKey: decrypt(record.encryptedApiKey),
     cert: Buffer.from(decrypt(record.encryptedCert), 'base64'),
     certPassphrase: decrypt(record.encryptedCertPass),

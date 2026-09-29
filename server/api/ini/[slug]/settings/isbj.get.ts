@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     hasConfig: true,
     host: record.host,
     username: record.username,
-    traegerNummer: record.traegerNummer,
-    einrichtungsNummer: record.einrichtungsNummer,
+    providerNumber: record.providerNumber,
+    facilityNumber: record.facilityNumber,
   }
 })

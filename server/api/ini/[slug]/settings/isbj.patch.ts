@@ -21,8 +21,8 @@ export default defineEventHandler(async (event) => {
   const certPart = parts.find((p) => p.name === 'cert' && p.data.length > 0)
 
   const username = get('username')
-  const traegerNummer = get('traegerNummer')
-  const einrichtungsNummer = get('einrichtungsNummer')
+  const providerNumber = get('providerNumber')
+  const facilityNumber = get('facilityNumber')
   const apiKey = get('apiKey')
   const certPassphrase = get('certPassphrase')
   const host = get('host')
@@ -32,8 +32,8 @@ export default defineEventHandler(async (event) => {
   if (!existing) {
     if (
       !username ||
-      !traegerNummer ||
-      !einrichtungsNummer ||
+      !providerNumber ||
+      !facilityNumber ||
       !apiKey ||
       !certPart ||
       !certPassphrase
@@ -45,8 +45,8 @@ export default defineEventHandler(async (event) => {
         clubId: club.id,
         host: host ?? 'ds.traegerportal.isbj.verwalt-berlin.de',
         username,
-        traegerNummer,
-        einrichtungsNummer,
+        providerNumber,
+        facilityNumber,
         encryptedApiKey: encrypt(apiKey),
         encryptedCert: encrypt(certPart.data.toString('base64')),
         encryptedCertPass: encrypt(certPassphrase),
@@ -58,8 +58,8 @@ export default defineEventHandler(async (event) => {
       data: {
         ...(host && { host }),
         ...(username && { username }),
-        ...(traegerNummer && { traegerNummer }),
-        ...(einrichtungsNummer && { einrichtungsNummer }),
+        ...(providerNumber && { providerNumber }),
+        ...(facilityNumber && { facilityNumber }),
         ...(apiKey && { encryptedApiKey: encrypt(apiKey) }),
         ...(certPart && { encryptedCert: encrypt(certPart.data.toString('base64')) }),
         ...(certPassphrase && { encryptedCertPass: encrypt(certPassphrase) }),
