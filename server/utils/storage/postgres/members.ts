@@ -200,8 +200,7 @@ export async function pgBatchUpdateMembers(
   expectedLastEditedAt?: string | null,
 ): Promise<void> {
   await sql.begin(async (tx) => {
-    for (let i = 0; i < updates.length; i++) {
-      const { userId, patch } = updates[i]
+    for (const [i, { userId, patch }] of updates.entries()) {
       await pgUpdateMember(
         tx as unknown as Sql,
         userId,

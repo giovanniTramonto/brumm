@@ -92,7 +92,7 @@ export async function migrateAllClubDbs(): Promise<
   return results.map((r, i) => {
     if (r.status === 'fulfilled') return r.value
     return {
-      clubId: clubs[i].id,
+      clubId: clubs[i]?.id ?? '',
       applied: [],
       failed: r.reason instanceof Error ? r.reason.message : String(r.reason),
     }

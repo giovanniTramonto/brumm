@@ -190,6 +190,7 @@ export async function createIncome(
             ${data.recurrenceType}, ${data.itemType}, ${data.sortOrder})
     RETURNING *
   `
+  if (!row) throw new Error('Insert into income returned no row')
   return rowToIncome(row)
 }
 
@@ -214,6 +215,7 @@ export async function updateIncome(
     WHERE id = ${id}
     RETURNING *
   `
+  if (!row) throw createError({ statusCode: 404, statusMessage: 'Eintrag nicht gefunden' })
   return rowToIncome(row)
 }
 
@@ -239,6 +241,7 @@ export async function createExpense(
             ${data.recurrenceType}, ${data.sortOrder})
     RETURNING *
   `
+  if (!row) throw new Error('Insert into expenses returned no row')
   return rowToExpense(row)
 }
 
@@ -263,6 +266,7 @@ export async function updateExpense(
     WHERE id = ${id}
     RETURNING *
   `
+  if (!row) throw createError({ statusCode: 404, statusMessage: 'Eintrag nicht gefunden' })
   return rowToExpense(row)
 }
 
@@ -272,10 +276,10 @@ export async function deleteExpense(sql: Sql, id: string): Promise<void> {
 
 export async function getMaxIncomeSortOrder(sql: Sql): Promise<number> {
   const [row] = await sql<{ max: number | null }[]>`SELECT MAX(sort_order) as max FROM income`
-  return (row.max ?? -1) + 1
+  return (row?.max ?? -1) + 1
 }
 
 export async function getMaxExpenseSortOrder(sql: Sql): Promise<number> {
   const [row] = await sql<{ max: number | null }[]>`SELECT MAX(sort_order) as max FROM expenses`
-  return (row.max ?? -1) + 1
+  return (row?.max ?? -1) + 1
 }

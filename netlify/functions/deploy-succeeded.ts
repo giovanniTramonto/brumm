@@ -19,6 +19,7 @@ function getKey(): Buffer {
 function decrypt(ciphertext: string): string {
   const key = getKey()
   const [ivHex, authTagHex, encryptedHex] = ciphertext.split(':')
+  if (!ivHex || !authTagHex || !encryptedHex) throw new Error('Invalid ciphertext format')
   const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, 'hex'))
   decipher.setAuthTag(Buffer.from(authTagHex, 'hex'))
   return decipher.update(Buffer.from(encryptedHex, 'hex')).toString('utf8') + decipher.final('utf8')

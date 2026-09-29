@@ -26,8 +26,10 @@ export function encrypt(plaintext: string): string {
 export function decrypt(ciphertext: string): string {
   const key = getKey()
   const parts = ciphertext.split(':')
-  if (parts.length !== 3) throw new Error('Invalid ciphertext format')
   const [ivHex, authTagHex, encryptedHex] = parts
+  if (parts.length !== 3 || !ivHex || !authTagHex || !encryptedHex) {
+    throw new Error('Invalid ciphertext format')
+  }
   const decipher = createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, 'hex'))
   decipher.setAuthTag(Buffer.from(authTagHex, 'hex'))
   return decipher.update(Buffer.from(encryptedHex, 'hex')).toString('utf8') + decipher.final('utf8')

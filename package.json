@@ -48,6 +48,7 @@
     "@vite-pwa/nuxt": "^1.1.1",
     "lefthook": "^2.1.8",
     "prisma": "^6.3.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vue-tsc": "^3.3.11"
   }
 }

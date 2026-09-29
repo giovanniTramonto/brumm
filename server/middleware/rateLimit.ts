@@ -18,7 +18,7 @@ export default defineEventHandler((event) => {
   if (!RATE_LIMITED_PATHS.includes(path) && !isMagicLink && !isPin && !isOtp) return
 
   const ip =
-    getRequestHeader(event, 'x-forwarded-for')?.split(',')[0].trim() ??
+    getRequestHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim() ??
     getRequestHeader(event, 'x-real-ip') ??
     'unknown'
 
