@@ -37,7 +37,7 @@ const groupedSections = computed(() => {
 
 <template>
   <div>
-    <h1 class="mb-6 text-2xl font-bold text-gray-900">Adressliste</h1>
+    <h1 class="mb-6 text-2xl font-bold text-gray-900">Kontaktlisten</h1>
 
     <LoadingBrumm v-if="isLoading" />
 

@@ -7,7 +7,7 @@ defineProps<{ slug: string }>()
     <h2 class="mb-3 text-sm font-medium text-gray-900">Kontakte</h2>
     <div class="flex flex-col gap-2">
       <NuxtLink :to="`/ini/${$props.slug}/addresses`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
-        Adressliste →
+        Kontaktlisten →
       </NuxtLink>
       <NuxtLink :to="`/ini/${$props.slug}/parent-jobs`" class="text-sm font-medium text-primary-700 hover:text-primary-900">
         Elternposten →
