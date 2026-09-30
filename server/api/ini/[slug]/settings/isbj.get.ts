@@ -1,3 +1,4 @@
+import { getISBJDefaultHost } from '~/server/utils/isbjClient'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -10,10 +11,13 @@ export default defineEventHandler(async (event) => {
 
   const record = await prisma.clubISBJConfig.findUnique({ where: { clubId: club.id } })
 
-  if (!record) return { hasConfig: false }
+  const defaultHost = getISBJDefaultHost()
+
+  if (!record) return { hasConfig: false, defaultHost }
 
   return {
     hasConfig: true,
+    defaultHost,
     host: record.host,
     username: record.username,
     providerNumber: record.providerNumber,

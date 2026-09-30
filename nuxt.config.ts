@@ -14,6 +14,9 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // ISBJ Dienstschnittstelle host used when a club has no host override.
+    // Override via NUXT_ISBJ_DEFAULT_HOST, e.g. dienstschnittstelle.isbja.itdz-berlin.de (acceptance) for local dev.
+    isbjDefaultHost: 'dienstschnittstelle.isbjp.itdz-berlin.de',
     public: {},
   },
 

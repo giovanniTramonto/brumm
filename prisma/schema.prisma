@@ -199,7 +199,7 @@ enum MemberStatus {
 model ClubISBJConfig {
   id                 String   @id @default(cuid())
   clubId             String   @unique
-  host               String   @default("ds.traegerportal.isbj.verwalt-berlin.de")
+  host               String?
   username           String
   providerNumber     String
   facilityNumber     String

@@ -118,7 +118,8 @@ async function onSaveStorage() {
 // --- ISBJ ---
 type ISBJStatus = {
   hasConfig: boolean
-  host?: string
+  defaultHost?: string
+  host?: string | null
   username?: string
   providerNumber?: string
   facilityNumber?: string
@@ -130,7 +131,7 @@ const isTestingISBJ = ref(false)
 const isbjTestResult = ref<'ok' | 'error' | null>(null)
 const isbjTestMessage = ref('')
 const isbjForm = ref({
-  host: 'ds.traegerportal.isbj.verwalt-berlin.de',
+  host: '',
   username: '',
   providerNumber: '',
   facilityNumber: '',
@@ -169,7 +170,7 @@ async function onSaveISBJ() {
     isbjTestResult.value = null
     isbjCertFile.value = null
     isbjForm.value = {
-      host: 'ds.traegerportal.isbj.verwalt-berlin.de',
+      host: '',
       username: '',
       providerNumber: '',
       facilityNumber: '',
@@ -183,6 +184,12 @@ async function onSaveISBJ() {
   } finally {
     isSavingISBJ.value = false
   }
+}
+
+function onEditISBJ() {
+  isbjForm.value.host = isbjStatus.value.host ?? ''
+  isEditingISBJ.value = true
+  isbjTestResult.value = null
 }
 
 async function onTestISBJ() {
@@ -393,7 +400,10 @@ onMounted(async () => {
           </div>
           <div class="flex gap-2">
             <dt class="w-40 shrink-0 text-gray-500">Host</dt>
-            <dd class="font-mono text-xs text-gray-500">{{ isbjStatus.host }}</dd>
+            <dd class="font-mono text-xs text-gray-500">
+              {{ isbjStatus.host ?? isbjStatus.defaultHost }}
+              <span v-if="!isbjStatus.host" class="font-sans text-gray-400">(Standard)</span>
+            </dd>
           </div>
           <div class="flex gap-2">
             <dt class="w-40 shrink-0 text-gray-500">Zertifikat & API-Key</dt>
@@ -414,7 +424,7 @@ onMounted(async () => {
           <button class="btn-secondary text-sm" :disabled="isTestingISBJ" @click="onTestISBJ">
             {{ isTestingISBJ ? 'Wird getestet…' : 'Verbindung testen' }}
           </button>
-          <button class="btn-secondary text-sm" @click="isEditingISBJ = true; isbjTestResult = null">
+          <button class="btn-secondary text-sm" @click="onEditISBJ">
             Zugangsdaten ändern
           </button>
           <button class="btn-danger text-sm" :disabled="isDeletingISBJ" @click="onDeleteISBJ">
@@ -461,8 +471,8 @@ onMounted(async () => {
             <input v-model="isbjForm.certPassphrase" type="password" class="input w-full text-sm" :required="!isbjStatus.hasConfig" />
           </div>
           <div class="tablet:col-span-2">
-            <label class="mb-1 block text-xs text-gray-500">Host</label>
-            <input v-model="isbjForm.host" type="text" class="input w-full font-mono text-sm" required />
+            <label class="mb-1 block text-xs text-gray-500">Host (leer = Standard)</label>
+            <input v-model="isbjForm.host" type="text" class="input w-full font-mono text-sm" :placeholder="isbjStatus.defaultHost" />
           </div>
         </div>
         <p v-if="isbjError" class="text-xs text-red-600">{{ isbjError }}</p>

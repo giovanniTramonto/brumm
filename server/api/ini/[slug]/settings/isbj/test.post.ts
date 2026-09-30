@@ -8,12 +8,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'Keine Berechtigung' })
   }
 
-  try {
-    await isbjFetch(club.id, 'GET', '/api/v1/betreuung/vertraege?max=1&start=0')
-    return { ok: true }
-  } catch (err: unknown) {
-    const statusCode = (err as { statusCode?: number })?.statusCode
-    const statusMessage = (err as { statusMessage?: string })?.statusMessage ?? 'Verbindungsfehler'
-    throw createError({ statusCode: statusCode ?? 502, statusMessage })
-  }
+  // isbjFetch already maps failures to German, user-facing messages
+  await isbjFetch(club.id, 'GET', '/api/v1/betreuung/vertraege?max=1&start=0')
+  return { ok: true }
 })

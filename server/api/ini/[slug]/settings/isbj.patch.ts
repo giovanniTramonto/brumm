@@ -1,5 +1,5 @@
 import { encrypt } from '~/server/utils/encryption'
-import { invalidateISBJCache } from '~/server/utils/isbjClient'
+import { getISBJDefaultHost, invalidateISBJCache } from '~/server/utils/isbjClient'
 import { prisma } from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
@@ -25,7 +25,9 @@ export default defineEventHandler(async (event) => {
   const facilityNumber = get('facilityNumber')
   const apiKey = get('apiKey')
   const certPassphrase = get('certPassphrase')
-  const host = get('host')
+  // Empty or the default means "use the configured default host" (stored as NULL), so host changes only need a config update
+  const rawHost = get('host')
+  const host = rawHost && rawHost !== getISBJDefaultHost() ? rawHost : null
 
   const existing = await prisma.clubISBJConfig.findUnique({ where: { clubId: club.id } })
 
@@ -43,7 +45,7 @@ export default defineEventHandler(async (event) => {
     await prisma.clubISBJConfig.create({
       data: {
         clubId: club.id,
-        host: host ?? 'ds.traegerportal.isbj.verwalt-berlin.de',
+        host,
         username,
         providerNumber,
         facilityNumber,
@@ -56,7 +58,7 @@ export default defineEventHandler(async (event) => {
     await prisma.clubISBJConfig.update({
       where: { clubId: club.id },
       data: {
-        ...(host && { host }),
+        host,
         ...(username && { username }),
         ...(providerNumber && { providerNumber }),
         ...(facilityNumber && { facilityNumber }),
