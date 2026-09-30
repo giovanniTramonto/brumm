@@ -112,18 +112,24 @@ function toISBJError(err: unknown, host: string) {
   return createError({ statusCode: 502, statusMessage: `Verbindungsfehler: ${code || message}` })
 }
 
+// The guide does not say whether the "normalized path" in the HMAC includes the query string.
+// `signQuery: false` signs only the path part; the connection test uses it to find out.
+export type ISBJFetchOptions = { signQuery?: boolean }
+
 export async function isbjFetch<T = unknown>(
   clubId: string,
   method: string,
   path: string,
   body?: object,
+  options: ISBJFetchOptions = {},
 ): Promise<T> {
   const config = await getISBJConfig(clubId)
   if (!config) throw createError({ statusCode: 503, statusMessage: 'ISBJ nicht konfiguriert.' })
 
   const agent = getOrCreateAgent(clubId, config.cert, config.certPassphrase)
   const bodyStr = body ? JSON.stringify(body) : ''
-  const headers = buildHeaders(method, path, bodyStr, config.username, config.apiKey)
+  const signedPath = options.signQuery === false ? (path.split('?')[0] ?? path) : path
+  const headers = buildHeaders(method, signedPath, bodyStr, config.username, config.apiKey)
 
   return new Promise((resolve, reject) => {
     const fail = (err: unknown) => {
@@ -143,7 +149,7 @@ export async function isbjFetch<T = unknown>(
             reject(
               createError({
                 statusCode: res.statusCode,
-                statusMessage: `ISBJ hat die Anmeldung abgelehnt (${res.statusCode}). Benutzername, API-Key oder Berechtigung „Dienstschnittstelle" prüfen.`,
+                statusMessage: `ISBJ hat die Anmeldung abgelehnt (${res.statusCode}). Benutzername, API-Key oder Berechtigung „Dienstschnittstelle" prüfen.${data ? ` Antwort: ${data.slice(0, 300)}` : ''}`,
               }),
             )
             return
