@@ -197,12 +197,8 @@ async function onTestISBJ() {
   isbjTestResult.value = null
   isbjTestMessage.value = ''
   try {
-    const result = await $fetch<{ ok: boolean; message?: string }>(
-      `/api/ini/${slug}/settings/isbj/test`,
-      { method: 'POST' },
-    )
+    await $fetch(`/api/ini/${slug}/settings/isbj/test`, { method: 'POST' })
     isbjTestResult.value = 'ok'
-    isbjTestMessage.value = result.message ?? ''
   } catch (err) {
     isbjTestResult.value = 'error'
     isbjTestMessage.value =
@@ -421,7 +417,7 @@ onMounted(async () => {
           class="rounded-md p-3 text-sm"
           :class="isbjTestResult === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
         >
-          {{ isbjTestResult === 'ok' ? `Verbindung erfolgreich. ${isbjTestMessage}` : isbjTestMessage }}
+          {{ isbjTestResult === 'ok' ? 'Verbindung erfolgreich.' : isbjTestMessage }}
         </div>
 
         <div class="flex flex-wrap gap-2 pt-1">

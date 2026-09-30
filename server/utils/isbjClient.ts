@@ -45,7 +45,8 @@ function getOrCreateAgent(clubId: string, cert: Buffer, certPassphrase: string) 
 
 // See ISBJ Entwicklerleitfaden 4.1.2: HMAC-SHA256 over "METHOD\npath\nmd5(body)\ndate",
 // keyed with the API key as-is, sent hex-encoded (the guide's prose says base64, but its
-// worked example only matches hex).
+// worked example only matches hex). The "normalized path" excludes the query string —
+// verified against ISBJ, which rejects signatures that include it.
 function buildHeaders(
   method: string,
   path: string,
@@ -55,7 +56,8 @@ function buildHeaders(
 ) {
   const date = new Date().toUTCString()
   const bodyMd5 = crypto.createHash('md5').update(body).digest('hex')
-  const message = [method.toUpperCase(), path, bodyMd5, date].join('\n')
+  const normalizedPath = path.split('?')[0] ?? path
+  const message = [method.toUpperCase(), normalizedPath, bodyMd5, date].join('\n')
   const hmac = crypto.createHmac('sha256', apiKey).update(message).digest('hex')
   return {
     Authorization: `HMAC ${username}:${hmac}`,
@@ -112,24 +114,18 @@ function toISBJError(err: unknown, host: string) {
   return createError({ statusCode: 502, statusMessage: `Verbindungsfehler: ${code || message}` })
 }
 
-// The guide does not say whether the "normalized path" in the HMAC includes the query string.
-// `signQuery: false` signs only the path part; the connection test uses it to find out.
-export type ISBJFetchOptions = { signQuery?: boolean }
-
 export async function isbjFetch<T = unknown>(
   clubId: string,
   method: string,
   path: string,
   body?: object,
-  options: ISBJFetchOptions = {},
 ): Promise<T> {
   const config = await getISBJConfig(clubId)
   if (!config) throw createError({ statusCode: 503, statusMessage: 'ISBJ nicht konfiguriert.' })
 
   const agent = getOrCreateAgent(clubId, config.cert, config.certPassphrase)
   const bodyStr = body ? JSON.stringify(body) : ''
-  const signedPath = options.signQuery === false ? (path.split('?')[0] ?? path) : path
-  const headers = buildHeaders(method, signedPath, bodyStr, config.username, config.apiKey)
+  const headers = buildHeaders(method, path, bodyStr, config.username, config.apiKey)
 
   return new Promise((resolve, reject) => {
     const fail = (err: unknown) => {
