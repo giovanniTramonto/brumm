@@ -38,6 +38,9 @@ function getOrCreateAgent(clubId: string, cert: Buffer, certPassphrase: string) 
     pfx: cert,
     passphrase: certPassphrase,
     ca: [...tls.rootCertificates, BERLIN_CLASS2_ROOT_CA],
+    // Reuse mTLS connections; loading contracts issues many requests in a row
+    keepAlive: true,
+    maxSockets: 8,
   })
   agentCache.set(clubId, agent)
   return agent

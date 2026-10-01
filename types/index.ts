@@ -211,3 +211,31 @@ export interface ApiError {
   statusCode: number
   message: string
 }
+
+export interface ISBJSurcharge {
+  type: string
+  validFrom: string | null
+  validTo: string | null
+}
+
+// Contract as read live from the ISBJ Dienstschnittstelle (never persisted).
+// ISBJ provides no child name or birth date, only a stable childId (kindId) via the voucher.
+export interface ISBJContract {
+  contractNumber: string
+  voucherNumber: string | null
+  childId: number | null
+  startDate: string | null
+  endDate: string | null
+  expectedEndDate: string | null
+  expectedEndReason: string | null
+  careScope: string | null
+  withMeal: boolean | null
+  // null = voucher could not be loaded
+  surcharges: ISBJSurcharge[] | null
+}
+
+export interface ISBJContractsResponse {
+  isConfigured: boolean
+  contracts: ISBJContract[]
+  voucherError: string | null
+}
