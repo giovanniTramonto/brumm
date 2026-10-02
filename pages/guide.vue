@@ -18,6 +18,7 @@ useHead({ title: 'Anleitung – Brumm' })
         <li>Kita unter <NuxtLink to="/register" class="text-primary-600 hover:underline font-medium">/register</NuxtLink> registrieren – du erhältst einen Einrichtungs-Link per E-Mail.</li>
         <li>Unter <strong class="text-gray-700">Einstellungen</strong> PostgreSQL-Datenbankverbindung und S3-Zugangsdaten einrichten.</li>
         <li>Unter <strong class="text-gray-700">Vorstand</strong> Vorstandsmitglieder, unter <strong class="text-gray-700">Team</strong> pädagogische Fachkräfte und unter <strong class="text-gray-700">Gruppen</strong> Betreuungsgruppen anlegen.</li>
+        <li>Optional: Unter <strong class="text-gray-700">Einstellungen → ISBJ Trägerportal</strong> die Zugangsdaten der ISBJ-Dienstschnittstelle eintragen und mit <strong class="text-gray-700">Verbindung testen</strong> prüfen. Danach zeigt das Dashboard die Kitaverträge aus ISBJ. Was du dafür brauchst, steht in den <NuxtLink to="/faq#isbj" class="text-blue-600 hover:underline">FAQ</NuxtLink>.</li>
       </ol>
     </section>
 
@@ -29,6 +30,7 @@ useHead({ title: 'Anleitung – Brumm' })
         <li>Du erhältst einen Anmelde-Link per E-Mail – kein Passwort nötig.</li>
         <li>Unter <strong class="text-gray-700">Berechnung</strong> siehst du Kostenerstattungen und den Personalschlüssel – monatsgenau oder als Jahresübersicht.</li>
         <li>Unter <strong class="text-gray-700">Infos</strong> Dokumente und Links für alle Mitglieder bereitstellen.</li>
+        <li>Ist ISBJ angebunden, zeigt das Dashboard eure Kitaverträge mit Laufzeit, Betreuungsumfang und Zuschlägen – live aus dem Trägerportal.</li>
       </ol>
       <p class="mt-6 text-xs font-medium uppercase tracking-wide text-gray-500">Mit Mitgliederverwaltung</p>
       <p class="mt-1 text-sm text-gray-500">Nur wenn der Admin diese Berechtigung aktiviert hat.</p>

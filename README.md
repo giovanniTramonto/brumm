@@ -31,6 +31,26 @@ npm run clean   # löscht .nuxt, .output, dist (bei Cache-Problemen)
 
 Nach dem Start PostgreSQL-DSN und S3-Zugangsdaten unter `/ini/{slug}/settings` eintragen. Für lokales Docker als Club-DSN `?sslmode=disable` anhängen: `postgresql://brumm:brumm@localhost:5433/brumm?sslmode=disable`. Beim Speichern der DSN werden ausstehende Club-DB-Migrationen automatisch ausgeführt.
 
+## ISBJ-Trägerportal (Dienstschnittstelle)
+
+Brumm kann die Kitaverträge eines Vereins live aus dem [ISBJ-Trägerportal](https://www.berlin.de/sen/jugend/traegerservice/isbj/zugang/) lesen (Dashboard-Card „ISBJ-Verträge" für Admin und Vorstand). Aktuell wird **nur gelesen und nichts gespeichert**; geplant ist, Verträge später auch aus Brumm heraus zu ändern. Zugangsdaten trägt der Admin unter `/ini/{slug}/settings` ein; API-Key, Zertifikat und Passwort werden AES-256-GCM-verschlüsselt abgelegt.
+
+**Lokale Entwicklung**: In `.env` auf die Abnahmeumgebung zeigen, damit Dev nie gegen Produktion läuft:
+
+```bash
+NUXT_ISBJ_DEFAULT_HOST=dienstschnittstelle.isbja.itdz-berlin.de
+```
+
+Ohne Variable gilt Produktion (`dienstschnittstelle.isbjp.itdz-berlin.de`). Für die Abnahme braucht es eigene Zugangsdaten (Zertifikat per E-Mail, PIN per Brief).
+
+**Was abweichend vom [Entwicklerleitfaden](https://www.berlin.de/sen/jugend/traegerservice/isbj/isbj-tragerportal_entwicklerleitfaden-dienstschnittstelle_v202.pdf) gilt** (gegen ISBJ verifiziert):
+
+- **Host**: Der Leitfaden nennt `ds.traegerportal.isbj.verwalt-berlin.de` – existiert nicht mehr. Seit 03/2026: `dienstschnittstelle.isbjp.itdz-berlin.de` (Abnahme: `…isbja…`).
+- **Serverzertifikat**: von der Berliner Landes-PKI („Berlin Class2 Root CA 2022"), nicht im Node-Trust-Store → explizit vertraut (`server/utils/isbjCa.ts`).
+- **HMAC**: hex-kodiert (der Text sagt base64, das Rechenbeispiel passt nur zu hex); API-Key direkt als String-Schlüssel; der „normalisierte Pfad" ist der Pfad **ohne** Query-String.
+- **Daten**: `betreuungsumfang` kommt als Klartext (`Ganztags`), Zuschläge als Kürzel (`NDH`; `QM` laut Leitfaden). `aktiv=true` heißt nur „nicht storniert". ISBJ liefert **keine Namen oder Geburtsdaten** von Kindern – nur eine stabile `kindId` über den Gutschein.
+- **Rechte**: Die Vertragsliste enthält nur Verträge, für die der User das Vertrags-Änderungs-Recht der Einrichtung hat. Fehlt es, kommt eine leere Liste statt eines Fehlers (in Produktion so aufgetreten).
+
 ## URL-Struktur
 
 ```
