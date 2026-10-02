@@ -24,7 +24,6 @@ const { isMember, canManageClub } = storeToRefs(authStore)
           <DashboardMyKids v-if="isMember" :slug="slug" />
           
           <DashboardOverview v-if="canManageClub" :slug="slug" />
-          <DashboardIsbj v-if="canManageClub" :slug="slug" />
 
           <template v-if="authStore.currentUser?.role === 'TEAM'">
             <div class="grid gap-4 desktop:grid-cols-3">
@@ -37,6 +36,7 @@ const { isMember, canManageClub } = storeToRefs(authStore)
 
           <DashboardWall :slug="slug" />
           <DashboardContacts :slug="slug" />
+          <DashboardIsbj v-if="canManageClub" :slug="slug" />
         </div>
       </template>
       <template #fallback>
