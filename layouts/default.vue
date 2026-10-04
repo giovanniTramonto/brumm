@@ -29,6 +29,7 @@ const navSections = computed((): NavSection[] => {
       label: 'Kinder & Eltern',
       items: [
         { label: 'Kinder', to: `${base}/members` },
+        { label: 'Verträge', to: `${base}/contracts` },
         { label: 'Elternposten', to: `${base}/parent-jobs` },
       ],
     })

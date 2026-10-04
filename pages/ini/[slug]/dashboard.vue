@@ -36,7 +36,6 @@ const { isMember, canManageClub } = storeToRefs(authStore)
 
           <DashboardWall :slug="slug" />
           <DashboardContacts :slug="slug" />
-          <DashboardIsbj v-if="canManageClub" :slug="slug" />
         </div>
       </template>
       <template #fallback>
