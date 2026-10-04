@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
     groupId: groupId ?? null,
     careType: careType || null,
     contractStart: contractStart || null,
+    contractNumber: null,
     surcharges: surcharges ?? [],
     contractEnd: contractEnd || null,
     address: address || null,

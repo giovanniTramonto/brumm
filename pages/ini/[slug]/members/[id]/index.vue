@@ -170,6 +170,7 @@ const hasChanges = computed(() => {
     (form.groupId || null) !== (m.groupId ?? null) ||
     (form.careType || null) !== (m.careType ?? null) ||
     (form.contractStart || null) !== (m.contractStart ?? null) ||
+    (form.contractNumber.trim() || null) !== (m.contractNumber ?? null) ||
     form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
     (form.contractEnd.trim() || null) !== (toContractEndMonthValue(m.contractEnd) || null) ||
     (form.address.trim() || null) !== (m.address ?? null)
@@ -189,6 +190,7 @@ const form = reactive({
   groupId: '',
   careType: '',
   contractStart: '',
+  contractNumber: '',
   surcharges: [] as string[],
   contractEnd: '',
 
@@ -416,6 +418,7 @@ onMounted(async () => {
     form.groupId = m.groupId ?? ''
     form.careType = m.careType ?? ''
     form.contractStart = m.contractStart ?? ''
+    form.contractNumber = m.contractNumber ?? ''
     form.surcharges = m.surcharges ?? []
     form.contractEnd = toContractEndMonthValue(m.contractEnd)
     form.address = m.address ?? ''
@@ -471,6 +474,9 @@ async function onSave() {
         groupId: form.groupId || undefined,
         careType: canManageMembers.value ? form.careType || undefined : undefined,
         contractStart: canManageMembers.value ? form.contractStart || undefined : undefined,
+        contractNumber: canManageMembers.value
+          ? form.contractNumber.trim() || undefined
+          : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
         address: form.address.trim() || undefined,
@@ -767,38 +773,14 @@ async function onSubmit() {
           </div>
 
           <div v-if="canManageMembers">
-            <label for="field-careType" class="label">Betreuungsumfang</label>
-            <select
-              id="field-careType"
-              v-model="form.careType"
+            <label for="field-contractNumber" class="label">Vertragsnummer</label>
+            <input
+              id="field-contractNumber"
+              v-model="form.contractNumber"
+              type="text"
               class="input mt-1"
-              :disabled="isKidDataLocked"
-            >
-              <option value="">Nicht angegeben</option>
-              <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
-                {{ opt.label }}
-              </option>
-            </select>
-          </div>
-
-          <div v-if="canManageMembers">
-            <label class="label">Zuschläge</label>
-            <div class="mt-1 flex flex-wrap gap-4">
-              <label
-                v-for="opt in SURCHARGE_OPTIONS"
-                :key="opt.key"
-                class="flex items-center gap-2 text-sm text-gray-700"
-              >
-                <input
-                  v-model="form.surcharges"
-                  type="checkbox"
-                  :value="opt.key"
-                  class="h-4 w-4 rounded border-gray-300"
-                  :disabled="isKidDataLocked"
-                />
-                {{ opt.label }}
-              </label>
-            </div>
+              :readonly="isKidDataLocked"
+            />
           </div>
 
           <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
@@ -833,9 +815,44 @@ async function onSubmit() {
               :disabled="isKidDataLocked"
             />
           </div>
+
+          <div v-if="canManageMembers">
+            <label for="field-careType" class="label">Betreuungsumfang</label>
+            <select
+              id="field-careType"
+              v-model="form.careType"
+              class="input mt-1"
+              :disabled="isKidDataLocked"
+            >
+              <option value="">Nicht angegeben</option>
+              <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
+                {{ opt.label }}
+              </option>
+            </select>
           </div>
 
-          <hr v-if="isMember && isKidDataLocked && !isContactLocked" class="border-gray-200" />
+          <div v-if="canManageMembers">
+            <label class="label">Zuschläge</label>
+            <div class="mt-1 flex flex-wrap gap-4">
+              <label
+                v-for="opt in SURCHARGE_OPTIONS"
+                :key="opt.key"
+                class="flex items-center gap-2 text-sm text-gray-700"
+              >
+                <input
+                  v-model="form.surcharges"
+                  type="checkbox"
+                  :value="opt.key"
+                  class="h-4 w-4 rounded border-gray-300"
+                  :disabled="isKidDataLocked"
+                />
+                {{ opt.label }}
+              </label>
+            </div>
+          </div>
+          </div>
+
+          <hr class="border-gray-200" />
 
           <div :inert="isContactLocked" class="space-y-4">
             <GuardianField

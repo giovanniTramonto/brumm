@@ -91,6 +91,7 @@ export default defineEventHandler(async (event) => {
     groupId: md.groupId,
     careType: md.careType,
     contractStart: md.contractStart,
+    contractNumber: md.contractNumber,
     surcharges: md.surcharges,
     storageRef: md.storageRef,
     contractEnd: md.contractEnd,

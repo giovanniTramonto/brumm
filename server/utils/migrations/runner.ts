@@ -148,6 +148,10 @@ ALTER TABLE expenses
     filename: '012_member_contract_start.sql',
     sql: `ALTER TABLE members ADD COLUMN IF NOT EXISTS contract_start TEXT;`,
   },
+  {
+    filename: '013_member_contract_number.sql',
+    sql: `ALTER TABLE members ADD COLUMN IF NOT EXISTS contract_number TEXT;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {

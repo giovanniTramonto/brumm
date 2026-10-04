@@ -96,6 +96,7 @@ export const updateMemberSchema = z
       .regex(/^\d{4}-\d{2}$/, 'Ungültiges Datum (YYYY-MM)')
       .optional()
       .or(z.literal('')),
+    contractNumber: z.string().max(50, 'Vertragsnummer zu lang').optional().or(z.literal('')),
     surcharges: z.array(z.string()).optional(),
     contractEnd: contractEndField,
     address: z.string().optional().or(z.literal('')),

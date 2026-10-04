@@ -18,6 +18,7 @@ type Row = {
   surcharges: string | null
   care_type: string | null
   contract_start: string | null
+  contract_number: string | null
   last_edited_at: string | null
   last_edited_by: string | null
   address: string | null
@@ -41,6 +42,7 @@ function rowToMemberData(row: Row): MemberData {
     surcharges: row.surcharges ? row.surcharges.split(',').filter(Boolean) : [],
     careType: row.care_type ?? null,
     contractStart: row.contract_start ?? null,
+    contractNumber: row.contract_number ?? null,
     lastEditedAt: row.last_edited_at ?? null,
     lastEditedBy: row.last_edited_by ?? null,
     address: row.address ?? null,
@@ -65,13 +67,13 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
       user_id, storage_ref, first_name, last_name, birth_date,
       guardian1_name, guardian2_name, email1, email2, group_id,
       contract_end, phone1, phone2, surcharges, care_type, contract_start,
-      last_edited_at, last_edited_by, address
+      contract_number, last_edited_at, last_edited_by, address
     ) VALUES (
       ${data.userId}, ${data.storageRef}, ${data.firstName}, ${data.lastName}, ${data.birthDate},
       ${data.guardian1Name}, ${data.guardian2Name}, ${data.email1}, ${data.email2 ?? null},
       ${data.groupId ?? null}, ${data.contractEnd ?? null}, ${data.phone1 ?? null},
       ${data.phone2 ?? null}, ${data.surcharges.join(',')}, ${data.careType ?? null},
-      ${data.contractStart ?? null}, ${data.lastEditedAt ?? null}, ${data.lastEditedBy ?? null},
+      ${data.contractStart ?? null}, ${data.contractNumber ?? null}, ${data.lastEditedAt ?? null}, ${data.lastEditedBy ?? null},
       ${data.address ?? null}
     )
     ON CONFLICT (user_id) DO UPDATE SET
@@ -90,6 +92,7 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
       surcharges     = EXCLUDED.surcharges,
       care_type      = EXCLUDED.care_type,
       contract_start = EXCLUDED.contract_start,
+      contract_number = EXCLUDED.contract_number,
       last_edited_at = EXCLUDED.last_edited_at,
       last_edited_by = EXCLUDED.last_edited_by,
       address        = EXCLUDED.address
@@ -166,7 +169,7 @@ export async function pgScrubMember(sql: Sql, userId: string): Promise<void> {
       guardian1_name = NULL, guardian2_name = NULL,
       email1 = NULL, email2 = NULL,
       phone1 = NULL, phone2 = NULL,
-      address = NULL, last_edited_by = NULL
+      address = NULL, last_edited_by = NULL, contract_number = NULL
     WHERE user_id = ${userId}
   `
 }

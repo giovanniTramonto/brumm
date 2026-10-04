@@ -88,7 +88,7 @@ async function scrubMemberFromClubDb(clubId: string, userId: string): Promise<vo
         guardian1_name = NULL, guardian2_name = NULL,
         email1 = NULL, email2 = NULL,
         phone1 = NULL, phone2 = NULL,
-        address = NULL, last_edited_by = NULL
+        address = NULL, last_edited_by = NULL, contract_number = NULL
       WHERE user_id = ${userId}
     `
   } finally {
