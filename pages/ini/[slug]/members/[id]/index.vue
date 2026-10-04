@@ -117,12 +117,21 @@ const visibleTemplates = computed(() => {
   return memberDocTemplates.value.filter((t) => t.submission !== null)
 })
 
+// Must match the server's Buffer.from(key).toString('base64url'), which encodes UTF-8 —
+// plain btoa() throws on keys with characters outside Latin-1 (e.g. "–" or emoji)
+function toBase64Url(value: string): string {
+  const binary = Array.from(new TextEncoder().encode(value), (byte) =>
+    String.fromCharCode(byte),
+  ).join('')
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
 const filteredDocuments = computed(() => {
   const submittedIds = new Set(
     memberDocTemplates.value
       .map((t) => t.submission?.s3Key)
       .filter((k): k is string => !!k)
-      .map((k) => btoa(k).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')),
+      .map(toBase64Url),
   )
   return documents.value.filter((d) => !submittedIds.has(d.id))
 })
