@@ -71,6 +71,12 @@ const sortedContracts = computed(() => {
   })
 })
 
+// ISBJ's aktiv=true only means "not cancelled" — a contract is running if today is within its term
+const today = new Date().toLocaleDateString('sv-SE')
+function isRunning(c: ISBJContract): boolean {
+  return !!c.startDate && c.startDate <= today && (!c.endDate || c.endDate >= today)
+}
+
 function formatDate(date: string | null): string {
   if (!date) return '–'
   const [year, month, day] = date.split('-')
@@ -129,7 +135,12 @@ function formatDate(date: string | null): string {
             </thead>
             <tbody class="divide-y divide-gray-100">
               <tr v-for="c in sortedContracts" :key="c.contractNumber" class="whitespace-nowrap hover:bg-gray-50">
-                <td class="px-4 py-3 font-mono text-sm font-medium text-gray-900">{{ c.contractNumber }}</td>
+                <td class="px-4 py-3 text-sm">
+                  <span
+                    class="inline-flex rounded-full px-2 py-0.5 font-mono text-xs font-medium"
+                    :class="isRunning(c) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'"
+                  >{{ c.contractNumber }}</span>
+                </td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(c.startDate) }} – {{ formatDate(c.endDate) }}</td>
                 <td class="px-4 py-3 text-sm">
                   <span v-if="c.careScope" class="text-gray-600">
@@ -166,6 +177,7 @@ function formatDate(date: string | null): string {
         <p class="mb-2 text-xs font-medium">Hinweise zu den Verträgen</p>
         <ul class="list-disc space-y-1 pl-4 text-xs">
           <li>Live aus dem ISBJ-Trägerportal geladen, nicht gespeichert</li>
+          <li>Grün markierte Verträge laufen aktuell (heute innerhalb der Laufzeit)</li>
           <li>ISBJ liefert keine Namen oder Geburtsdaten der Kinder, nur die Kind-ID</li>
         </ul>
       </FootnoteCard>
