@@ -42,6 +42,15 @@ const STATUS_ORDER: Record<string, number> = {
   DEACTIVATED: 4,
 }
 
+// Shared by the status column and the counters next to the title
+const STATUS_BADGES: Record<string, { label: string; class: string }> = {
+  ACTIVE: { label: 'Aktiv', class: 'bg-green-100 text-green-800' },
+  INACTIVE: { label: 'Inaktiv', class: 'bg-purple-100 text-purple-800' },
+  REGISTERED: { label: 'Bestätigt', class: 'bg-blue-100 text-blue-800' },
+  PENDING_INVITE: { label: 'Ausstehend', class: 'bg-orange-100 text-orange-800' },
+  DEACTIVATED: { label: 'Abgemeldet', class: 'bg-gray-100 text-gray-600' },
+}
+
 function toggleSort(key: string) {
   const dir = sortKey.value === key && sortDir.value === 'asc' ? 'desc' : 'asc'
   router.replace({ query: { ...route.query, sort: key, dir } })
@@ -54,12 +63,24 @@ const showNoMemberManagerHint = computed(() => {
   return user?.role === 'MANAGER' && !user?.isMemberManager
 })
 
+const visibleMembers = computed(() =>
+  (isMember.value ? membersStore.members.filter((m) => m.isOwnChild) : membersStore.members).filter(
+    (m) => !m.deletedAt,
+  ),
+)
+
+// Counts per status (independent of the search), only statuses that occur, in STATUS_ORDER
+const statusCounts = computed(() => {
+  const counts = new Map<string, number>()
+  for (const m of visibleMembers.value) counts.set(m.status, (counts.get(m.status) ?? 0) + 1)
+  return Object.keys(STATUS_ORDER)
+    .filter((status) => counts.has(status))
+    .map((status) => ({ status, count: counts.get(status) ?? 0, ...STATUS_BADGES[status] }))
+})
+
 const filteredMembers = computed(() => {
   const q = search.value.toLowerCase()
-  const base = (
-    isMember.value ? membersStore.members.filter((m) => m.isOwnChild) : membersStore.members
-  ).filter((m) => !m.deletedAt)
-  const filtered = base.filter(
+  const filtered = visibleMembers.value.filter(
     (m) => m.firstName.toLowerCase().includes(q) || m.lastName.toLowerCase().includes(q),
   )
   const dir = sortDir.value === 'asc' ? 1 : -1
@@ -88,8 +109,21 @@ const filteredMembers = computed(() => {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">Kinder</h1>
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-2">
+        <h1 class="text-2xl font-bold text-gray-900">Kinder</h1>
+        <!-- Counters only from tablet on, phones are too narrow -->
+        <template v-if="!membersStore.isLoading && !membersStore.error">
+          <span
+            v-for="s in statusCounts"
+            :key="s.status"
+            class="hidden rounded-full px-2.5 py-0.5 text-sm font-medium tablet:inline-flex"
+            :class="s.class"
+          >
+            <span class="font-mono">{{ s.count }}</span>&nbsp;{{ s.label.toLowerCase() }}
+          </span>
+        </template>
+      </div>
       <div v-if="authStore.currentUser?.role !== 'MEMBER'" class="flex gap-3">
         <NuxtLink
           v-if="canManageMembers"
@@ -189,9 +223,9 @@ const filteredMembers = computed(() => {
             <td class="px-4 py-3">
               <span
                 class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : member.status === 'INACTIVE' ? 'bg-purple-100 text-purple-800' : member.status === 'DEACTIVATED' ? 'bg-gray-100 text-gray-600' : member.status === 'PENDING_INVITE' ? 'bg-orange-100 text-orange-800' : 'bg-purple-100 text-purple-800'"
+                :class="STATUS_BADGES[member.status]?.class"
               >
-                {{ member.status === 'ACTIVE' ? "Aktiv" : member.status === 'INACTIVE' ? "Inaktiv" : member.status === 'DEACTIVATED' ? "Abgemeldet" : member.status === 'PENDING_INVITE' ? "Ausstehend" : "Bestätigt" }}
+                {{ STATUS_BADGES[member.status]?.label }}
               </span>
             </td>
             <td class="px-4 py-3 text-right">
