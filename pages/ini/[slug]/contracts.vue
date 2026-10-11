@@ -2,7 +2,8 @@
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { useIsbjStore } from '~/stores/isbj'
-import type { ISBJContract } from '~/types'
+import { useMembersStore } from '~/stores/members'
+import type { ISBJContract, Member } from '~/types'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -16,6 +17,26 @@ const { canManageClub, isSuperUser } = storeToRefs(authStore)
 const roleTextClass = computed(() => (isSuperUser.value ? 'text-admin-800' : 'text-ini-800'))
 const isbjStore = useIsbjStore()
 const { contracts, isConfigured, voucherError, isLoading, error } = storeToRefs(isbjStore)
+const membersStore = useMembersStore()
+
+// Contract numbers are typed in by hand, so ignore whitespace and case when matching
+function normalizeContractNumber(value: string): string {
+  return value.replace(/\s+/g, '').toLowerCase()
+}
+
+const membersByContractNumber = computed(() => {
+  const map = new Map<string, Member[]>()
+  for (const m of membersStore.members) {
+    if (m.deletedAt || !m.contractNumber) continue
+    const key = normalizeContractNumber(m.contractNumber)
+    map.set(key, [...(map.get(key) ?? []), m])
+  }
+  return map
+})
+
+function getMembers(c: ISBJContract): Member[] {
+  return membersByContractNumber.value.get(normalizeContractNumber(c.contractNumber)) ?? []
+}
 
 onMounted(() => {
   if (canManageClub.value) isbjStore.fetchContracts(slug)
@@ -27,6 +48,7 @@ function onReload() {
 
 type SortKey =
   | 'contractNumber'
+  | 'member'
   | 'startDate'
   | 'careScope'
   | 'expectedEndDate'
@@ -34,6 +56,7 @@ type SortKey =
   | 'childId'
 const SORT_KEYS: SortKey[] = [
   'contractNumber',
+  'member',
   'startDate',
   'careScope',
   'expectedEndDate',
@@ -54,6 +77,10 @@ function toggleSort(key: string) {
 }
 
 function getSortValue(c: ISBJContract, key: SortKey): string {
+  if (key === 'member')
+    return getMembers(c)
+      .map((m) => `${m.lastName}, ${m.firstName}`)
+      .join(' / ')
   if (key === 'surcharges') return (c.surcharges ?? []).map((s) => s.type).join(', ')
   if (key === 'childId') return c.childId === null ? '' : String(c.childId).padStart(12, '0')
   return c[key] ?? ''
@@ -126,10 +153,11 @@ function formatDate(date: string | null): string {
             <thead class="bg-gray-50">
               <tr>
                 <SortableTableHeader label="Vertrag" columnKey="contractNumber" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+                <SortableTableHeader label="Kind" columnKey="member" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Laufzeit" columnKey="startDate" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Umfang" columnKey="careScope" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Vorauss. Ende" columnKey="expectedEndDate" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
-                <SortableTableHeader label="Zuschläge" columnKey="surcharges" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+                <SortableTableHeader label="Zuschläge" columnKey="surcharges" class="max-w-[200px]" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Kind-ID" columnKey="childId" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
               </tr>
             </thead>
@@ -140,6 +168,19 @@ function formatDate(date: string | null): string {
                     class="inline-flex rounded-full px-2 py-0.5 font-mono text-xs font-medium"
                     :class="isRunning(c) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'"
                   >{{ c.contractNumber }}</span>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <div v-if="getMembers(c).length > 0" class="flex flex-col">
+                    <NuxtLink
+                      v-for="m in getMembers(c)"
+                      :key="m.id"
+                      :to="`/ini/${slug}/members/${m.id}`"
+                      class="font-medium text-gray-900 hover:text-primary-700"
+                    >{{ m.lastName }}, {{ m.firstName }}</NuxtLink>
+                  </div>
+                  <span v-else-if="membersStore.isLoading" class="text-gray-400">…</span>
+                  <span v-else-if="isRunning(c)" class="inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700">nicht zugeordnet</span>
+                  <span v-else class="text-gray-400">–</span>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(c.startDate) }} – {{ formatDate(c.endDate) }}</td>
                 <td class="px-4 py-3 text-sm">
@@ -152,10 +193,10 @@ function formatDate(date: string | null): string {
                   {{ formatDate(c.expectedEndDate) }}
                   <span v-if="c.expectedEndReason" class="text-gray-400">({{ c.expectedEndReason }})</span>
                 </td>
-                <td class="px-4 py-3 text-sm">
+                <td class="max-w-[200px] whitespace-normal px-4 py-3 text-sm">
                   <span v-if="c.surcharges === null" class="text-gray-400">?</span>
                   <span v-else-if="c.surcharges.length === 0" class="text-gray-400">–</span>
-                  <span v-else class="flex gap-1">
+                  <span v-else class="flex flex-wrap gap-1">
                     <span
                       v-for="s in c.surcharges"
                       :key="s.type"
@@ -178,6 +219,7 @@ function formatDate(date: string | null): string {
         <ul class="list-disc space-y-1 pl-4 text-xs">
           <li>Live aus dem ISBJ-Trägerportal geladen, nicht gespeichert</li>
           <li>Grün markierte Verträge laufen aktuell (heute innerhalb der Laufzeit)</li>
+          <li>Die Zuordnung zum Kind erfolgt über die Vertragsnummer, die beim Kind hinterlegt ist</li>
           <li>ISBJ liefert keine Namen oder Geburtsdaten der Kinder, nur die Kind-ID</li>
         </ul>
       </FootnoteCard>
