@@ -19,23 +19,24 @@ const isbjStore = useIsbjStore()
 const { contracts, isConfigured, voucherError, isLoading, error } = storeToRefs(isbjStore)
 const membersStore = useMembersStore()
 
-// Contract numbers are typed in by hand, so ignore whitespace and case when matching
-function normalizeContractNumber(value: string): string {
+// Voucher numbers are typed in by hand, so ignore whitespace and case when matching
+function normalizeVoucherNumber(value: string): string {
   return value.replace(/\s+/g, '').toLowerCase()
 }
 
-const membersByContractNumber = computed(() => {
+const membersByVoucherNumber = computed(() => {
   const map = new Map<string, Member[]>()
   for (const m of membersStore.members) {
-    if (m.deletedAt || !m.contractNumber) continue
-    const key = normalizeContractNumber(m.contractNumber)
+    if (m.deletedAt || !m.voucherNumber) continue
+    const key = normalizeVoucherNumber(m.voucherNumber)
     map.set(key, [...(map.get(key) ?? []), m])
   }
   return map
 })
 
 function getMembers(c: ISBJContract): Member[] {
-  return membersByContractNumber.value.get(normalizeContractNumber(c.contractNumber)) ?? []
+  if (!c.voucherNumber) return []
+  return membersByVoucherNumber.value.get(normalizeVoucherNumber(c.voucherNumber)) ?? []
 }
 
 onMounted(() => {
@@ -47,27 +48,23 @@ function onReload() {
 }
 
 type SortKey =
-  | 'contractNumber'
+  | 'voucherNumber'
   | 'member'
   | 'startDate'
   | 'careScope'
   | 'expectedEndDate'
   | 'surcharges'
-  | 'childId'
 const SORT_KEYS: SortKey[] = [
-  'contractNumber',
+  'voucherNumber',
   'member',
   'startDate',
   'careScope',
   'expectedEndDate',
   'surcharges',
-  'childId',
 ]
 
 const sortKey = computed<SortKey>(() =>
-  SORT_KEYS.includes(route.query.sort as SortKey)
-    ? (route.query.sort as SortKey)
-    : 'contractNumber',
+  SORT_KEYS.includes(route.query.sort as SortKey) ? (route.query.sort as SortKey) : 'voucherNumber',
 )
 const sortDir = computed<'asc' | 'desc'>(() => (route.query.dir === 'desc' ? 'desc' : 'asc'))
 
@@ -82,7 +79,6 @@ function getSortValue(c: ISBJContract, key: SortKey): string {
       .map((m) => `${m.lastName}, ${m.firstName}`)
       .join(' / ')
   if (key === 'surcharges') return (c.surcharges ?? []).map((s) => s.type).join(', ')
-  if (key === 'childId') return c.childId === null ? '' : String(c.childId).padStart(12, '0')
   return c[key] ?? ''
 }
 
@@ -152,22 +148,23 @@ function formatDate(date: string | null): string {
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
-                <SortableTableHeader label="Vertrag" columnKey="contractNumber" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
+                <SortableTableHeader label="Gutschein" columnKey="voucherNumber" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Kind" columnKey="member" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Laufzeit" columnKey="startDate" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Umfang" columnKey="careScope" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Vorauss. Ende" columnKey="expectedEndDate" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
                 <SortableTableHeader label="Zuschläge" columnKey="surcharges" class="max-w-[200px]" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
-                <SortableTableHeader label="Kind-ID" columnKey="childId" :activeSortKey="sortKey" :activeSortDir="sortDir" @sort="toggleSort" />
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
               <tr v-for="c in sortedContracts" :key="c.contractNumber" class="whitespace-nowrap hover:bg-gray-50">
                 <td class="px-4 py-3 text-sm">
                   <span
+                    v-if="c.voucherNumber"
                     class="inline-flex rounded-full px-2 py-0.5 font-mono text-xs font-medium"
                     :class="isRunning(c) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'"
-                  >{{ c.contractNumber }}</span>
+                  >{{ c.voucherNumber }}</span>
+                  <span v-else class="text-gray-400">–</span>
                 </td>
                 <td class="px-4 py-3 text-sm">
                   <div v-if="getMembers(c).length > 0" class="flex flex-col">
@@ -204,13 +201,12 @@ function formatDate(date: string | null): string {
                     >{{ s.type }}</span>
                   </span>
                 </td>
-                <td class="px-4 py-3 font-mono text-sm text-gray-400">{{ c.childId ?? '–' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p v-if="voucherError" class="mt-3 text-xs text-gray-500">
-          Gutscheindaten (Zuschläge, Kind-ID) nicht verfügbar: {{ voucherError }}
+          Gutscheindaten (Zuschläge) nicht verfügbar: {{ voucherError }}
         </p>
       </template>
 
@@ -219,8 +215,7 @@ function formatDate(date: string | null): string {
         <ul class="list-disc space-y-1 pl-4 text-xs">
           <li>Live aus dem ISBJ-Trägerportal geladen, nicht gespeichert</li>
           <li>Grün markierte Verträge laufen aktuell (heute innerhalb der Laufzeit)</li>
-          <li>Die Zuordnung zum Kind erfolgt über die Vertragsnummer, die beim Kind hinterlegt ist</li>
-          <li>ISBJ liefert keine Namen oder Geburtsdaten der Kinder, nur die Kind-ID</li>
+          <li>Die Zuordnung zum Kind erfolgt über die Gutscheinnummer, die beim Kind hinterlegt ist</li>
         </ul>
       </FootnoteCard>
     </template>

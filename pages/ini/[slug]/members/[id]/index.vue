@@ -170,7 +170,7 @@ const hasChanges = computed(() => {
     (form.groupId || null) !== (m.groupId ?? null) ||
     (form.careType || null) !== (m.careType ?? null) ||
     (form.contractStart || null) !== (m.contractStart ?? null) ||
-    (form.contractNumber.trim() || null) !== (m.contractNumber ?? null) ||
+    (form.voucherNumber.trim() || null) !== (m.voucherNumber ?? null) ||
     form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
     (form.contractEnd.trim() || null) !== (toContractEndMonthValue(m.contractEnd) || null) ||
     (form.address.trim() || null) !== (m.address ?? null)
@@ -190,7 +190,7 @@ const form = reactive({
   groupId: '',
   careType: '',
   contractStart: '',
-  contractNumber: '',
+  voucherNumber: '',
   surcharges: [] as string[],
   contractEnd: '',
 
@@ -418,7 +418,7 @@ onMounted(async () => {
     form.groupId = m.groupId ?? ''
     form.careType = m.careType ?? ''
     form.contractStart = m.contractStart ?? ''
-    form.contractNumber = m.contractNumber ?? ''
+    form.voucherNumber = m.voucherNumber ?? ''
     form.surcharges = m.surcharges ?? []
     form.contractEnd = toContractEndMonthValue(m.contractEnd)
     form.address = m.address ?? ''
@@ -474,9 +474,7 @@ async function onSave() {
         groupId: form.groupId || undefined,
         careType: canManageMembers.value ? form.careType || undefined : undefined,
         contractStart: canManageMembers.value ? form.contractStart || undefined : undefined,
-        contractNumber: canManageMembers.value
-          ? form.contractNumber.trim() || undefined
-          : undefined,
+        voucherNumber: canManageMembers.value ? form.voucherNumber.trim() || undefined : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
         address: form.address.trim() || undefined,
@@ -773,10 +771,10 @@ async function onSubmit() {
           </div>
 
           <div v-if="canManageMembers">
-            <label for="field-contractNumber" class="label">Vertragsnummer</label>
+            <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
             <input
-              id="field-contractNumber"
-              v-model="form.contractNumber"
+              id="field-voucherNumber"
+              v-model="form.voucherNumber"
               type="text"
               class="input mt-1"
               :readonly="isKidDataLocked"

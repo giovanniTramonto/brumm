@@ -152,6 +152,18 @@ ALTER TABLE expenses
     filename: '013_member_contract_number.sql',
     sql: `ALTER TABLE members ADD COLUMN IF NOT EXISTS contract_number TEXT;`,
   },
+  {
+    filename: '014_member_voucher_number.sql',
+    sql: `
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'members' AND column_name = 'contract_number')
+    AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'members' AND column_name = 'voucher_number') THEN
+    ALTER TABLE members RENAME COLUMN contract_number TO voucher_number;
+  END IF;
+END $$;
+ALTER TABLE members ADD COLUMN IF NOT EXISTS voucher_number TEXT;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {

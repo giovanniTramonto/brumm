@@ -85,7 +85,7 @@ export interface MemberData {
   groupId: string | null
   careType: string | null
   contractStart: string | null
-  contractNumber: string | null
+  voucherNumber: string | null
   surcharges: string[]
   contractEnd: string | null
   lastEditedAt: string | null
@@ -106,7 +106,7 @@ export interface Member extends User {
   groupId: string | null
   careType: string | null
   contractStart: string | null
-  contractNumber: string | null
+  voucherNumber: string | null
   surcharges: string[]
   storageRef: string
   contractEnd: string | null
