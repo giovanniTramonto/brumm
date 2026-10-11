@@ -71,6 +71,10 @@ const isActivateBlocked = computed(() => {
   return !!m && m.hasInvite && !m.hasSubmittedDocuments && !isOwnChild.value
 })
 
+const isActiveOrInactive = computed(
+  () => member.value?.status === 'ACTIVE' || member.value?.status === 'INACTIVE',
+)
+
 // TEAM sees the form read-only (inert); managers without member access get a plain data list
 const hasForm = computed(() => canManageMembers.value || isMember.value || isTeam.value)
 
@@ -555,6 +559,7 @@ async function onToggleDisabled() {
 
 async function onDeactivate() {
   if (!member.value || !confirm('Kind abmelden?')) return
+  deleteError.value = null
   isDeactivating.value = true
   try {
     await membersStore.deactivateMember(slug, member.value.id)
@@ -564,7 +569,7 @@ async function onDeactivate() {
       deactivatedAt: new Date().toISOString(),
     }
   } catch (err: unknown) {
-    inviteActionError.value =
+    deleteError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isDeactivating.value = false
@@ -730,8 +735,8 @@ async function onSubmit() {
               </button>
             </template>
 
-            <!-- Aktiv oder Inaktiv: Deaktivieren/Aktivieren + Abmelden -->
-            <template v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE'">
+            <!-- Aktiv oder Inaktiv: Deaktivieren/Aktivieren (Abmelden lives in "Mitgliedschaft beenden") -->
+            <template v-else-if="isActiveOrInactive">
               <button
                 type="button"
                 class="btn-secondary text-sm"
@@ -740,17 +745,9 @@ async function onSubmit() {
               >
                 {{ isDisabling ? "Wird gespeichert…" : member.status === 'INACTIVE' ? "Aktivieren" : "Deaktivieren" }}
               </button>
-              <button
-                type="button"
-                class="btn-secondary text-sm"
-                :disabled="isDeactivating || !canManageMembers"
-                @click="onDeactivate"
-              >
-                {{ isDeactivating ? "Wird abgemeldet…" : "Abmelden" }}
-              </button>
             </template>
 
-            <!-- Abgemeldet: Abmeldung rückgängig + Löschen -->
+            <!-- Abgemeldet: Abmeldung rückgängig (Sofort löschen lives in "Mitgliedschaft beenden") -->
             <template v-else-if="member.status === 'DEACTIVATED'">
               <button
                 type="button"
@@ -1399,28 +1396,49 @@ async function onSubmit() {
 
         <!-- 4) Delete -->
         <section
-          v-if="canManageMembers && (member.status === 'PENDING_INVITE' || member.status === 'REGISTERED' || member.status === 'DEACTIVATED')"
+          v-if="canManageMembers"
           class="card space-y-3"
           aria-labelledby="section-delete"
         >
           <h2 id="section-delete" class="text-base font-semibold text-gray-900">Mitgliedschaft beenden</h2>
-          <p v-if="member.status === 'DEACTIVATED'" class="text-sm text-gray-500">
-            Persönliche Daten werden entfernt. Anonymisierte Daten bleiben für die Berechnung vergangener Monate erhalten.
-          </p>
-          <p v-else class="text-sm text-gray-500">
-            Das Kind wird dauerhaft entfernt.<template v-if="member.hasInvite"> Die Eltern erhalten eine E-Mail.</template>
-          </p>
-          <button
-            type="button"
-            class="btn-danger text-sm"
-            :disabled="isCancellingInvite"
-            @click="onDeleteMember"
-          >
-            {{ isCancellingInvite ? "Wird gelöscht…" : member.status === 'DEACTIVATED' ? "Sofort löschen" : "Kind entfernen" }}
-          </button>
-          <p v-if="deleteError" role="alert" class="text-sm text-red-600">
-            {{ deleteError }}
-          </p>
+          <!-- Aktiv oder Inaktiv: Abmelden -->
+          <template v-if="isActiveOrInactive">
+            <p class="text-sm text-gray-500">
+              Abgemeldete Kinder werden nach einem Jahr automatisch gelöscht. Die Abmeldung lässt sich bis dahin rückgängig machen.
+            </p>
+            <div class="flex flex-wrap gap-3">
+              <button
+                type="button"
+                class="btn-secondary text-sm"
+                :disabled="isDeactivating || !canManageMembers"
+                @click="onDeactivate"
+              >
+                {{ isDeactivating ? "Wird abgemeldet…" : "Abmelden" }}
+              </button>
+            </div>
+            <p v-if="deleteError" role="alert" class="text-sm text-red-600">
+              {{ deleteError }}
+            </p>
+          </template>
+          <template v-else>
+            <p v-if="member.status === 'DEACTIVATED'" class="text-sm text-gray-500">
+              Persönliche Daten werden entfernt. Anonymisierte Daten bleiben für die Berechnung vergangener Monate erhalten.
+            </p>
+            <p v-else class="text-sm text-gray-500">
+              Das Kind wird dauerhaft entfernt.<template v-if="member.hasInvite"> Die Eltern erhalten eine E-Mail.</template>
+            </p>
+            <button
+              type="button"
+              class="btn-danger text-sm"
+              :disabled="isCancellingInvite"
+              @click="onDeleteMember"
+            >
+              {{ isCancellingInvite ? "Wird gelöscht…" : member.status === 'DEACTIVATED' ? "Sofort löschen" : "Kind entfernen" }}
+            </button>
+            <p v-if="deleteError" role="alert" class="text-sm text-red-600">
+              {{ deleteError }}
+            </p>
+          </template>
         </section>
       </component>
 
