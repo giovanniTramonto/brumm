@@ -63,10 +63,15 @@ const SORT_KEYS: SortKey[] = [
   'surcharges',
 ]
 
+// Default: newest contract start first
+const hasSortQuery = computed(() => SORT_KEYS.includes(route.query.sort as SortKey))
 const sortKey = computed<SortKey>(() =>
-  SORT_KEYS.includes(route.query.sort as SortKey) ? (route.query.sort as SortKey) : 'voucherNumber',
+  hasSortQuery.value ? (route.query.sort as SortKey) : 'startDate',
 )
-const sortDir = computed<'asc' | 'desc'>(() => (route.query.dir === 'desc' ? 'desc' : 'asc'))
+const sortDir = computed<'asc' | 'desc'>(() => {
+  if (!hasSortQuery.value) return 'desc'
+  return route.query.dir === 'desc' ? 'desc' : 'asc'
+})
 
 function toggleSort(key: string) {
   const dir = sortKey.value === key && sortDir.value === 'asc' ? 'desc' : 'asc'
