@@ -29,7 +29,7 @@ const navSections = computed((): NavSection[] => {
       label: 'Kinder & Eltern',
       items: [
         { label: 'Kinder', to: `${base}/members` },
-        { label: 'Verträge', to: `${base}/contracts` },
+        { label: 'ISBJ Verträge', to: `${base}/contracts` },
         { label: 'Elternposten', to: `${base}/parent-jobs` },
       ],
     })
@@ -134,7 +134,7 @@ function onLogout() {
 
 <template>
   <div :class="bgClass" class="min-h-screen">
-    <nav v-if="currentUser" aria-label="Hauptnavigation" class="app-nav relative z-10 border-b border-gray-200 bg-white shadow-sm">
+    <nav v-if="currentUser" aria-label="Hauptnavigation" class="app-nav relative z-20 border-b border-gray-200 bg-white shadow-sm">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex min-h-16 items-center justify-between py-4">
           <div class="flex items-center gap-6">

@@ -118,7 +118,7 @@ function formatDate(date: string | null): string {
   <div>
     <div class="mb-6 flex items-center justify-between gap-4">
       <div class="flex flex-wrap items-center gap-2">
-        <h1 class="text-2xl font-bold text-gray-900">Verträge</h1>
+        <h1 class="text-2xl font-bold text-gray-900">ISBJ Verträge</h1>
         <template v-if="isConfigured && !isLoading && !error">
           <span class="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
             <span class="font-mono">{{ runningCount }}</span>&nbsp;aktiv
@@ -128,8 +128,15 @@ function formatDate(date: string | null): string {
           </span>
         </template>
       </div>
-      <button v-if="canManageClub && isConfigured && !isLoading" type="button" class="btn-secondary text-sm" @click="onReload">
-        Neu laden
+      <button
+        v-if="canManageClub && isConfigured && !isLoading"
+        type="button"
+        class="btn-secondary"
+        aria-label="Neu laden"
+        title="Neu laden"
+        @click="onReload"
+      >
+        <AppIcon name="refresh" class="h-5 w-5" />
       </button>
     </div>
 
