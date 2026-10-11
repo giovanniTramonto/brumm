@@ -24,8 +24,9 @@ const isReactivating = ref(false)
 const isDisabling = ref(false)
 const isResendingInvite = ref(false)
 const isCancellingInvite = ref(false)
-const deleteError = ref<string | null>(null)
-const inviteActionError = ref<string | null>(null)
+// Errors of all actions in the "Mitgliedschaft" section
+const membershipError = ref<string | null>(null)
+const isActivating = ref(false)
 
 type DocumentEntry = { id: string; name: string; createdTime: string | null }
 const documents = ref<DocumentEntry[]>([])
@@ -73,6 +74,14 @@ const isActivateBlocked = computed(() => {
 
 const isActiveOrInactive = computed(
   () => member.value?.status === 'ACTIVE' || member.value?.status === 'INACTIVE',
+)
+
+// MEMBER and TEAM come from the dashboard, everyone else from the member list
+const overviewPath = computed(() =>
+  isMember.value || isTeam.value ? `/ini/${slug}/dashboard` : `/ini/${slug}/members`,
+)
+const overviewLabel = computed(() =>
+  isMember.value || isTeam.value ? 'Zurück zum Dashboard' : 'Zurück zur Kinderliste',
 )
 
 // TEAM sees the form read-only (inert); managers without member access get a plain data list
@@ -502,8 +511,7 @@ async function onSave() {
       ? (membersStore.groups.find((g) => g.id === refreshed.member.groupId) ?? null)
       : null
     membersStore.updateMember({ ...refreshed.member, isOwnChild: isOwnChild.value, group })
-    // Same target as the "← Zurück" link
-    await navigateTo(isMember.value ? `/ini/${slug}/dashboard` : `/ini/${slug}/members`)
+    await navigateTo(overviewPath.value)
   } catch (err: unknown) {
     saveError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
@@ -520,20 +528,30 @@ async function onActivate() {
     )
   )
     return
-  await membersStore.activateMember(slug, member.value.id)
-  member.value = { ...member.value, status: 'ACTIVE', hasInvite: true }
-  await loadDocuments()
+  membershipError.value = null
+  isActivating.value = true
+  try {
+    await membersStore.activateMember(slug, member.value.id)
+    member.value = { ...member.value, status: 'ACTIVE', hasInvite: true }
+    await loadDocuments()
+  } catch (err: unknown) {
+    membershipError.value =
+      (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
+  } finally {
+    isActivating.value = false
+  }
 }
 
 async function onReactivate() {
   if (!member.value) return
+  membershipError.value = null
   isReactivating.value = true
   try {
     await membersStore.reactivateMember(slug, member.value.id)
     member.value = { ...member.value, status: 'ACTIVE', deactivatedAt: null }
     await loadDocuments()
   } catch (err: unknown) {
-    inviteActionError.value =
+    membershipError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isReactivating.value = false
@@ -542,6 +560,7 @@ async function onReactivate() {
 
 async function onToggleDisabled() {
   if (!member.value) return
+  membershipError.value = null
   isDisabling.value = true
   try {
     await membersStore.toggleDisabledMember(slug, member.value.id)
@@ -550,7 +569,7 @@ async function onToggleDisabled() {
       status: member.value.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
     }
   } catch (err: unknown) {
-    inviteActionError.value =
+    membershipError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isDisabling.value = false
@@ -559,7 +578,7 @@ async function onToggleDisabled() {
 
 async function onDeactivate() {
   if (!member.value || !confirm('Kind abmelden?')) return
-  deleteError.value = null
+  membershipError.value = null
   isDeactivating.value = true
   try {
     await membersStore.deactivateMember(slug, member.value.id)
@@ -569,7 +588,7 @@ async function onDeactivate() {
       deactivatedAt: new Date().toISOString(),
     }
   } catch (err: unknown) {
-    deleteError.value =
+    membershipError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isDeactivating.value = false
@@ -578,14 +597,14 @@ async function onDeactivate() {
 
 async function onResendInvite() {
   if (!member.value) return
-  inviteActionError.value = null
+  membershipError.value = null
   isResendingInvite.value = true
   try {
     await $fetch(`/api/ini/${slug}/members/${member.value.id}/resend-invite`, {
       method: 'POST',
     })
   } catch (err: unknown) {
-    inviteActionError.value =
+    membershipError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isResendingInvite.value = false
@@ -600,7 +619,7 @@ async function onDeleteMember() {
         ? 'Kind wirklich dauerhaft entfernen? Die Eltern erhalten eine E-Mail.'
         : 'Kind wirklich dauerhaft entfernen?'
   if (!member.value || !confirm(confirmText)) return
-  deleteError.value = null
+  membershipError.value = null
   isCancellingInvite.value = true
   try {
     await $fetch(`/api/ini/${slug}/members/${member.value.id}/delete`, {
@@ -609,7 +628,7 @@ async function onDeleteMember() {
     membersStore.removeMember(member.value.id)
     await navigateTo(`/ini/${slug}/members`)
   } catch (err: unknown) {
-    deleteError.value =
+    membershipError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isCancellingInvite.value = false
@@ -662,13 +681,14 @@ async function onSubmit() {
 
 <template>
   <div class="max-w-3xl">
-    <div class="mb-6">
+    <!-- Once the member is loaded, this link lives in the sticky bar -->
+    <div v-if="!member" class="mb-6">
       <NuxtLink
-        :to="isMember || isTeam ? `/ini/${slug}/dashboard` : `/ini/${slug}/members`"
+        :to="overviewPath"
         class="text-sm text-gray-500 hover:text-gray-900"
-        :aria-label="isMember || isTeam ? 'Zurück zum Dashboard' : 'Zurück zur Kinderliste'"
+        :aria-label="overviewLabel"
       >
-        ← Zurück
+        ← Übersicht
       </NuxtLink>
     </div>
 
@@ -684,26 +704,20 @@ async function onSubmit() {
       <!-- One form across all sections so "Speichern" saves everything; managers without member access get a plain div with read-only data -->
       <component
         :is="hasForm ? 'form' : 'div'"
-        :inert="isTeam"
         class="space-y-4"
         @submit.prevent="onSave"
       >
         <!-- Actions: sticky so "Speichern" stays reachable while scrolling through the sections -->
-        <div v-if="canManageMembers || (isMember && !isContactLocked)" class="card sticky top-4 z-10 space-y-2 bg-gray-900 ring-gray-700">
-          <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
-            Kind wurde abgemeldet.<template v-if="deletionDate"> Automatische Löschung am {{ deletionDate }}.</template>
-          </p>
+        <div class="card sticky top-4 z-10 bg-gray-900 ring-gray-700">
           <div class="flex items-center justify-between gap-3">
-            <button
-              v-if="!isContactLocked && !isTeam"
-              type="submit"
-              class="btn-primary text-sm"
-              :disabled="isSubmitting || !hasChanges"
+            <NuxtLink
+              :to="overviewPath"
+              class="text-sm text-blue-300 hover:underline"
+              :aria-label="overviewLabel"
             >
-              {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
-            </button>
-            <div v-else />
-            <div class="flex gap-3">
+              ← Übersicht
+            </NuxtLink>
+            <div class="flex items-center gap-3">
               <button
                 v-if="isMember && member.status === 'REGISTERED' && member.hasInvite && !submitted"
                 type="button"
@@ -713,61 +727,20 @@ async function onSubmit() {
               >
                 Einreichen
               </button>
-            <div v-if="canManageMembers" class="flex items-center gap-3">
-            <!-- Vor Aktivierung: Kind aktivieren + Einladung erneut senden -->
-            <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
               <button
-                type="button"
+                v-if="!isContactLocked && (canManageMembers || isMember)"
+                type="submit"
                 class="btn-primary text-sm"
-                :disabled="isActivateBlocked || !canManageMembers"
-                @click="onActivate"
+                :disabled="isSubmitting || !hasChanges"
               >
-                Kind aktivieren
+                {{ isSubmitting ? "Wird gespeichert…" : "Speichern" }}
               </button>
-              <button
-                v-if="member.status === 'PENDING_INVITE'"
-                type="button"
-                class="btn-secondary text-sm"
-                :disabled="isResendingInvite || !canManageMembers"
-                @click="onResendInvite"
-              >
-                {{ isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden" }}
-              </button>
-            </template>
-
-            <!-- Aktiv oder Inaktiv: Deaktivieren/Aktivieren (Abmelden lives in "Mitgliedschaft beenden") -->
-            <template v-else-if="isActiveOrInactive">
-              <button
-                type="button"
-                class="btn-secondary text-sm"
-                :disabled="isDisabling || !canManageMembers"
-                @click="onToggleDisabled"
-              >
-                {{ isDisabling ? "Wird gespeichert…" : member.status === 'INACTIVE' ? "Aktivieren" : "Deaktivieren" }}
-              </button>
-            </template>
-
-            <!-- Abgemeldet: Abmeldung rückgängig (Sofort löschen lives in "Mitgliedschaft beenden") -->
-            <template v-else-if="member.status === 'DEACTIVATED'">
-              <button
-                type="button"
-                class="btn-secondary text-sm"
-                :disabled="isReactivating || !canManageMembers"
-                @click="onReactivate"
-              >
-                {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung rückgängig" }}
-              </button>
-            </template>
-            </div>
             </div>
           </div>
-          <p v-if="inviteActionError" class="text-sm text-red-300">
-            {{ inviteActionError }}
-          </p>
         </div>
 
         <!-- 1) General -->
-        <section class="card space-y-4" aria-labelledby="section-general">
+        <section class="card space-y-4" :inert="isTeam" aria-labelledby="section-general">
           <div class="flex items-center justify-between">
             <h1 id="section-general" class="text-xl font-semibold text-gray-900">
               {{ member.firstName }} {{ member.lastName }}
@@ -877,7 +850,7 @@ async function onSubmit() {
         </section>
 
         <!-- 2) Guardian contact data -->
-        <section class="card space-y-4" aria-labelledby="section-contact">
+        <section class="card space-y-4" :inert="isTeam" aria-labelledby="section-contact">
           <h2 id="section-contact" class="text-base font-semibold text-gray-900">Kontaktdaten</h2>
           <div v-if="hasForm" :inert="isContactLocked" class="space-y-4">
             <GuardianField
@@ -925,7 +898,7 @@ async function onSubmit() {
         </section>
 
         <!-- 3) Contract -->
-        <section class="card space-y-4" aria-labelledby="section-contract">
+        <section class="card space-y-4" :inert="isTeam" aria-labelledby="section-contract">
           <h2 id="section-contract" class="text-base font-semibold text-gray-900">Vertrag</h2>
           <div v-if="hasForm" :inert="isKidDataLocked" class="space-y-4">
             <div v-if="canManageMembers">
@@ -1394,51 +1367,120 @@ async function onSubmit() {
           </div>
         </section>
 
-        <!-- 4) Delete -->
-        <section
-          v-if="canManageMembers"
-          class="card space-y-3"
-          aria-labelledby="section-delete"
-        >
-          <h2 id="section-delete" class="text-base font-semibold text-gray-900">Mitgliedschaft beenden</h2>
-          <!-- Aktiv oder Inaktiv: Abmelden -->
-          <template v-if="isActiveOrInactive">
-            <p class="text-sm text-gray-500">
-              Abgemeldete Kinder werden nach einem Jahr automatisch gelöscht. Die Abmeldung lässt sich bis dahin rückgängig machen.
-            </p>
-            <div class="flex flex-wrap gap-3">
-              <button
-                type="button"
-                class="btn-secondary text-sm"
-                :disabled="isDeactivating || !canManageMembers"
-                @click="onDeactivate"
-              >
-                {{ isDeactivating ? "Wird abgemeldet…" : "Abmelden" }}
-              </button>
-            </div>
-            <p v-if="deleteError" role="alert" class="text-sm text-red-600">
-              {{ deleteError }}
-            </p>
-          </template>
-          <template v-else>
-            <p v-if="member.status === 'DEACTIVATED'" class="text-sm text-gray-500">
-              Persönliche Daten werden entfernt. Anonymisierte Daten bleiben für die Berechnung vergangener Monate erhalten.
-            </p>
-            <p v-else class="text-sm text-gray-500">
-              Das Kind wird dauerhaft entfernt.<template v-if="member.hasInvite"> Die Eltern erhalten eine E-Mail.</template>
-            </p>
-            <button
-              type="button"
-              class="btn-danger text-sm"
-              :disabled="isCancellingInvite"
-              @click="onDeleteMember"
-            >
-              {{ isCancellingInvite ? "Wird gelöscht…" : member.status === 'DEACTIVATED' ? "Sofort löschen" : "Kind entfernen" }}
-            </button>
-            <p v-if="deleteError" role="alert" class="text-sm text-red-600">
-              {{ deleteError }}
-            </p>
-          </template>
+        <!-- 4) Membership: every status action with a short explanation; DOM order is text → button
+             so phones show the text first, from tablet on the row is reversed so buttons line up on the left -->
+        <section v-if="canManageMembers" class="card space-y-4" aria-labelledby="section-membership">
+          <h2 id="section-membership" class="text-base font-semibold text-gray-900">Mitgliedschaft</h2>
+
+          <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
+            Kind wurde abgemeldet.<template v-if="deletionDate"> Automatische Löschung am {{ deletionDate }}.</template>
+          </p>
+
+          <ul class="divide-y divide-gray-100">
+            <!-- Vor Aktivierung -->
+            <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
+              <li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">
+                  Schaltet die Mitgliedschaft frei. Die Eltern erhalten eine Bestätigungs-E-Mail.
+                </p>
+                <button
+                  type="button"
+                  class="btn-primary shrink-0 text-sm tablet:w-52"
+                  :disabled="isActivateBlocked || isActivating"
+                  @click="onActivate"
+                >
+                  {{ isActivating ? "Wird aktiviert…" : "Kind aktivieren" }}
+                </button>
+              </li>
+              <li v-if="member.status === 'PENDING_INVITE'" class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">Schickt den Einladungslink noch einmal an die Eltern.</p>
+                <button
+                  type="button"
+                  class="btn-secondary shrink-0 text-sm tablet:w-52"
+                  :disabled="isResendingInvite"
+                  @click="onResendInvite"
+                >
+                  {{ isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden" }}
+                </button>
+              </li>
+              <li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">
+                  Entfernt das Kind dauerhaft.<template v-if="member.hasInvite"> Die Eltern erhalten eine E-Mail.</template>
+                </p>
+                <button
+                  type="button"
+                  class="btn-danger shrink-0 text-sm tablet:w-52"
+                  :disabled="isCancellingInvite"
+                  @click="onDeleteMember"
+                >
+                  {{ isCancellingInvite ? "Wird gelöscht…" : "Kind entfernen" }}
+                </button>
+              </li>
+            </template>
+
+            <!-- Aktiv oder Inaktiv -->
+            <template v-else-if="isActiveOrInactive">
+              <li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">
+                  <template v-if="member.status === 'INACTIVE'">Nimmt das Kind wieder in die Berechnung auf.</template>
+                  <template v-else>Nimmt das Kind vorübergehend aus der Berechnung, z. B. zur Simulation. Lässt sich jederzeit rückgängig machen.</template>
+                </p>
+                <button
+                  type="button"
+                  class="btn-secondary shrink-0 text-sm tablet:w-52"
+                  :disabled="isDisabling"
+                  @click="onToggleDisabled"
+                >
+                  {{ isDisabling ? "Wird gespeichert…" : member.status === 'INACTIVE' ? "Aktivieren" : "Deaktivieren" }}
+                </button>
+              </li>
+              <li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">
+                  Beendet die Mitgliedschaft. Abgemeldete Kinder werden nach einem Jahr automatisch gelöscht.
+                </p>
+                <button
+                  type="button"
+                  class="btn-secondary shrink-0 text-sm tablet:w-52"
+                  :disabled="isDeactivating"
+                  @click="onDeactivate"
+                >
+                  {{ isDeactivating ? "Wird abgemeldet…" : "Abmelden" }}
+                </button>
+              </li>
+            </template>
+
+            <!-- Abgemeldet -->
+            <template v-else-if="member.status === 'DEACTIVATED'">
+              <li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">Setzt das Kind wieder auf Aktiv.</p>
+                <button
+                  type="button"
+                  class="btn-secondary shrink-0 text-sm tablet:w-52"
+                  :disabled="isReactivating"
+                  @click="onReactivate"
+                >
+                  {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung rückgängig" }}
+                </button>
+              </li>
+              <li class="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 tablet:flex-row-reverse tablet:items-center tablet:justify-end tablet:gap-6">
+                <p class="text-sm text-gray-500">
+                  Entfernt die persönlichen Daten sofort. Anonymisierte Daten bleiben für die Berechnung vergangener Monate erhalten.
+                </p>
+                <button
+                  type="button"
+                  class="btn-danger shrink-0 text-sm tablet:w-52"
+                  :disabled="isCancellingInvite"
+                  @click="onDeleteMember"
+                >
+                  {{ isCancellingInvite ? "Wird gelöscht…" : "Sofort löschen" }}
+                </button>
+              </li>
+            </template>
+          </ul>
+
+          <p v-if="membershipError" role="alert" class="text-sm text-red-600">
+            {{ membershipError }}
+          </p>
         </section>
       </component>
 
