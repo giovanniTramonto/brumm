@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{ name: 'person' | 'pencil' | 'chevron-down' | 'calendar' }>()
+defineProps<{
+  name: 'person' | 'pencil' | 'chevron-down' | 'calendar' | 'plus' | 'search'
+}>()
 </script>
 
 <template>
@@ -27,6 +29,13 @@ defineProps<{ name: 'person' | 'pencil' | 'chevron-down' | 'calendar' }>()
     <template v-if="name === 'calendar'">
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <path d="M16 2v4M8 2v4M3 10h18" />
+    </template>
+    <template v-if="name === 'plus'">
+      <path d="M12 5v14M5 12h14" />
+    </template>
+    <template v-if="name === 'search'">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
     </template>
   </svg>
 </template>

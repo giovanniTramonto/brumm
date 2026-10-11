@@ -12,6 +12,12 @@ const authStore = useAuthStore()
 const membersStore = useMembersStore()
 
 const search = ref('')
+const searchInput = ref<HTMLInputElement | null>(null)
+
+// The list already filters while typing; submitting just closes the on-screen keyboard
+function onSearchSubmit() {
+  searchInput.value?.blur()
+}
 
 // New contractEnd values are "YYYY-MM"; legacy ones are a plain "YYYY" year.
 function formatContractEnd(contractEnd: string): string {
@@ -96,8 +102,13 @@ const filteredMembers = computed(() => {
           v-if="canManageMembers || isMember"
           :to="`/ini/${slug}/members/create`"
           class="btn-primary"
+          aria-label="Kind anlegen"
         >
-          Kind anlegen
+          <span class="inline-flex items-center gap-1 tablet:hidden" aria-hidden="true">
+            <AppIcon name="plus" class="h-4 w-4" />
+            Kind
+          </span>
+          <span class="hidden tablet:inline">Kind anlegen</span>
         </NuxtLink>
       </div>
     </div>
@@ -111,14 +122,24 @@ const filteredMembers = computed(() => {
       </template>
     </div>
 
-    <div v-if="authStore.currentUser?.role === 'SUPERUSER' || authStore.currentUser?.role === 'MANAGER'" class="mb-4">
+    <form
+      v-if="authStore.currentUser?.role === 'SUPERUSER' || authStore.currentUser?.role === 'MANAGER'"
+      role="search"
+      class="card mb-4 flex max-w-full gap-2"
+      @submit.prevent="onSearchSubmit"
+    >
       <input
+        ref="searchInput"
         v-model="search"
         type="search"
         class="input max-w-sm"
+        aria-label="Kinder nach Name suchen"
         placeholder="Suche nach Name…"
       />
-    </div>
+      <button type="submit" class="btn-secondary shrink-0" aria-label="Suchen">
+        <AppIcon name="search" class="h-5 w-5" />
+      </button>
+    </form>
 
     <LoadingBrumm v-if="membersStore.isLoading" />
 

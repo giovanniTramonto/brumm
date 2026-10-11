@@ -24,6 +24,7 @@ const isReactivating = ref(false)
 const isDisabling = ref(false)
 const isResendingInvite = ref(false)
 const isCancellingInvite = ref(false)
+const deleteError = ref<string | null>(null)
 const inviteActionError = ref<string | null>(null)
 
 type DocumentEntry = { id: string; name: string; createdTime: string | null }
@@ -63,6 +64,15 @@ const isUploadingContractDoc = ref(false)
 const contractUploadError = ref<string | null>(null)
 
 const { isMember, isTeam, canManageMembers } = storeToRefs(authStore)
+
+// With invite, activation waits until the guardians submitted their documents (unless the admin is the guardian)
+const isActivateBlocked = computed(() => {
+  const m = member.value
+  return !!m && m.hasInvite && !m.hasSubmittedDocuments && !isOwnChild.value
+})
+
+// TEAM sees the form read-only (inert); managers without member access get a plain data list
+const hasForm = computed(() => canManageMembers.value || isMember.value || isTeam.value)
 
 const isKidDataLocked = computed(() => {
   if (!member.value) return false
@@ -488,6 +498,8 @@ async function onSave() {
       ? (membersStore.groups.find((g) => g.id === refreshed.member.groupId) ?? null)
       : null
     membersStore.updateMember({ ...refreshed.member, isOwnChild: isOwnChild.value, group })
+    // Same target as the "← Zurück" link
+    await navigateTo(isMember.value ? `/ini/${slug}/dashboard` : `/ini/${slug}/members`)
   } catch (err: unknown) {
     saveError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
@@ -583,7 +595,7 @@ async function onDeleteMember() {
         ? 'Kind wirklich dauerhaft entfernen? Die Eltern erhalten eine E-Mail.'
         : 'Kind wirklich dauerhaft entfernen?'
   if (!member.value || !confirm(confirmText)) return
-  inviteActionError.value = null
+  deleteError.value = null
   isCancellingInvite.value = true
   try {
     await $fetch(`/api/ini/${slug}/members/${member.value.id}/delete`, {
@@ -592,7 +604,7 @@ async function onDeleteMember() {
     membersStore.removeMember(member.value.id)
     await navigateTo(`/ini/${slug}/members`)
   } catch (err: unknown) {
-    inviteActionError.value =
+    deleteError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler'
   } finally {
     isCancellingInvite.value = false
@@ -664,631 +676,15 @@ async function onSubmit() {
     </div>
 
     <template v-else-if="member">
-      <div class="card space-y-4">
-        <div class="flex items-center justify-between">
-          <h1 class="text-xl font-semibold text-gray-900">
-            {{ member.firstName }} {{ member.lastName }}
-          </h1>
-          <span
-            role="status"
-            class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="
-              member.status === 'ACTIVE'
-                ? 'bg-green-100 text-green-800'
-                : member.status === 'INACTIVE'
-                  ? 'bg-purple-100 text-purple-800'
-                  : member.status === 'DEACTIVATED'
-                    ? 'bg-gray-100 text-gray-600'
-                    : member.status === 'PENDING_INVITE'
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-blue-100 text-blue-800'
-            "
-          >
-            {{
-              member.status === 'ACTIVE'
-                ? "Aktiv"
-                : member.status === 'INACTIVE'
-                  ? "Inaktiv"
-                  : member.status === 'DEACTIVATED'
-                    ? "Abgemeldet"
-                    : member.status === 'PENDING_INVITE'
-                      ? "Ausstehend"
-                      : "Bestätigt"
-            }}
-          </span>
-        </div>
-
-        <p v-if="canManageMembers && !member.hasInvite && (member.status === 'PENDING_INVITE' || member.status === 'REGISTERED')" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
-          Kind wurde ohne Einladung angelegt.
-        </p>
-
-        <!-- canManageMembers or own MEMBER: editable form; TEAM: read-only -->
-        <form
-          v-if="canManageMembers || isMember || isTeam"
-          :inert="isTeam"
-          class="space-y-4"
-          @submit.prevent="onSave"
-        >
-          <div
-            v-if="saveError"
-            role="alert"
-            class="rounded-md bg-red-50 p-3 text-sm text-red-700"
-          >
-            {{ saveError }}
-          </div>
-
-          <div :inert="isKidDataLocked" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="field-firstName" class="label">Vorname *</label>
-              <input
-                id="field-firstName"
-                v-model="form.firstName"
-                type="text"
-                class="input mt-1"
-                :readonly="isKidDataLocked"
-                :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
-              />
-            </div>
-            <div>
-              <label for="field-lastName" class="label">Nachname *</label>
-              <input
-                id="field-lastName"
-                v-model="form.lastName"
-                type="text"
-                class="input mt-1"
-                :readonly="isKidDataLocked"
-                :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label for="field-birthDate" class="label">Geburtsdatum *</label>
-            <input
-              id="field-birthDate"
-              v-model="form.birthDate"
-              type="date"
-              class="input mt-1"
-              :readonly="isKidDataLocked"
-              :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
-            />
-          </div>
-
-          <div>
-            <label for="field-groupId" class="label">Gruppe</label>
-            <select
-              id="field-groupId"
-              v-model="form.groupId"
-              class="input mt-1"
-              :disabled="isKidDataLocked"
-            >
-              <option value="">Keine Gruppe</option>
-              <option v-for="group in groups" :key="group.id" :value="group.id">
-                {{ group.name }}
-              </option>
-            </select>
-          </div>
-
-          <div v-if="canManageMembers">
-            <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
-            <input
-              id="field-voucherNumber"
-              v-model="form.voucherNumber"
-              type="text"
-              class="input mt-1"
-              :readonly="isKidDataLocked"
-            />
-          </div>
-
-          <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="field-contractStart" class="label">Vertragsbeginn</label>
-              <input
-                id="field-contractStart"
-                v-model="form.contractStart"
-                type="month"
-                class="input mt-1"
-                :disabled="isKidDataLocked"
-              />
-            </div>
-            <div>
-              <label for="field-contractEnd" class="label">Vertragsende</label>
-              <input
-                id="field-contractEnd"
-                v-model="form.contractEnd"
-                type="month"
-                class="input mt-1"
-                :disabled="isKidDataLocked"
-              />
-            </div>
-          </div>
-          <div v-else>
-            <label for="field-contractEnd2" class="label">Vertragsende</label>
-            <input
-              id="field-contractEnd2"
-              v-model="form.contractEnd"
-              type="month"
-              class="input mt-1"
-              :disabled="isKidDataLocked"
-            />
-          </div>
-
-          <div v-if="canManageMembers">
-            <label for="field-careType" class="label">Betreuungsumfang</label>
-            <select
-              id="field-careType"
-              v-model="form.careType"
-              class="input mt-1"
-              :disabled="isKidDataLocked"
-            >
-              <option value="">Nicht angegeben</option>
-              <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
-                {{ opt.label }}
-              </option>
-            </select>
-          </div>
-
-          <div v-if="canManageMembers">
-            <label class="label">Zuschläge</label>
-            <div class="mt-1 flex flex-wrap gap-4">
-              <label
-                v-for="opt in SURCHARGE_OPTIONS"
-                :key="opt.key"
-                class="flex items-center gap-2 text-sm text-gray-700"
-              >
-                <input
-                  v-model="form.surcharges"
-                  type="checkbox"
-                  :value="opt.key"
-                  class="h-4 w-4 rounded border-gray-300"
-                  :disabled="isKidDataLocked"
-                />
-                {{ opt.label }}
-              </label>
-            </div>
-          </div>
-          </div>
-
-          <hr class="border-gray-200" />
-
-          <div :inert="isContactLocked" class="space-y-4">
-            <GuardianField
-              v-model="guardian1Fields"
-              label="Erziehungsber. 1"
-              fieldId="field-guardian-1"
-              required
-              :readonly="isContactLocked"
-              :memberId="member.id"
-              :originalEmail="member.email1"
-              :otherEmail="form.email2"
-            />
-
-            <GuardianField
-              v-model="guardian2Fields"
-              label="Erziehungsber. 2"
-              fieldId="field-guardian-2"
-              :readonly="isContactLocked"
-              :memberId="member.id"
-              :originalEmail="member.email2 ?? undefined"
-              :otherEmail="form.email1"
-            />
-
-            <div>
-              <label for="field-address" class="label">Adresse</label>
-              <input
-                id="field-address"
-                v-model="form.address"
-                type="text"
-                class="input mt-1"
-                :readonly="isContactLocked"
-              />
-            </div>
-          </div>
-
-
-        <!-- MEMBER: Aktiv → documents -->
-        <template v-if="!isTeam && isMember && (member.status === 'ACTIVE' || member.status === 'INACTIVE')">
-          <div class="border-t pt-4">
-            <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-            <LoadingBrumm v-if="isLoadingDocs" />
-            <p v-else-if="documents.length === 0" class="text-sm text-gray-500">
-              Keine Vertragsunterlagen hochgeladen.
-            </p>
-            <ul v-else class="space-y-1">
-              <li
-                v-for="doc in documents"
-                :key="doc.id"
-                class="flex items-center gap-2 text-sm text-gray-700"
-              >
-                <span aria-hidden="true" class="text-gray-400">📄</span>
-                <span class="flex-1">{{ doc.name }}</span>
-                <a
-                  :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
-                  class="btn-secondary py-1 text-xs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >Ansehen ↗</a
-                >
-              </li>
-            </ul>
-          </div>
-
-          <div class="border-t pt-4">
-            <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
-            <LoadingBrumm v-if="isLoadingOtherDocs" />
-            <template v-else>
-              <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
-                <li
-                  v-for="doc in otherDocuments"
-                  :key="doc.id"
-                  class="flex items-center gap-2 text-sm text-gray-700"
-                >
-                  <span aria-hidden="true" class="text-gray-400">📄</span>
-                  <span class="flex-1">{{ doc.name }}</span>
-                  <label
-                    class="btn-secondary cursor-pointer py-1 text-xs"
-                    :class="{ 'opacity-50': replacingOtherFileId === doc.id }"
-                  >
-                    {{ replacingOtherFileId === doc.id ? "Loading …" : "Ändern" }}
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      class="hidden"
-                      :disabled="replacingOtherFileId === doc.id"
-                      @change="onReplaceOtherDocument(doc.id, $event)"
-                    />
-                  </label>
-                  <span v-if="otherReplaceErrorFileId === doc.id && otherReplaceError" class="text-xs text-red-600">{{ otherReplaceError }}</span>
-                  <a
-                    :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
-                    class="btn-secondary py-1 text-xs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >Ansehen ↗</a
-                  >
-                </li>
-              </ul>
-              <label
-                class="btn-secondary cursor-pointer text-sm"
-                :class="{ 'opacity-50': isUploadingOtherDoc }"
-              >
-                {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  class="hidden"
-                  :disabled="isUploadingOtherDoc"
-                  @change="onUploadOtherDocument"
-                />
-              </label>
-              <p v-if="otherUploadError" role="alert" class="mt-1 text-xs text-red-600">
-                {{ otherUploadError }}
-              </p>
-            </template>
-          </div>
-        </template>
-
-        <!-- MEMBER: Bestätigt → template-based upload list -->
-        <template v-else-if="!isTeam && isMember && member.status === 'REGISTERED'">
-          <div class="border-t pt-4">
-            <div class="mb-3 flex items-center gap-3">
-              <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-              <span v-if="!member.hasInvite" class="text-xs text-gray-500">Die Unterlagen werden von der Kita hochgeladen</span>
-              <span v-else-if="!localAllSubmitted" class="text-xs text-orange-600">Bitte vervollständige alle Unterlagen</span>
-            </div>
-          </div>
-
-          <LoadingBrumm v-if="isLoadingTemplates" />
-
-          <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
-            Die Kita hat noch keine Vertragsunterlagen hinterlegt.
-          </p>
-
-          <template v-else-if="submitted">
-            <ul class="divide-y divide-gray-100">
-              <li
-                v-for="t in memberDocTemplates.filter(t => t.submission)"
-                :key="t.id"
-                class="flex items-center gap-2 py-2 text-sm text-gray-700"
-              >
-                <span aria-hidden="true" class="text-gray-400">📄</span>
-                <span class="flex-1">{{ t.submission?.filename ?? t.name }}</span>
-                <a
-                  :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
-                  class="btn-secondary py-1 text-xs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >Ansehen ↗</a>
-              </li>
-            </ul>
-            <p class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
-              Unterlagen wurden erfolgreich eingereicht. Du erhältst eine E-Mail, sobald dein Kind aktiviert wurde.
-            </p>
-          </template>
-
-          <p v-if="!member.hasInvite" class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
-            Du erhältst eine E-Mail, sobald dein Kind aktiviert wurde.
-          </p>
-
-        </template>
-
-        <!-- TEAM or other: readonly data -->
-        <dl v-else-if="!isMember && !canManageMembers && !isTeam" class="space-y-2 text-sm">
-          <div class="flex gap-2">
-            <dt class="w-40 text-gray-500">Geburtsdatum</dt>
-            <dd class="text-gray-900">
-              {{ new Date(member.birthDate).toLocaleDateString("de-DE") }}
-            </dd>
-          </div>
-          <div v-if="member.guardian1Name" class="flex gap-2">
-            <dt class="w-40 text-gray-500">Erziehungsber. 1</dt>
-            <dd class="text-gray-900">{{ member.guardian1Name }}</dd>
-          </div>
-          <div v-if="member.guardian2Name" class="flex gap-2">
-            <dt class="w-40 text-gray-500">Erziehungsber. 2</dt>
-            <dd class="text-gray-900">{{ member.guardian2Name }}</dd>
-          </div>
-          <div v-if="member.contractStart" class="flex gap-2">
-            <dt class="w-40 text-gray-500">Vertragsbeginn</dt>
-            <dd class="text-gray-900">{{ member.contractStart }}</dd>
-          </div>
-          <div v-if="member.contractEnd" class="flex gap-2">
-            <dt class="w-40 text-gray-500">Vertragsende</dt>
-            <dd class="text-gray-900">{{ member.contractEnd }}</dd>
-          </div>
-        </dl>
-
-        <!-- canManageMembers: document overview -->
-        <div v-if="canManageMembers" class="border-t pt-4">
-          <div class="mb-3 flex items-center gap-3">
-            <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
-            <span
-              v-if="!member.hasInvite && member.status === 'REGISTERED'"
-              class="text-xs text-gray-500"
-            >Unterlagen können direkt hochgeladen werden</span>
-            <span
-              v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments && !isOwnChild"
-              class="text-xs text-orange-600"
-            >Noch nicht fertig eingereicht</span>
-          </div>
-
-          <LoadingBrumm v-if="isLoadingTemplates || isLoadingDocs" />
-
-          <!-- Aktiv oder Abgemeldet: nur hochgeladene Dateien anzeigen -->
-          <template v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE' || member.status === 'DEACTIVATED'">
-            <ul v-if="documents.length > 0" class="divide-y divide-gray-100">
-              <li
-                v-for="doc in documents"
-                :key="doc.id"
-                class="flex items-center gap-2 py-2 text-sm text-gray-700"
-              >
-                <span aria-hidden="true" class="text-gray-400">📄</span>
-                <span class="flex-1">{{ doc.name }}</span>
-                <a
-                  :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
-                  class="btn-secondary py-1 text-xs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >Ansehen ↗</a>
-              </li>
-            </ul>
-            <p v-else class="text-sm text-gray-500">Keine Vertragsunterlagen hochgeladen.</p>
-          </template>
-
-          <!-- No invite: direct upload by canManageMembers -->
-          <template v-else-if="!member.hasInvite">
-            <ul v-if="documents.length > 0" class="mb-3 divide-y divide-gray-100">
-              <li
-                v-for="doc in documents"
-                :key="doc.id"
-                class="flex items-center gap-2 py-2 text-sm text-gray-700"
-              >
-                <span aria-hidden="true" class="text-gray-400">📄</span>
-                <span class="flex-1">{{ doc.name }}</span>
-                <a
-                  :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
-                  class="btn-secondary py-1 text-xs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >Ansehen ↗</a>
-                <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteContractDocument(doc.id)">Löschen</button>
-              </li>
-            </ul>
-            <div class="flex items-center gap-3">
-              <label
-                class="btn-secondary cursor-pointer text-sm"
-                :class="{ 'opacity-50': isUploadingContractDoc }"
-              >
-                {{ isUploadingContractDoc ? 'Loading …' : 'Datei hinzufügen' }}
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  class="hidden"
-                  :disabled="isUploadingContractDoc"
-                  @change="onUploadContractDocument"
-                />
-              </label>
-              <span v-if="contractUploadError" class="text-xs text-red-600">{{ contractUploadError }}</span>
-            </div>
-          </template>
-
-          <p v-else-if="member.status === 'PENDING_INVITE'" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">Upload erst möglich, wenn die Erziehungsberechtigten die Einladung bestätigt haben.</p>
-
-          <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">Noch keine Vertragsvorlagen konfiguriert – <NuxtLink :to="`/ini/${slug}/contract-templates`" class="font-medium underline">Jetzt anlegen →</NuxtLink></p>
-
-          <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates, shown alongside template list before activation -->
-          <ul v-if="filteredDocuments.length > 0 && member.hasInvite && member.status === 'REGISTERED'" class="mt-2 divide-y divide-gray-100">
-            <li
-              v-for="doc in filteredDocuments"
-              :key="doc.id"
-              class="flex items-center gap-2 py-2 text-sm text-gray-700"
-            >
-              <span aria-hidden="true" class="text-gray-400">📄</span>
-              <span class="flex-1">{{ doc.name }}</span>
-              <a
-                :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
-                class="btn-secondary py-1 text-xs"
-                target="_blank"
-                rel="noopener noreferrer"
-              >Ansehen ↗</a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Shared template list: MEMBER (Bestätigt, vor Einreichen) + canManageMembers (pre-activation, invite) -->
-        <template
-          v-if="
-            memberDocTemplates.length > 0 &&
-            member.status === 'REGISTERED' &&
-            member.hasInvite &&
-            (!submitted || canManageMembers) &&
-            (isMember || canManageMembers)
-          "
-        >
-          <ul class="divide-y divide-gray-100">
-            <li
-              v-for="t in visibleTemplates"
-              :key="t.id"
-              class="flex items-center gap-3 py-3"
-            >
-              <span
-                class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1"
-                :class="isDone(t) ? 'bg-green-100 text-green-600 ring-green-400' : 'bg-gray-50 text-gray-300 ring-gray-200'"
-                :aria-label="isDone(t) ? 'Erledigt' : 'Ausstehend'"
-                aria-hidden="false"
-              ><span aria-hidden="true">✓</span></span>
-              <span class="min-w-0 flex-1 text-sm text-gray-900">{{ t.name }}</span>
-              <div class="flex shrink-0 items-center gap-2">
-                <template v-if="t.documentType === 'read'">
-                  <button
-                    v-if="canInteractWithTemplates && !readMap[t.id]"
-                    type="button"
-                    class="btn-secondary py-1 text-xs"
-                    @click="onMarkRead(t.id)"
-                  >
-                    Als gelesen markieren
-                  </button>
-                  <span
-                    v-if="readMap[t.id]"
-                    class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
-                  >✓ Gelesen</span>
-                  <a
-                    v-if="t.submission?.s3Key"
-                    :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
-                    class="btn-secondary py-1 text-xs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Ansehen ↗</a>
-                  <a
-                    v-else-if="t.hasFile && canInteractWithTemplates"
-                    :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
-                    class="btn-secondary py-1 text-xs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Ansehen ↗</a>
-                </template>
-                <template v-else-if="t.documentType === 'upload' || t.documentType === 'submit'">
-                  <span
-                    v-if="t.submission?.filename"
-                    class="max-w-[160px] truncate text-xs text-gray-500"
-                    :title="t.submission.filename"
-                  >{{ t.submission.filename }}</span>
-                  <label
-                    v-if="canInteractWithTemplates"
-                    class="btn-secondary cursor-pointer py-1 text-xs"
-                    :class="{ 'opacity-50': uploadingTemplateId === t.id }"
-                  >
-                    {{ uploadingTemplateId === t.id ? 'Loading …' : t.submission ? 'Ändern' : 'Hochladen' }}
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      class="hidden"
-                      :disabled="uploadingTemplateId === t.id"
-                      @change="onUploadForTemplate(t.id, $event)"
-                    />
-                  </label>
-                  <span
-                    v-if="uploadErrors[t.id]"
-                    role="alert"
-                    class="max-w-[160px] truncate text-xs text-red-600"
-                  >{{ uploadErrors[t.id] }}</span>
-                  <a
-                    v-if="t.submission"
-                    :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
-                    class="btn-secondary py-1 text-xs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Ansehen ↗</a>
-                  <a
-                    v-else-if="t.documentType === 'upload' && t.hasFile && canInteractWithTemplates"
-                    :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
-                    class="btn-secondary py-1 text-xs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Ansehen ↗</a>
-                </template>
-              </div>
-            </li>
-          </ul>
-        </template>
-
-        <div v-if="canManageMembers && (member.status === 'ACTIVE' || member.status === 'INACTIVE')" class="border-t pt-4">
-          <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
-          <LoadingBrumm v-if="isLoadingOtherDocs" />
-          <template v-else>
-            <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
-              <li
-                v-for="doc in otherDocuments"
-                :key="doc.id"
-                class="flex items-center gap-2 text-sm text-gray-700"
-              >
-                <span aria-hidden="true" class="text-gray-400">📄</span>
-                <span class="flex-1">{{ doc.name }}</span>
-                <label
-                  class="btn-secondary cursor-pointer py-1 text-xs"
-                  :class="{ 'opacity-50': replacingOtherFileId === doc.id }"
-                >
-                  {{ replacingOtherFileId === doc.id ? "Loading …" : "Ändern" }}
-                  <input
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                    class="hidden"
-                    :disabled="replacingOtherFileId === doc.id"
-                    @change="onReplaceOtherDocument(doc.id, $event)"
-                  />
-                </label>
-                <span v-if="otherReplaceErrorFileId === doc.id && otherReplaceError" class="text-xs text-red-600">{{ otherReplaceError }}</span>
-                <a
-                  :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
-                  class="btn-secondary py-1 text-xs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >Ansehen ↗</a
-                >
-                <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteOtherDocument(doc.id)">Löschen</button>
-              </li>
-            </ul>
-            <div class="flex items-center gap-3">
-              <label
-                class="btn-secondary cursor-pointer text-sm"
-                :class="{ 'opacity-50': isUploadingOtherDoc }"
-              >
-                {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                  class="hidden"
-                  :disabled="isUploadingOtherDoc"
-                  @change="onUploadOtherDocument"
-                />
-              </label>
-              <span v-if="otherUploadError" role="alert" class="text-xs text-red-600">{{ otherUploadError }}</span>
-            </div>
-          </template>
-        </div>
-
-        <div v-if="canManageMembers || (isMember && !isContactLocked)" class="space-y-2 border-t pt-4">
+      <!-- One form across all sections so "Speichern" saves everything; managers without member access get a plain div with read-only data -->
+      <component
+        :is="hasForm ? 'form' : 'div'"
+        :inert="isTeam"
+        class="space-y-4"
+        @submit.prevent="onSave"
+      >
+        <!-- Actions: sticky so "Speichern" stays reachable while scrolling through the sections -->
+        <div v-if="canManageMembers || (isMember && !isContactLocked)" class="card sticky top-4 z-10 space-y-2 bg-gray-900 ring-gray-700">
           <p v-if="member.status === 'DEACTIVATED'" class="rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-700">
             Kind wurde abgemeldet.<template v-if="deletionDate"> Automatische Löschung am {{ deletionDate }}.</template>
           </p>
@@ -1312,16 +708,16 @@ async function onSubmit() {
               >
                 Einreichen
               </button>
-            <div v-if="canManageMembers" class="flex gap-3">
-            <!-- Vor Aktivierung: Aktivieren + Einladung + Kind entfernen -->
+            <div v-if="canManageMembers" class="flex items-center gap-3">
+            <!-- Vor Aktivierung: Kind aktivieren + Einladung erneut senden -->
             <template v-if="member.status === 'PENDING_INVITE' || member.status === 'REGISTERED'">
               <button
                 type="button"
                 class="btn-primary text-sm"
-                :disabled="(!member.hasSubmittedDocuments && member.hasInvite && !isOwnChild) || !canManageMembers"
+                :disabled="isActivateBlocked || !canManageMembers"
                 @click="onActivate"
               >
-                Aktivieren
+                Kind aktivieren
               </button>
               <button
                 v-if="member.status === 'PENDING_INVITE'"
@@ -1331,14 +727,6 @@ async function onSubmit() {
                 @click="onResendInvite"
               >
                 {{ isResendingInvite ? "Wird gesendet…" : "Einladung erneut senden" }}
-              </button>
-              <button
-                type="button"
-                class="btn-danger text-sm"
-                :disabled="isCancellingInvite || !canManageMembers"
-                @click="onDeleteMember"
-              >
-                Kind entfernen
               </button>
             </template>
 
@@ -1372,24 +760,669 @@ async function onSubmit() {
               >
                 {{ isReactivating ? "Wird reaktiviert…" : "Abmeldung rückgängig" }}
               </button>
-              <button
-                type="button"
-                class="btn-danger text-sm"
-                :disabled="isCancellingInvite || !canManageMembers"
-                @click="onDeleteMember"
-              >
-                Sofort löschen
-              </button>
             </template>
             </div>
             </div>
           </div>
-          <p v-if="inviteActionError" class="text-sm text-red-700">
+          <p v-if="inviteActionError" class="text-sm text-red-300">
             {{ inviteActionError }}
           </p>
         </div>
-        </form>
-      </div>
+
+        <!-- 1) General -->
+        <section class="card space-y-4" aria-labelledby="section-general">
+          <div class="flex items-center justify-between">
+            <h1 id="section-general" class="text-xl font-semibold text-gray-900">
+              {{ member.firstName }} {{ member.lastName }}
+            </h1>
+            <span
+              role="status"
+              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              :class="
+                member.status === 'ACTIVE'
+                  ? 'bg-green-100 text-green-800'
+                  : member.status === 'INACTIVE'
+                    ? 'bg-purple-100 text-purple-800'
+                    : member.status === 'DEACTIVATED'
+                      ? 'bg-gray-100 text-gray-600'
+                      : member.status === 'PENDING_INVITE'
+                        ? 'bg-orange-100 text-orange-800'
+                        : 'bg-blue-100 text-blue-800'
+              "
+            >
+              {{
+                member.status === 'ACTIVE'
+                  ? "Aktiv"
+                  : member.status === 'INACTIVE'
+                    ? "Inaktiv"
+                    : member.status === 'DEACTIVATED'
+                      ? "Abgemeldet"
+                      : member.status === 'PENDING_INVITE'
+                        ? "Ausstehend"
+                        : "Bestätigt"
+              }}
+            </span>
+          </div>
+
+          <p v-if="canManageMembers && !member.hasInvite && (member.status === 'PENDING_INVITE' || member.status === 'REGISTERED')" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
+            Kind wurde ohne Einladung angelegt.
+          </p>
+
+        <div
+          v-if="saveError"
+          role="alert"
+          class="rounded-md bg-red-50 p-3 text-sm text-red-700"
+        >
+          {{ saveError }}
+        </div>
+
+          <div v-if="hasForm" :inert="isKidDataLocked" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="field-firstName" class="label">Vorname *</label>
+                <input
+                  id="field-firstName"
+                  v-model="form.firstName"
+                  type="text"
+                  class="input mt-1"
+                  :readonly="isKidDataLocked"
+                  :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
+                />
+              </div>
+              <div>
+                <label for="field-lastName" class="label">Nachname *</label>
+                <input
+                  id="field-lastName"
+                  v-model="form.lastName"
+                  type="text"
+                  class="input mt-1"
+                  :readonly="isKidDataLocked"
+                  :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label for="field-birthDate" class="label">Geburtsdatum *</label>
+              <input
+                id="field-birthDate"
+                v-model="form.birthDate"
+                type="date"
+                class="input mt-1"
+                :readonly="isKidDataLocked"
+                :required="member.status !== 'ACTIVE' && member.status !== 'INACTIVE'"
+              />
+            </div>
+
+            <div>
+              <label for="field-groupId" class="label">Gruppe</label>
+              <select
+                id="field-groupId"
+                v-model="form.groupId"
+                class="input mt-1"
+                :disabled="isKidDataLocked"
+              >
+                <option value="">Keine Gruppe</option>
+                <option v-for="group in groups" :key="group.id" :value="group.id">
+                  {{ group.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <dl v-else class="space-y-2 text-sm">
+            <div class="flex gap-2">
+              <dt class="w-40 text-gray-500">Geburtsdatum</dt>
+              <dd class="text-gray-900">
+                {{ new Date(member.birthDate).toLocaleDateString("de-DE") }}
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- 2) Guardian contact data -->
+        <section class="card space-y-4" aria-labelledby="section-contact">
+          <h2 id="section-contact" class="text-base font-semibold text-gray-900">Kontaktdaten</h2>
+          <div v-if="hasForm" :inert="isContactLocked" class="space-y-4">
+            <GuardianField
+              v-model="guardian1Fields"
+              label="Erziehungsber. 1"
+              fieldId="field-guardian-1"
+              required
+              :readonly="isContactLocked"
+              :memberId="member.id"
+              :originalEmail="member.email1"
+              :otherEmail="form.email2"
+            />
+
+            <GuardianField
+              v-model="guardian2Fields"
+              label="Erziehungsber. 2"
+              fieldId="field-guardian-2"
+              :readonly="isContactLocked"
+              :memberId="member.id"
+              :originalEmail="member.email2 ?? undefined"
+              :otherEmail="form.email1"
+            />
+
+            <div>
+              <label for="field-address" class="label">Adresse</label>
+              <input
+                id="field-address"
+                v-model="form.address"
+                type="text"
+                class="input mt-1"
+                :readonly="isContactLocked"
+              />
+            </div>
+          </div>
+          <dl v-else class="space-y-2 text-sm">
+            <div v-if="member.guardian1Name" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Erziehungsber. 1</dt>
+              <dd class="text-gray-900">{{ member.guardian1Name }}</dd>
+            </div>
+            <div v-if="member.guardian2Name" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Erziehungsber. 2</dt>
+              <dd class="text-gray-900">{{ member.guardian2Name }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- 3) Contract -->
+        <section class="card space-y-4" aria-labelledby="section-contract">
+          <h2 id="section-contract" class="text-base font-semibold text-gray-900">Vertrag</h2>
+          <div v-if="hasForm" :inert="isKidDataLocked" class="space-y-4">
+            <div v-if="canManageMembers">
+              <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
+              <input
+                id="field-voucherNumber"
+                v-model="form.voucherNumber"
+                type="text"
+                class="input mt-1"
+                :readonly="isKidDataLocked"
+              />
+            </div>
+
+            <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="field-contractStart" class="label">Vertragsbeginn</label>
+                <input
+                  id="field-contractStart"
+                  v-model="form.contractStart"
+                  type="month"
+                  class="input mt-1"
+                  :disabled="isKidDataLocked"
+                />
+              </div>
+              <div>
+                <label for="field-contractEnd" class="label">Vertragsende</label>
+                <input
+                  id="field-contractEnd"
+                  v-model="form.contractEnd"
+                  type="month"
+                  class="input mt-1"
+                  :disabled="isKidDataLocked"
+                />
+              </div>
+            </div>
+            <div v-else>
+              <label for="field-contractEnd2" class="label">Vertragsende</label>
+              <input
+                id="field-contractEnd2"
+                v-model="form.contractEnd"
+                type="month"
+                class="input mt-1"
+                :disabled="isKidDataLocked"
+              />
+            </div>
+
+            <div v-if="canManageMembers">
+              <label for="field-careType" class="label">Betreuungsumfang</label>
+              <select
+                id="field-careType"
+                v-model="form.careType"
+                class="input mt-1"
+                :disabled="isKidDataLocked"
+              >
+                <option value="">Nicht angegeben</option>
+                <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+
+            <div v-if="canManageMembers">
+              <label class="label">Zuschläge</label>
+              <div class="mt-1 flex flex-wrap gap-4">
+                <label
+                  v-for="opt in SURCHARGE_OPTIONS"
+                  :key="opt.key"
+                  class="flex items-center gap-2 text-sm text-gray-700"
+                >
+                  <input
+                    v-model="form.surcharges"
+                    type="checkbox"
+                    :value="opt.key"
+                    class="h-4 w-4 rounded border-gray-300"
+                    :disabled="isKidDataLocked"
+                  />
+                  {{ opt.label }}
+                </label>
+              </div>
+            </div>
+          </div>
+          <dl v-else class="space-y-2 text-sm">
+            <div v-if="member.contractStart" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Vertragsbeginn</dt>
+              <dd class="text-gray-900">{{ member.contractStart }}</dd>
+            </div>
+            <div v-if="member.contractEnd" class="flex gap-2">
+              <dt class="w-40 text-gray-500">Vertragsende</dt>
+              <dd class="text-gray-900">{{ member.contractEnd }}</dd>
+            </div>
+          </dl>
+
+          <!-- MEMBER: Aktiv → documents -->
+          <template v-if="!isTeam && isMember && (member.status === 'ACTIVE' || member.status === 'INACTIVE')">
+            <div class="border-t pt-4">
+              <h3 class="mb-3 text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
+              <LoadingBrumm v-if="isLoadingDocs" />
+              <p v-else-if="documents.length === 0" class="text-sm text-gray-500">
+                Keine Vertragsunterlagen hochgeladen.
+              </p>
+              <ul v-else class="space-y-1">
+                <li
+                  v-for="doc in documents"
+                  :key="doc.id"
+                  class="flex items-center gap-2 text-sm text-gray-700"
+                >
+                  <span aria-hidden="true" class="text-gray-400">📄</span>
+                  <span class="flex-1">{{ doc.name }}</span>
+                  <a
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Ansehen ↗</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="border-t pt-4">
+              <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
+              <LoadingBrumm v-if="isLoadingOtherDocs" />
+              <template v-else>
+                <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
+                  <li
+                    v-for="doc in otherDocuments"
+                    :key="doc.id"
+                    class="flex items-center gap-2 text-sm text-gray-700"
+                  >
+                    <span aria-hidden="true" class="text-gray-400">📄</span>
+                    <span class="flex-1">{{ doc.name }}</span>
+                    <label
+                      class="btn-secondary cursor-pointer py-1 text-xs"
+                      :class="{ 'opacity-50': replacingOtherFileId === doc.id }"
+                    >
+                      {{ replacingOtherFileId === doc.id ? "Loading …" : "Ändern" }}
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        class="hidden"
+                        :disabled="replacingOtherFileId === doc.id"
+                        @change="onReplaceOtherDocument(doc.id, $event)"
+                      />
+                    </label>
+                    <span v-if="otherReplaceErrorFileId === doc.id && otherReplaceError" class="text-xs text-red-600">{{ otherReplaceError }}</span>
+                    <a
+                      :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Ansehen ↗</a
+                    >
+                  </li>
+                </ul>
+                <label
+                  class="btn-secondary cursor-pointer text-sm"
+                  :class="{ 'opacity-50': isUploadingOtherDoc }"
+                >
+                  {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    class="hidden"
+                    :disabled="isUploadingOtherDoc"
+                    @change="onUploadOtherDocument"
+                  />
+                </label>
+                <p v-if="otherUploadError" role="alert" class="mt-1 text-xs text-red-600">
+                  {{ otherUploadError }}
+                </p>
+              </template>
+            </div>
+          </template>
+
+          <!-- MEMBER: Bestätigt → template-based upload list -->
+          <template v-else-if="!isTeam && isMember && member.status === 'REGISTERED'">
+            <div class="border-t pt-4">
+              <div class="mb-3 flex items-center gap-3">
+                <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
+                <span v-if="!member.hasInvite" class="text-xs text-gray-500">Die Unterlagen werden von der Kita hochgeladen</span>
+                <span v-else-if="!localAllSubmitted" class="text-xs text-orange-600">Bitte vervollständige alle Unterlagen</span>
+              </div>
+            </div>
+
+            <LoadingBrumm v-if="isLoadingTemplates" />
+
+            <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">
+              Die Kita hat noch keine Vertragsunterlagen hinterlegt.
+            </p>
+
+            <template v-else-if="submitted">
+              <ul class="divide-y divide-gray-100">
+                <li
+                  v-for="t in memberDocTemplates.filter(t => t.submission)"
+                  :key="t.id"
+                  class="flex items-center gap-2 py-2 text-sm text-gray-700"
+                >
+                  <span aria-hidden="true" class="text-gray-400">📄</span>
+                  <span class="flex-1">{{ t.submission?.filename ?? t.name }}</span>
+                  <a
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >Ansehen ↗</a>
+                </li>
+              </ul>
+              <p class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
+                Unterlagen wurden erfolgreich eingereicht. Du erhältst eine E-Mail, sobald dein Kind aktiviert wurde.
+              </p>
+            </template>
+
+            <p v-if="!member.hasInvite" class="mt-3 rounded-md bg-green-50 px-3 py-2 text-xs text-green-700">
+              Du erhältst eine E-Mail, sobald dein Kind aktiviert wurde.
+            </p>
+
+          </template>
+
+          <!-- canManageMembers: document overview -->
+          <div v-if="canManageMembers" class="border-t pt-4">
+            <div class="mb-3 flex items-center gap-3">
+              <h3 class="text-sm font-medium text-gray-900">Vertragsunterlagen</h3>
+              <span
+                v-if="!member.hasInvite && member.status === 'REGISTERED'"
+                class="text-xs text-gray-500"
+              >Unterlagen können direkt hochgeladen werden</span>
+              <span
+                v-else-if="member.hasInvite && member.status === 'REGISTERED' && !member.hasSubmittedDocuments && !isOwnChild"
+                class="text-xs text-orange-600"
+              >Noch nicht fertig eingereicht</span>
+            </div>
+
+            <LoadingBrumm v-if="isLoadingTemplates || isLoadingDocs" />
+
+            <!-- Aktiv oder Abgemeldet: nur hochgeladene Dateien anzeigen -->
+            <template v-else-if="member.status === 'ACTIVE' || member.status === 'INACTIVE' || member.status === 'DEACTIVATED'">
+              <ul v-if="documents.length > 0" class="divide-y divide-gray-100">
+                <li
+                  v-for="doc in documents"
+                  :key="doc.id"
+                  class="flex items-center gap-2 py-2 text-sm text-gray-700"
+                >
+                  <span aria-hidden="true" class="text-gray-400">📄</span>
+                  <span class="flex-1">{{ doc.name }}</span>
+                  <a
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >Ansehen ↗</a>
+                </li>
+              </ul>
+              <p v-else class="text-sm text-gray-500">Keine Vertragsunterlagen hochgeladen.</p>
+            </template>
+
+            <!-- No invite: direct upload by canManageMembers -->
+            <template v-else-if="!member.hasInvite">
+              <ul v-if="documents.length > 0" class="mb-3 divide-y divide-gray-100">
+                <li
+                  v-for="doc in documents"
+                  :key="doc.id"
+                  class="flex items-center gap-2 py-2 text-sm text-gray-700"
+                >
+                  <span aria-hidden="true" class="text-gray-400">📄</span>
+                  <span class="flex-1">{{ doc.name }}</span>
+                  <a
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >Ansehen ↗</a>
+                  <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteContractDocument(doc.id)">Löschen</button>
+                </li>
+              </ul>
+              <div class="flex items-center gap-3">
+                <label
+                  class="btn-secondary cursor-pointer text-sm"
+                  :class="{ 'opacity-50': isUploadingContractDoc }"
+                >
+                  {{ isUploadingContractDoc ? 'Loading …' : 'Datei hinzufügen' }}
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    class="hidden"
+                    :disabled="isUploadingContractDoc"
+                    @change="onUploadContractDocument"
+                  />
+                </label>
+                <span v-if="contractUploadError" class="text-xs text-red-600">{{ contractUploadError }}</span>
+              </div>
+            </template>
+
+            <p v-else-if="member.status === 'PENDING_INVITE'" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">Upload erst möglich, wenn die Erziehungsberechtigten die Einladung bestätigt haben.</p>
+
+            <p v-else-if="memberDocTemplates.length === 0" class="rounded-md bg-orange-50 px-3 py-2 text-xs text-orange-700">Noch keine Vertragsvorlagen konfiguriert – <NuxtLink :to="`/ini/${slug}/contract-templates`" class="font-medium underline">Jetzt anlegen →</NuxtLink></p>
+
+            <!-- Directly uploaded documents (e.g. no-invite flow), not covered by templates, shown alongside template list before activation -->
+            <ul v-if="filteredDocuments.length > 0 && member.hasInvite && member.status === 'REGISTERED'" class="mt-2 divide-y divide-gray-100">
+              <li
+                v-for="doc in filteredDocuments"
+                :key="doc.id"
+                class="flex items-center gap-2 py-2 text-sm text-gray-700"
+              >
+                <span aria-hidden="true" class="text-gray-400">📄</span>
+                <span class="flex-1">{{ doc.name }}</span>
+                <a
+                  :href="`/api/ini/${slug}/members/${memberId}/documents/${doc.id}/download`"
+                  class="btn-secondary py-1 text-xs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >Ansehen ↗</a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Shared template list: MEMBER (Bestätigt, vor Einreichen) + canManageMembers (pre-activation, invite) -->
+          <template
+            v-if="
+              memberDocTemplates.length > 0 &&
+              member.status === 'REGISTERED' &&
+              member.hasInvite &&
+              (!submitted || canManageMembers) &&
+              (isMember || canManageMembers)
+            "
+          >
+            <ul class="divide-y divide-gray-100">
+              <li
+                v-for="t in visibleTemplates"
+                :key="t.id"
+                class="flex items-center gap-3 py-3"
+              >
+                <span
+                  class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1"
+                  :class="isDone(t) ? 'bg-green-100 text-green-600 ring-green-400' : 'bg-gray-50 text-gray-300 ring-gray-200'"
+                  :aria-label="isDone(t) ? 'Erledigt' : 'Ausstehend'"
+                  aria-hidden="false"
+                ><span aria-hidden="true">✓</span></span>
+                <span class="min-w-0 flex-1 text-sm text-gray-900">{{ t.name }}</span>
+                <div class="flex shrink-0 items-center gap-2">
+                  <template v-if="t.documentType === 'read'">
+                    <button
+                      v-if="canInteractWithTemplates && !readMap[t.id]"
+                      type="button"
+                      class="btn-secondary py-1 text-xs"
+                      @click="onMarkRead(t.id)"
+                    >
+                      Als gelesen markieren
+                    </button>
+                    <span
+                      v-if="readMap[t.id]"
+                      class="btn-secondary py-1 text-xs bg-green-50 text-green-700 ring-green-400 pointer-events-none"
+                    >✓ Gelesen</span>
+                    <a
+                      v-if="t.submission?.s3Key"
+                      :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >Ansehen ↗</a>
+                    <a
+                      v-else-if="t.hasFile && canInteractWithTemplates"
+                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >Ansehen ↗</a>
+                  </template>
+                  <template v-else-if="t.documentType === 'upload' || t.documentType === 'submit'">
+                    <span
+                      v-if="t.submission?.filename"
+                      class="max-w-[160px] truncate text-xs text-gray-500"
+                      :title="t.submission.filename"
+                    >{{ t.submission.filename }}</span>
+                    <label
+                      v-if="canInteractWithTemplates"
+                      class="btn-secondary cursor-pointer py-1 text-xs"
+                      :class="{ 'opacity-50': uploadingTemplateId === t.id }"
+                    >
+                      {{ uploadingTemplateId === t.id ? 'Loading …' : t.submission ? 'Ändern' : 'Hochladen' }}
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                        class="hidden"
+                        :disabled="uploadingTemplateId === t.id"
+                        @change="onUploadForTemplate(t.id, $event)"
+                      />
+                    </label>
+                    <span
+                      v-if="uploadErrors[t.id]"
+                      role="alert"
+                      class="max-w-[160px] truncate text-xs text-red-600"
+                    >{{ uploadErrors[t.id] }}</span>
+                    <a
+                      v-if="t.submission"
+                      :href="`/api/ini/${slug}/members/${memberId}/documents/contract/${t.id}/download`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >Ansehen ↗</a>
+                    <a
+                      v-else-if="t.documentType === 'upload' && t.hasFile && canInteractWithTemplates"
+                      :href="`/api/ini/${slug}/contract-templates/${t.id}/file`"
+                      class="btn-secondary py-1 text-xs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >Ansehen ↗</a>
+                  </template>
+                </div>
+              </li>
+            </ul>
+          </template>
+
+          <div v-if="canManageMembers && (member.status === 'ACTIVE' || member.status === 'INACTIVE')" class="border-t pt-4">
+            <h3 class="mb-3 text-sm font-medium text-gray-900">Weitere Unterlagen</h3>
+            <LoadingBrumm v-if="isLoadingOtherDocs" />
+            <template v-else>
+              <ul v-if="otherDocuments.length > 0" class="mb-3 space-y-1">
+                <li
+                  v-for="doc in otherDocuments"
+                  :key="doc.id"
+                  class="flex items-center gap-2 text-sm text-gray-700"
+                >
+                  <span aria-hidden="true" class="text-gray-400">📄</span>
+                  <span class="flex-1">{{ doc.name }}</span>
+                  <label
+                    class="btn-secondary cursor-pointer py-1 text-xs"
+                    :class="{ 'opacity-50': replacingOtherFileId === doc.id }"
+                  >
+                    {{ replacingOtherFileId === doc.id ? "Loading …" : "Ändern" }}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      class="hidden"
+                      :disabled="replacingOtherFileId === doc.id"
+                      @change="onReplaceOtherDocument(doc.id, $event)"
+                    />
+                  </label>
+                  <span v-if="otherReplaceErrorFileId === doc.id && otherReplaceError" class="text-xs text-red-600">{{ otherReplaceError }}</span>
+                  <a
+                    :href="`/api/ini/${slug}/members/${memberId}/documents/other/${doc.id}/download`"
+                    class="btn-secondary py-1 text-xs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >Ansehen ↗</a
+                  >
+                  <button type="button" class="btn-secondary py-1 text-xs text-red-600" @click="onDeleteOtherDocument(doc.id)">Löschen</button>
+                </li>
+              </ul>
+              <div class="flex items-center gap-3">
+                <label
+                  class="btn-secondary cursor-pointer text-sm"
+                  :class="{ 'opacity-50': isUploadingOtherDoc }"
+                >
+                  {{ isUploadingOtherDoc ? "Loading …" : "Datei hinzufügen" }}
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    class="hidden"
+                    :disabled="isUploadingOtherDoc"
+                    @change="onUploadOtherDocument"
+                  />
+                </label>
+                <span v-if="otherUploadError" role="alert" class="text-xs text-red-600">{{ otherUploadError }}</span>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- 4) Delete -->
+        <section
+          v-if="canManageMembers && (member.status === 'PENDING_INVITE' || member.status === 'REGISTERED' || member.status === 'DEACTIVATED')"
+          class="card space-y-3"
+          aria-labelledby="section-delete"
+        >
+          <h2 id="section-delete" class="text-base font-semibold text-gray-900">Mitgliedschaft beenden</h2>
+          <p v-if="member.status === 'DEACTIVATED'" class="text-sm text-gray-500">
+            Persönliche Daten werden entfernt. Anonymisierte Daten bleiben für die Berechnung vergangener Monate erhalten.
+          </p>
+          <p v-else class="text-sm text-gray-500">
+            Das Kind wird dauerhaft entfernt.<template v-if="member.hasInvite"> Die Eltern erhalten eine E-Mail.</template>
+          </p>
+          <button
+            type="button"
+            class="btn-danger text-sm"
+            :disabled="isCancellingInvite"
+            @click="onDeleteMember"
+          >
+            {{ isCancellingInvite ? "Wird gelöscht…" : member.status === 'DEACTIVATED' ? "Sofort löschen" : "Kind entfernen" }}
+          </button>
+          <p v-if="deleteError" role="alert" class="text-sm text-red-600">
+            {{ deleteError }}
+          </p>
+        </section>
+      </component>
 
       <FootnoteCard v-if="member?.lastEditedAt">
         <p class="text-xs">
