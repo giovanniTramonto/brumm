@@ -86,6 +86,7 @@ export default defineEventHandler(async (event) => {
         contractStart: md.contractStart,
         // Every MANAGER needs it for the ISBJ contracts page, not only member managers
         voucherNumber: currentUser.role !== 'MEMBER' || isOwnChild ? md.voucherNumber : null,
+        contractSignedOn: currentUser.role !== 'MEMBER' || isOwnChild ? md.contractSignedOn : null,
         surcharges: canManageMembers || isOwnChild ? md.surcharges : null,
         group: md.groupId ? (groupMap.get(md.groupId) ?? null) : null,
         storageRef: md.storageRef,

@@ -92,6 +92,7 @@ export default defineEventHandler(async (event) => {
     careType: md.careType,
     contractStart: md.contractStart,
     voucherNumber: md.voucherNumber,
+    contractSignedOn: md.contractSignedOn,
     surcharges: md.surcharges,
     storageRef: md.storageRef,
     contractEnd: md.contractEnd,

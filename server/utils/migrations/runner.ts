@@ -164,6 +164,10 @@ BEGIN
 END $$;
 ALTER TABLE members ADD COLUMN IF NOT EXISTS voucher_number TEXT;`,
   },
+  {
+    filename: '015_member_contract_signed_on.sql',
+    sql: `ALTER TABLE members ADD COLUMN IF NOT EXISTS contract_signed_on TEXT;`,
+  },
 ]
 
 export async function runMigrations(sql: Sql): Promise<{ applied: string[]; failed?: string }> {

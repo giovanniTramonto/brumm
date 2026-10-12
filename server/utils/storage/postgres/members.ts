@@ -19,6 +19,7 @@ type Row = {
   care_type: string | null
   contract_start: string | null
   voucher_number: string | null
+  contract_signed_on: string | null
   last_edited_at: string | null
   last_edited_by: string | null
   address: string | null
@@ -43,6 +44,7 @@ function rowToMemberData(row: Row): MemberData {
     careType: row.care_type ?? null,
     contractStart: row.contract_start ?? null,
     voucherNumber: row.voucher_number ?? null,
+    contractSignedOn: row.contract_signed_on ?? null,
     lastEditedAt: row.last_edited_at ?? null,
     lastEditedBy: row.last_edited_by ?? null,
     address: row.address ?? null,
@@ -67,13 +69,13 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
       user_id, storage_ref, first_name, last_name, birth_date,
       guardian1_name, guardian2_name, email1, email2, group_id,
       contract_end, phone1, phone2, surcharges, care_type, contract_start,
-      voucher_number, last_edited_at, last_edited_by, address
+      voucher_number, contract_signed_on, last_edited_at, last_edited_by, address
     ) VALUES (
       ${data.userId}, ${data.storageRef}, ${data.firstName}, ${data.lastName}, ${data.birthDate},
       ${data.guardian1Name}, ${data.guardian2Name}, ${data.email1}, ${data.email2 ?? null},
       ${data.groupId ?? null}, ${data.contractEnd ?? null}, ${data.phone1 ?? null},
       ${data.phone2 ?? null}, ${data.surcharges.join(',')}, ${data.careType ?? null},
-      ${data.contractStart ?? null}, ${data.voucherNumber ?? null}, ${data.lastEditedAt ?? null}, ${data.lastEditedBy ?? null},
+      ${data.contractStart ?? null}, ${data.voucherNumber ?? null}, ${data.contractSignedOn ?? null}, ${data.lastEditedAt ?? null}, ${data.lastEditedBy ?? null},
       ${data.address ?? null}
     )
     ON CONFLICT (user_id) DO UPDATE SET
@@ -93,6 +95,7 @@ export async function pgSaveMember(sql: Sql, data: MemberData): Promise<void> {
       care_type      = EXCLUDED.care_type,
       contract_start = EXCLUDED.contract_start,
       voucher_number = EXCLUDED.voucher_number,
+      contract_signed_on = EXCLUDED.contract_signed_on,
       last_edited_at = EXCLUDED.last_edited_at,
       last_edited_by = EXCLUDED.last_edited_by,
       address        = EXCLUDED.address

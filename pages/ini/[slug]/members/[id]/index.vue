@@ -194,6 +194,7 @@ const hasChanges = computed(() => {
     (form.careType || null) !== (m.careType ?? null) ||
     (form.contractStart || null) !== (m.contractStart ?? null) ||
     (form.voucherNumber.trim() || null) !== (m.voucherNumber ?? null) ||
+    (form.contractSignedOn || null) !== (m.contractSignedOn ?? null) ||
     form.surcharges.slice().sort().join(',') !== m.surcharges.slice().sort().join(',') ||
     (form.contractEnd.trim() || null) !== (toContractEndMonthValue(m.contractEnd) || null) ||
     (form.address.trim() || null) !== (m.address ?? null)
@@ -214,6 +215,7 @@ const form = reactive({
   careType: '',
   contractStart: '',
   voucherNumber: '',
+  contractSignedOn: '',
   surcharges: [] as string[],
   contractEnd: '',
 
@@ -442,6 +444,7 @@ onMounted(async () => {
     form.careType = m.careType ?? ''
     form.contractStart = m.contractStart ?? ''
     form.voucherNumber = m.voucherNumber ?? ''
+    form.contractSignedOn = m.contractSignedOn ?? ''
     form.surcharges = m.surcharges ?? []
     form.contractEnd = toContractEndMonthValue(m.contractEnd)
     form.address = m.address ?? ''
@@ -498,6 +501,7 @@ async function onSave() {
         careType: canManageMembers.value ? form.careType || undefined : undefined,
         contractStart: canManageMembers.value ? form.contractStart || undefined : undefined,
         voucherNumber: canManageMembers.value ? form.voucherNumber.trim() || undefined : undefined,
+        contractSignedOn: canManageMembers.value ? form.contractSignedOn || undefined : undefined,
         surcharges: canManageMembers.value ? form.surcharges : undefined,
         contractEnd: form.contractEnd.trim() || undefined,
         address: form.address.trim() || undefined,
@@ -901,15 +905,27 @@ async function onSubmit() {
         <section class="card space-y-4" :inert="isTeam" aria-labelledby="section-contract">
           <h2 id="section-contract" class="text-base font-semibold text-gray-900">Vertrag</h2>
           <div v-if="hasForm" :inert="isKidDataLocked" class="space-y-4">
-            <div v-if="canManageMembers">
-              <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
-              <input
-                id="field-voucherNumber"
-                v-model="form.voucherNumber"
-                type="text"
-                class="input mt-1"
-                :readonly="isKidDataLocked"
-              />
+            <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
+                <input
+                  id="field-voucherNumber"
+                  v-model="form.voucherNumber"
+                  type="text"
+                  class="input mt-1"
+                  :readonly="isKidDataLocked"
+                />
+              </div>
+              <div>
+                <label for="field-contractSignedOn" class="label">Vertragsabschluss</label>
+                <input
+                  id="field-contractSignedOn"
+                  v-model="form.contractSignedOn"
+                  type="date"
+                  class="input mt-1"
+                  :readonly="isKidDataLocked"
+                />
+              </div>
             </div>
 
             <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">

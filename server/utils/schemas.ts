@@ -97,6 +97,11 @@ export const updateMemberSchema = z
       .optional()
       .or(z.literal('')),
     voucherNumber: z.string().max(50, 'Gutscheinnummer zu lang').optional().or(z.literal('')),
+    contractSignedOn: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Ungültiges Datum (Vertragsabschluss)')
+      .optional()
+      .or(z.literal('')),
     surcharges: z.array(z.string()).optional(),
     contractEnd: contractEndField,
     address: z.string().optional().or(z.literal('')),
