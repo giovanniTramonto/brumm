@@ -125,10 +125,20 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
           <dt class="text-gray-500">Gutschein</dt>
           <dd class="text-gray-900">
             gültig {{ formatIsbjDate(isbj.voucher.validFrom) }} – {{ formatIsbjDate(isbj.voucher.validTo) }}
+            <!-- ISBJ reports a voucher used by a contract as not redeemable — that only matters
+                 when there is no contract yet (registration would fail) -->
             <span
-              v-if="isbj.voucher.isRedeemable === false"
+              v-if="contract"
+              class="ml-1 inline-flex rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600"
+            >eingelöst</span>
+            <span
+              v-else-if="isbj.voucher.isRedeemable === false"
               class="ml-1 inline-flex rounded-full bg-orange-100 px-1.5 py-0.5 text-xs text-orange-700"
             >nicht einlösbar</span>
+            <span
+              v-else-if="isbj.voucher.isRedeemable"
+              class="ml-1 inline-flex rounded-full bg-green-100 px-1.5 py-0.5 text-xs text-green-800"
+            >einlösbar</span>
           </dd>
         </template>
         <template v-if="contract">
