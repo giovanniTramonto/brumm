@@ -47,13 +47,16 @@ async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T)
   return results
 }
 
+// aktiv=true only excludes cancelled contracts; datumAb drops contracts whose end and financing
+// period lie before today, so years of ended contracts are not loaded one by one
 async function fetchActiveContractNumbers(clubId: string): Promise<string[]> {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' })
   const numbers: string[] = []
   for (let start = 0; ; start += PAGE_SIZE) {
     const page = await isbjFetch<ISBJPage>(
       clubId,
       'GET',
-      `/api/v1/betreuung/vertraege?aktiv=true&max=${PAGE_SIZE}&start=${start}`,
+      `/api/v1/betreuung/vertraege?aktiv=true&datumAb=${today}&max=${PAGE_SIZE}&start=${start}`,
     )
     const entries = page.eintraege ?? []
     numbers.push(...entries)
@@ -74,62 +77,63 @@ export async function fetchISBJContracts(
 ): Promise<{ contracts: ISBJContract[]; voucherError: string | null }> {
   const numbers = await fetchActiveContractNumbers(clubId)
 
-  const details = await mapWithConcurrency(numbers, CONCURRENCY, (nr) =>
-    isbjFetch<ISBJContractDetail>(
+  // Voucher lookups were temporarily disabled by ISBJ in 2026; contracts stay usable without them
+  let voucherError: string | null = null
+  const vouchers = new Map<string, Promise<ISBJVoucher | null>>()
+  function loadVoucher(nr: string): Promise<ISBJVoucher | null> {
+    let voucher = vouchers.get(nr)
+    if (!voucher) {
+      voucher = isbjFetch<ISBJVoucher>(
+        clubId,
+        'GET',
+        `/api/v1/betreuung/gutscheine/${encodeURIComponent(nr)}`,
+      ).catch((err) => {
+        voucherError ??=
+          (err as { statusMessage?: string })?.statusMessage ??
+          'Gutscheine konnten nicht geladen werden.'
+        return null
+      })
+      vouchers.set(nr, voucher)
+    }
+    return voucher
+  }
+
+  // Each worker loads the contract and right away its voucher, instead of waiting for all details
+  const loaded = await mapWithConcurrency(numbers, CONCURRENCY, async (nr) => {
+    const detail = await isbjFetch<ISBJContractDetail>(
       clubId,
       'GET',
       `/api/v1/betreuung/vertraege/${encodeURIComponent(nr)}`,
-    ),
-  )
-  const activeDetails = details.filter((d) => !d.storniert)
-
-  // Voucher lookups were temporarily disabled by ISBJ in 2026; contracts stay usable without them
-  let voucherError: string | null = null
-  const voucherNumbers = [
-    ...new Set(activeDetails.map((d) => d.gutschein).filter((g): g is string => !!g)),
-  ]
-  const vouchers = new Map<string, ISBJVoucher | null>()
-  await mapWithConcurrency(voucherNumbers, CONCURRENCY, async (nr) => {
-    try {
-      vouchers.set(
-        nr,
-        await isbjFetch<ISBJVoucher>(
-          clubId,
-          'GET',
-          `/api/v1/betreuung/gutscheine/${encodeURIComponent(nr)}`,
-        ),
-      )
-    } catch (err) {
-      vouchers.set(nr, null)
-      voucherError ??=
-        (err as { statusMessage?: string })?.statusMessage ??
-        'Gutscheine konnten nicht geladen werden.'
-    }
+    )
+    if (detail.storniert) return null
+    const voucher = detail.gutschein ? await loadVoucher(detail.gutschein) : null
+    return { detail, voucher }
   })
 
-  const contracts = activeDetails.map((detail): ISBJContract => {
-    const voucher = detail.gutschein ? (vouchers.get(detail.gutschein) ?? null) : null
-    const expectedEnd = latestExpectedEnd(detail)
-    const surcharges: ISBJSurcharge[] | null = voucher
-      ? (voucher.zuschlagsberechtigungen ?? []).map((z) => ({
-          type: z.typ,
-          validFrom: z.gueltigVon ?? null,
-          validTo: z.gueltigBis ?? null,
-        }))
-      : null
-    return {
-      contractNumber: detail.vertragsnummer,
-      voucherNumber: detail.gutschein ?? null,
-      childId: voucher?.kindId ?? null,
-      startDate: detail.laufzeitBeginn ?? null,
-      endDate: detail.laufzeitEnde ?? null,
-      expectedEndDate: expectedEnd?.voraussichtlichesVertragsende ?? null,
-      expectedEndReason: expectedEnd?.aenderungsgrund ?? null,
-      careScope: detail.betreuungsumfang ?? null,
-      withMeal: detail.mitEssen ?? null,
-      surcharges,
-    }
-  })
+  const contracts = loaded
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+    .map(({ detail, voucher }): ISBJContract => {
+      const expectedEnd = latestExpectedEnd(detail)
+      const surcharges: ISBJSurcharge[] | null = voucher
+        ? (voucher.zuschlagsberechtigungen ?? []).map((z) => ({
+            type: z.typ,
+            validFrom: z.gueltigVon ?? null,
+            validTo: z.gueltigBis ?? null,
+          }))
+        : null
+      return {
+        contractNumber: detail.vertragsnummer,
+        voucherNumber: detail.gutschein ?? null,
+        childId: voucher?.kindId ?? null,
+        startDate: detail.laufzeitBeginn ?? null,
+        endDate: detail.laufzeitEnde ?? null,
+        expectedEndDate: expectedEnd?.voraussichtlichesVertragsende ?? null,
+        expectedEndReason: expectedEnd?.aenderungsgrund ?? null,
+        careScope: detail.betreuungsumfang ?? null,
+        withMeal: detail.mitEssen ?? null,
+        surcharges,
+      }
+    })
 
   contracts.sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
   return { contracts, voucherError }
