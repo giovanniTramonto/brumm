@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
-import type { Member } from '~/types'
+import type { Member, MemberISBJResponse, MemberISBJSyncResponse } from '~/types'
 import { MAX_UPLOAD_SIZE_BYTES, MAX_UPLOAD_SIZE_LABEL, SURCHARGE_OPTIONS } from '~/utils/config'
 import { CARE_TYPE_OPTIONS } from '~/utils/reimbursement'
 
@@ -31,6 +31,40 @@ const isActivating = ref(false)
 type DocumentEntry = { id: string; name: string; createdTime: string | null }
 const documents = ref<DocumentEntry[]>([])
 const isLoadingDocs = ref(false)
+
+// ISBJ data for the "Gutschein" section; null = not loaded (or the request itself failed)
+const memberIsbj = ref<MemberISBJResponse | null>(null)
+const isLoadingIsbj = ref(false)
+
+async function loadMemberIsbj() {
+  isLoadingIsbj.value = true
+  try {
+    memberIsbj.value = await $fetch<MemberISBJResponse>(`/api/ini/${slug}/members/${memberId}/isbj`)
+  } catch {
+    // Falls back to the manual fields; ISBJ errors themselves arrive as data
+    memberIsbj.value = null
+  } finally {
+    isLoadingIsbj.value = false
+  }
+}
+
+// "ISBJ Aktualisieren" saved new values: keep page, form and store in line without a reload
+function onIsbjSynced(result: MemberISBJSyncResponse) {
+  if (!member.value || !result.isChanged) return
+  member.value = {
+    ...member.value,
+    careType: result.careType,
+    surcharges: result.surcharges,
+    lastEditedAt: result.lastEditedAt,
+    lastEditedBy: result.lastEditedBy,
+  }
+  form.careType = result.careType ?? ''
+  form.surcharges = [...result.surcharges]
+  const group = member.value.groupId
+    ? (membersStore.groups.find((g) => g.id === member.value?.groupId) ?? null)
+    : null
+  membersStore.updateMember({ ...member.value, isOwnChild: isOwnChild.value, group })
+}
 
 type TemplateEntry = {
   id: string
@@ -83,6 +117,15 @@ const overviewPath = computed(() =>
 const overviewLabel = computed(() =>
   isMember.value || isTeam.value ? 'Zurück zum Dashboard' : 'Zurück zur Kinderliste',
 )
+
+// Same labels and colors as the status column in the member list
+const STATUS_BADGES: Record<string, { label: string; class: string }> = {
+  ACTIVE: { label: 'Aktiv', class: 'bg-green-100 text-green-800' },
+  INACTIVE: { label: 'Inaktiv', class: 'bg-purple-100 text-purple-800' },
+  REGISTERED: { label: 'Bestätigt', class: 'bg-blue-100 text-blue-800' },
+  PENDING_INVITE: { label: 'Ausstehend', class: 'bg-orange-100 text-orange-800' },
+  DEACTIVATED: { label: 'Abgemeldet', class: 'bg-gray-100 text-gray-600' },
+}
 
 // TEAM sees the form read-only (inert); managers without member access get a plain data list
 const hasForm = computed(() => canManageMembers.value || isMember.value || isTeam.value)
@@ -453,6 +496,7 @@ onMounted(async () => {
 
     // Dokumente im Hintergrund laden — blockiert das Formular nicht
     loadMemberDocTemplates()
+    if (canManageMembers.value) loadMemberIsbj()
     if (m.status === 'ACTIVE' || m.status === 'INACTIVE') {
       loadDocuments()
       loadOtherDocuments()
@@ -713,15 +757,22 @@ async function onSubmit() {
       >
         <!-- Actions: sticky so "Speichern" stays reachable while scrolling through the sections -->
         <div class="card sticky top-4 z-10 bg-gray-900 ring-gray-700">
-          <div class="flex items-center justify-between gap-3">
+          <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             <NuxtLink
               :to="overviewPath"
-              class="text-sm text-blue-300 hover:underline"
+              class="justify-self-start text-sm text-blue-300 hover:underline"
               :aria-label="overviewLabel"
             >
               ← Übersicht
             </NuxtLink>
-            <div class="flex items-center gap-3">
+            <span
+              role="status"
+              class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+              :class="STATUS_BADGES[member.status]?.class"
+            >
+              {{ STATUS_BADGES[member.status]?.label }}
+            </span>
+            <div class="flex items-center justify-self-end gap-3">
               <button
                 v-if="isMember && member.status === 'REGISTERED' && member.hasInvite && !submitted"
                 type="button"
@@ -745,38 +796,9 @@ async function onSubmit() {
 
         <!-- 1) General -->
         <section class="card space-y-4" :inert="isTeam" aria-labelledby="section-general">
-          <div class="flex items-center justify-between">
-            <h1 id="section-general" class="text-xl font-semibold text-gray-900">
-              {{ member.firstName }} {{ member.lastName }}
-            </h1>
-            <span
-              role="status"
-              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
-              :class="
-                member.status === 'ACTIVE'
-                  ? 'bg-green-100 text-green-800'
-                  : member.status === 'INACTIVE'
-                    ? 'bg-purple-100 text-purple-800'
-                    : member.status === 'DEACTIVATED'
-                      ? 'bg-gray-100 text-gray-600'
-                      : member.status === 'PENDING_INVITE'
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'bg-blue-100 text-blue-800'
-              "
-            >
-              {{
-                member.status === 'ACTIVE'
-                  ? "Aktiv"
-                  : member.status === 'INACTIVE'
-                    ? "Inaktiv"
-                    : member.status === 'DEACTIVATED'
-                      ? "Abgemeldet"
-                      : member.status === 'PENDING_INVITE'
-                        ? "Ausstehend"
-                        : "Bestätigt"
-              }}
-            </span>
-          </div>
+          <h1 id="section-general" class="text-xl font-semibold text-gray-900">
+            {{ member.firstName }} {{ member.lastName }}
+          </h1>
 
           <p v-if="canManageMembers && !member.hasInvite && (member.status === 'PENDING_INVITE' || member.status === 'REGISTERED')" class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
             Kind wurde ohne Einladung angelegt.
@@ -903,20 +925,10 @@ async function onSubmit() {
 
         <!-- 3) Contract -->
         <section class="card space-y-4" :inert="isTeam" aria-labelledby="section-contract">
-          <h2 id="section-contract" class="text-base font-semibold text-gray-900">Vertrag</h2>
+          <h2 id="section-contract" class="text-base font-semibold text-gray-900">Vertrag mit der Kita</h2>
           <div v-if="hasForm" :inert="isKidDataLocked" class="space-y-4">
-            <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
-              <div>
-                <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
-                <input
-                  id="field-voucherNumber"
-                  v-model="form.voucherNumber"
-                  type="text"
-                  class="input mt-1"
-                  :readonly="isKidDataLocked"
-                />
-              </div>
-              <div>
+            <div v-if="canManageMembers" class="grid grid-cols-2 gap-4 tablet:grid-cols-3">
+              <div class="col-span-2 tablet:col-span-1">
                 <label for="field-contractSignedOn" class="label">Vertragsabschluss</label>
                 <input
                   id="field-contractSignedOn"
@@ -926,9 +938,6 @@ async function onSubmit() {
                   :readonly="isKidDataLocked"
                 />
               </div>
-            </div>
-
-            <div v-if="canManageMembers" class="grid grid-cols-2 gap-4">
               <div>
                 <label for="field-contractStart" class="label">Vertragsbeginn</label>
                 <input
@@ -961,40 +970,6 @@ async function onSubmit() {
               />
             </div>
 
-            <div v-if="canManageMembers">
-              <label for="field-careType" class="label">Betreuungsumfang</label>
-              <select
-                id="field-careType"
-                v-model="form.careType"
-                class="input mt-1"
-                :disabled="isKidDataLocked"
-              >
-                <option value="">Nicht angegeben</option>
-                <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
-                  {{ opt.label }}
-                </option>
-              </select>
-            </div>
-
-            <div v-if="canManageMembers">
-              <label class="label">Zuschläge</label>
-              <div class="mt-1 flex flex-wrap gap-4">
-                <label
-                  v-for="opt in SURCHARGE_OPTIONS"
-                  :key="opt.key"
-                  class="flex items-center gap-2 text-sm text-gray-700"
-                >
-                  <input
-                    v-model="form.surcharges"
-                    type="checkbox"
-                    :value="opt.key"
-                    class="h-4 w-4 rounded border-gray-300"
-                    :disabled="isKidDataLocked"
-                  />
-                  {{ opt.label }}
-                </label>
-              </div>
-            </div>
           </div>
           <dl v-else class="space-y-2 text-sm">
             <div v-if="member.contractStart" class="flex gap-2">
@@ -1383,7 +1358,74 @@ async function onSubmit() {
           </div>
         </section>
 
-        <!-- 4) Membership: every status action with a short explanation; DOM order is text → button
+        <!-- 4) Voucher: the data ISBJ funding is based on (only canManageMembers edits it) -->
+        <section v-if="canManageMembers" class="card space-y-4" aria-labelledby="section-voucher">
+          <h2 id="section-voucher" class="text-base font-semibold text-gray-900">Gutschein</h2>
+          <div :inert="isKidDataLocked" class="space-y-4">
+            <div>
+              <label for="field-voucherNumber" class="label">Gutscheinnummer</label>
+              <input
+                id="field-voucherNumber"
+                v-model="form.voucherNumber"
+                type="text"
+                class="input mt-1"
+                :readonly="isKidDataLocked"
+              />
+            </div>
+
+            <p v-if="isLoadingIsbj" class="text-sm text-gray-500" aria-live="polite">ISBJ-Daten werden geladen …</p>
+
+            <!-- ISBJ configured (even if unreachable): ISBJ is the source, manual fields are hidden -->
+            <MemberIsbjVoucher
+              v-else-if="memberIsbj?.isConfigured"
+              :slug="slug"
+              :member="member"
+              :isbj="memberIsbj"
+              :isLocked="isKidDataLocked"
+              @synced="onIsbjSynced"
+            />
+
+            <!-- No ISBJ: care type and surcharges are entered by hand (values stay after ISBJ is removed) -->
+            <template v-else>
+              <div>
+                <label for="field-careType" class="label">Betreuungsumfang</label>
+                <select
+                  id="field-careType"
+                  v-model="form.careType"
+                  class="input mt-1"
+                  :disabled="isKidDataLocked"
+                >
+                  <option value="">Nicht angegeben</option>
+                  <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
+                    {{ opt.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="label">Zuschläge</label>
+                <div class="mt-1 flex flex-wrap gap-4">
+                  <label
+                    v-for="opt in SURCHARGE_OPTIONS"
+                    :key="opt.key"
+                    class="flex items-center gap-2 text-sm text-gray-700"
+                  >
+                    <input
+                      v-model="form.surcharges"
+                      type="checkbox"
+                      :value="opt.key"
+                      class="h-4 w-4 rounded border-gray-300"
+                      :disabled="isKidDataLocked"
+                    />
+                    {{ opt.label }}
+                  </label>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        <!-- 5) Membership: every status action with a short explanation; DOM order is text → button
              so phones show the text first, from tablet on the row is reversed so buttons line up on the left -->
         <section v-if="canManageMembers" class="card space-y-4" aria-labelledby="section-membership">
           <h2 id="section-membership" class="text-base font-semibold text-gray-900">Mitgliedschaft</h2>
