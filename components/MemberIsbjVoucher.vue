@@ -12,9 +12,9 @@ import {
   surchargeLabel,
 } from '~/utils/isbjMatching'
 
-// ISBJ part of the "Gutschein" section (only when ISBJ is configured): summary of the current
-// ISBJ contract instead of the manual care type / surcharge fields, "ISBJ Aktualisieren" to copy
-// ISBJ → Brumm, and a read-only preview of what "ISBJ Anmelden" would send.
+// ISBJ part of the "Gutschein" section (only when ISBJ is configured): key facts of the current
+// ISBJ contract, the stored Brumm fields (default slot, read-only) next to the ISBJ values,
+// "ISBJ Aktualisieren" to copy ISBJ → Brumm, and a read-only preview of what "ISBJ Anmelden" would send.
 const props = defineProps<{
   slug: string
   member: Member
@@ -106,7 +106,7 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="space-y-4">
     <p v-if="isbj.error" role="alert" class="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
       ISBJ-Daten konnten nicht geladen werden: {{ isbj.error }}
     </p>
@@ -115,8 +115,12 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
       Gutscheinnummer eintragen und speichern, um den Vertrag aus ISBJ zu laden.
     </p>
 
+    <!-- Key facts of the voucher and its current contract -->
     <template v-else>
-      <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm tablet:grid-cols-[10rem_1fr]">
+      <dl
+        v-if="isbj.voucher || contract"
+        class="grid grid-cols-1 gap-x-6 gap-y-1 rounded-md bg-gray-50 p-3 text-sm tablet:grid-cols-[8rem_1fr]"
+      >
         <template v-if="isbj.voucher">
           <dt class="text-gray-500">Gutschein</dt>
           <dd class="text-gray-900">
@@ -127,7 +131,6 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
             >nicht einlösbar</span>
           </dd>
         </template>
-
         <template v-if="contract">
           <dt class="text-gray-500">Vertrag</dt>
           <dd class="text-gray-900">
@@ -138,38 +141,6 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
               :class="isContractRunning(contract, today) ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
             >{{ isContractRunning(contract, today) ? 'läuft' : 'künftig' }}</span>
           </dd>
-
-          <dt class="text-gray-500">Betreuungsumfang</dt>
-          <dd class="text-gray-900">
-            {{ isbjCareType ? careTypeLabel(isbjCareType) : (contract.careScope ?? '–') }}
-            <span v-if="!isbjCareType && contract.careScope" class="text-xs text-gray-400">(unbekannter ISBJ-Wert)</span>
-            <span v-if="syncPatch.careType" class="block text-xs text-orange-700">
-              In Brumm: {{ careTypeLabel(member.careType) }}
-            </span>
-          </dd>
-
-          <dt class="text-gray-500">Zuschläge</dt>
-          <dd class="text-gray-900">
-            <template v-if="!isbjSurcharges">nicht verfügbar</template>
-            <template v-else-if="isbjSurcharges.keys.length === 0 && isbjSurcharges.unknownTypes.length === 0">keine</template>
-            <span v-else class="flex flex-wrap gap-1">
-              <span
-                v-for="key in isbjSurcharges.keys"
-                :key="key"
-                class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
-              >{{ surchargeLabel(key) }}</span>
-              <span
-                v-for="type in isbjSurcharges.unknownTypes"
-                :key="type"
-                class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-400"
-                :title="`Unbekannter ISBJ-Zuschlag ${type} – wird nicht übernommen`"
-              >{{ type }}</span>
-            </span>
-            <span v-if="syncPatch.surcharges" class="block text-xs text-orange-700">
-              In Brumm: {{ member.surcharges.length > 0 ? member.surcharges.map(surchargeLabel).join(', ') : 'keine' }}
-            </span>
-          </dd>
-
           <template v-if="contract.expectedEndDate">
             <dt class="text-gray-500">Vorauss. Ende</dt>
             <dd class="text-gray-900">
@@ -185,13 +156,55 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
       </p>
     </template>
 
-    <div v-if="isbj.voucherNumber && !isbj.error" class="flex flex-wrap items-center gap-3">
+    <!-- Brumm (stored values, passed in as slot) next to ISBJ -->
+    <div class="grid gap-6" :class="contract && 'tablet:grid-cols-2'">
+      <div class="space-y-4">
+        <p v-if="contract" class="text-xs font-medium uppercase tracking-wide text-gray-500">In Brumm</p>
+        <slot />
+      </div>
+
+      <div v-if="contract" class="space-y-4">
+        <p class="text-xs font-medium uppercase tracking-wide text-gray-500">In ISBJ</p>
+        <div>
+          <p class="label">Betreuungsumfang</p>
+          <p class="mt-1 py-1.5 text-sm" :class="syncPatch.careType ? 'font-medium text-orange-700' : 'text-gray-900'">
+            {{ isbjCareType ? careTypeLabel(isbjCareType) : (contract.careScope ?? '–') }}
+            <span v-if="!isbjCareType && contract.careScope" class="text-xs font-normal text-gray-400">(unbekannter ISBJ-Wert)</span>
+          </p>
+        </div>
+        <div>
+          <p class="label">Zuschläge</p>
+          <p v-if="!isbjSurcharges" class="mt-1 text-sm text-gray-500">nicht verfügbar</p>
+          <p
+            v-else-if="isbjSurcharges.keys.length === 0 && isbjSurcharges.unknownTypes.length === 0"
+            class="mt-1 text-sm"
+            :class="syncPatch.surcharges ? 'font-medium text-orange-700' : 'text-gray-900'"
+          >keine</p>
+          <div v-else class="mt-1 flex flex-wrap gap-1">
+            <span
+              v-for="key in isbjSurcharges.keys"
+              :key="key"
+              class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium"
+              :class="syncPatch.surcharges ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-700'"
+            >{{ surchargeLabel(key) }}</span>
+            <span
+              v-for="type in isbjSurcharges.unknownTypes"
+              :key="type"
+              class="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-400"
+              :title="`Unbekannter ISBJ-Zuschlag ${type} – wird nicht übernommen`"
+            >{{ type }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div v-if="isbj.voucherNumber && !isbj.error" class="flex flex-wrap items-center gap-3 border-t pt-4">
       <button
         v-if="contract"
         type="button"
         class="btn-secondary text-sm"
         :disabled="!hasDifferences || isSyncing || isLocked"
-        :title="hasDifferences ? 'Betreuungsumfang und Zuschläge aus ISBJ übernehmen' : 'Brumm stimmt mit ISBJ überein'"
         @click="onSync"
       >
         {{ isSyncing ? 'Wird übernommen…' : 'ISBJ Aktualisieren' }}
@@ -206,7 +219,10 @@ const missingCount = computed(() => registration.value.filter((f) => !f.value).l
       >
         ISBJ Anmelden
       </button>
-      <span v-if="contract && !hasDifferences" class="text-xs text-gray-500">Brumm stimmt mit ISBJ überein.</span>
+      <span v-if="contract && hasDifferences" class="text-xs text-orange-700">
+        Brumm weicht von ISBJ ab – „ISBJ Aktualisieren“ übernimmt die ISBJ-Werte.
+      </span>
+      <span v-else-if="contract" class="text-xs text-gray-500">Brumm stimmt mit ISBJ überein.</span>
     </div>
     <p v-if="syncError" role="alert" class="text-xs text-red-600">{{ syncError }}</p>
 

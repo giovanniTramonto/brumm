@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MemberIsbjVoucher from '~/components/MemberIsbjVoucher.vue'
 import { useAuthStore } from '~/stores/auth'
 import { useMembersStore } from '~/stores/members'
 import type { Member, MemberISBJResponse, MemberISBJSyncResponse } from '~/types'
@@ -35,6 +36,8 @@ const isLoadingDocs = ref(false)
 // ISBJ data for the "Gutschein" section; null = not loaded (or the request itself failed)
 const memberIsbj = ref<MemberISBJResponse | null>(null)
 const isLoadingIsbj = ref(false)
+// With ISBJ configured, care type and surcharges are read-only and come from ISBJ
+const isIsbjManaged = computed(() => !!memberIsbj.value?.isConfigured)
 
 async function loadMemberIsbj() {
   isLoadingIsbj.value = true
@@ -1375,25 +1378,24 @@ async function onSubmit() {
 
             <p v-if="isLoadingIsbj" class="text-sm text-gray-500" aria-live="polite">ISBJ-Daten werden geladen …</p>
 
-            <!-- ISBJ configured (even if unreachable): ISBJ is the source, manual fields are hidden -->
-            <MemberIsbjVoucher
-              v-else-if="memberIsbj?.isConfigured"
-              :slug="slug"
-              :member="member"
-              :isbj="memberIsbj"
-              :isLocked="isKidDataLocked"
+            <!-- Care type and surcharges are rendered once: entered by hand without ISBJ; with ISBJ
+                 configured (even if unreachable) read-only inside the ISBJ comparison and filled via
+                 "ISBJ Aktualisieren". The values stay when ISBJ is removed again. -->
+            <component
+              :is="isIsbjManaged && memberIsbj ? MemberIsbjVoucher : 'div'"
+              v-bind="isIsbjManaged && memberIsbj
+                ? { slug, member, isbj: memberIsbj, isLocked: isKidDataLocked }
+                : { class: 'space-y-4' }"
               @synced="onIsbjSynced"
-            />
-
-            <!-- No ISBJ: care type and surcharges are entered by hand (values stay after ISBJ is removed) -->
-            <template v-else>
+            >
               <div>
-                <label for="field-careType" class="label">Betreuungsumfang</label>
+                <label for="field-careType" class="label" :class="isIsbjManaged && 'text-gray-400'">Betreuungsumfang</label>
                 <select
                   id="field-careType"
                   v-model="form.careType"
                   class="input mt-1"
-                  :disabled="isKidDataLocked"
+                  :class="isIsbjManaged && 'text-gray-400'"
+                  :disabled="isKidDataLocked || isIsbjManaged || isLoadingIsbj"
                 >
                   <option value="">Nicht angegeben</option>
                   <option v-for="opt in CARE_TYPE_OPTIONS" :key="opt.key" :value="opt.key">
@@ -1403,25 +1405,27 @@ async function onSubmit() {
               </div>
 
               <div>
-                <label class="label">Zuschläge</label>
+                <label class="label" :class="isIsbjManaged && 'text-gray-400'">Zuschläge</label>
                 <div class="mt-1 flex flex-wrap gap-4">
                   <label
                     v-for="opt in SURCHARGE_OPTIONS"
                     :key="opt.key"
-                    class="flex items-center gap-2 text-sm text-gray-700"
+                    class="flex items-center gap-2 text-sm"
+                    :class="isIsbjManaged ? 'text-gray-400' : 'text-gray-700'"
                   >
                     <input
                       v-model="form.surcharges"
                       type="checkbox"
                       :value="opt.key"
                       class="h-4 w-4 rounded border-gray-300"
-                      :disabled="isKidDataLocked"
+                      :class="isIsbjManaged && 'opacity-50'"
+                      :disabled="isKidDataLocked || isIsbjManaged || isLoadingIsbj"
                     />
                     {{ opt.label }}
                   </label>
                 </div>
               </div>
-            </template>
+            </component>
           </div>
         </section>
 
