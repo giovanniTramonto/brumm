@@ -238,6 +238,42 @@ export interface ISBJContract {
   surcharges: ISBJSurcharge[] | null
 }
 
+export interface ISBJVoucherInfo {
+  voucherNumber: string
+  type: string | null
+  validFrom: string | null
+  validTo: string | null
+  isRedeemable: boolean | null
+  // Raw ISBJ value (e.g. "H"), the maximum care scope the voucher allows
+  careScope: string | null
+  surcharges: ISBJSurcharge[]
+}
+
+// ISBJ data for one child, looked up via its voucher number (member detail page, "Gutschein")
+export interface MemberISBJResponse {
+  isConfigured: boolean
+  voucherNumber: string | null
+  facilityNumber: string | null
+  voucher: ISBJVoucherInfo | null
+  // All non-cancelled contracts of the voucher, oldest first
+  contracts: ISBJContract[]
+  error: string | null
+}
+
+export interface MemberISBJSyncResponse {
+  isChanged: boolean
+  careType: string | null
+  surcharges: string[]
+  lastEditedAt: string | null
+  lastEditedBy: string | null
+}
+
+export interface ISBJConnectionResponse {
+  isConfigured: boolean
+  isConnected: boolean
+  error: string | null
+}
+
 export interface ISBJContractsResponse {
   isConfigured: boolean
   contracts: ISBJContract[]

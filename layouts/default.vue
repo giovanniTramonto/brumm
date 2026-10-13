@@ -217,6 +217,7 @@ function onLogout() {
           </div>
 
           <div class="flex items-center gap-3 pl-8">
+            <IsbjConnectionIndicator v-if="slug && canManageClub" :slug="slug" />
             <span class="hidden text-sm text-gray-500 tablet:inline">{{ roleLabel }}</span>
             <button class="btn-secondary hidden text-sm tablet:inline-flex" @click="onLogout">Abmelden</button>
             <NavBurger

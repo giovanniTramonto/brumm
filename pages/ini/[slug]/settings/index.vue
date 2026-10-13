@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
+import { useIsbjStore } from '~/stores/isbj'
 
 definePageMeta({ middleware: ['auth', 'role'], requiredRole: 'SUPERUSER' })
 
 const route = useRoute()
 const slug = route.params.slug as string
 const authStore = useAuthStore()
+const isbjStore = useIsbjStore()
 
 // --- Vereinsname ---
 const nameInput = ref(authStore.currentClub?.name ?? '')
@@ -178,6 +180,7 @@ async function onSaveISBJ() {
       certPassphrase: '',
     }
     await fetchISBJStatus()
+    isbjStore.onConfigChanged(slug)
   } catch (err) {
     isbjError.value =
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Fehler beim Speichern'
@@ -205,6 +208,8 @@ async function onTestISBJ() {
       (err as { data?: { statusMessage?: string } })?.data?.statusMessage ?? 'Verbindungsfehler'
   } finally {
     isTestingISBJ.value = false
+    // Keep the navigation indicator in line with the manual test
+    isbjStore.checkConnection(slug, { force: true })
   }
 }
 
@@ -214,6 +219,7 @@ async function onDeleteISBJ() {
   try {
     await $fetch(`/api/ini/${slug}/settings/isbj`, { method: 'DELETE' })
     await fetchISBJStatus()
+    isbjStore.onConfigChanged(slug)
   } finally {
     isDeletingISBJ.value = false
   }
